@@ -8,11 +8,15 @@ A mobile recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for
 - Install the [Earle F. Philhower Raspberry Pi Pico Arduino core for Arduino IDE](Earle F. Philhower Raspberry Pi Pico Arduino core) via the Arduino Board manager (see [installation guide](https://github.com/earlephilhower/arduino-pico#installing-via-arduino-boards-manager)).
 - Import or install the [Bodmer TFT_eSPI library](https://github.com/Bodmer/TFT_eSPI).
 - Locate the TFT_eSPI library :
+
     \Arduino\libraries\TFT_eSPI folder in your documents
-- copy the [Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h]() configuration file for the TFT display in this folder.
+    
+- copy the [Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h) configuration file for the TFT display in this folder.
 - edit the User_Setup_Select.h and modify line 29:
+
     #include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h>           // Default setup is root library folder
-- Compile your code and flash the .uf2 to your board (Arduino do that automatically once you've pressed the BOOTSEL button once).
+    
+- Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 
 # User manual
 
