@@ -1,6 +1,6 @@
 # Mitsubishi-M64282FP-dashcam
 
-A mobile recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, For the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library.
+A mobile recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
 
 # Multi-systems installation guide
 
