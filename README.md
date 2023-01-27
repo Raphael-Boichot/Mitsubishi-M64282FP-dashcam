@@ -2,6 +2,8 @@
 
 A SD card based recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
 
+![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Showcase.png)
+
 # Multi-systems installation guide
 
 - Install the last [Arduino IDE](https://www.arduino.cc/en/software)
@@ -41,12 +43,9 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
 
-# Showcase
-
-![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Showcase.png)
-
 # To do
 
 - a decent PCB
 - a decent schematic
 - some acknowledgments
+- showcase of images taken with the device
