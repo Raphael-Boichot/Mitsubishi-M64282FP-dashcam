@@ -35,8 +35,8 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 
 **With battery charger**
-- an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html)
-- a [DD05CVSA charghe unit](https://fr.aliexpress.com/item/1005003537981780.html)
+- an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
+- a [DD05CVSA charghe unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
 
 # Pinout
@@ -45,7 +45,7 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 # To do
 
-- a decent PCB
-- a decent schematic
-- some acknowledgments
-- showcase of images taken with the device
+- a decent PCB.
+- a decent schematic.
+- some acknowledgments.
+- showcase of images taken with the device.
