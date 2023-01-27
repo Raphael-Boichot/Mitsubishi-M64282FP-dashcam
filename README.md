@@ -23,7 +23,19 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 # Minimal parts
 
+**In bare mode**
+- An Arduino Pi Pico. Fancy purple Chinese clone are OK but beware of the pinout which can be more or less different from the regular boards.
+- a 1.8 TFT SPI 128x160 display
+- Two 4 gates bidirectionnal level shifters
+- A way to connect the sensor without destroying the original cable like a JST ZH1.5MM 9 Pin or a butchered replacement cable.
+
+**With battery charger**
+- an USB breakout board
+- a DD05CVSA charghe unit
+- A LiPo. The device draws nothing, even a 200 mA.h is enough to play with the device outside.
+
 # Pinout
+
 
 # Showcase
 
