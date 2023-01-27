@@ -1,6 +1,6 @@
 # Mitsubishi-M64282FP-dashcam
 
-A mobile recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
+A SD card based recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
 
 # Multi-systems installation guide
 
@@ -18,8 +18,8 @@ A mobile recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for
 
 # User manual
 
-- Once the device is booted, it adapt the sensor exposure for 2-3 seconds then run in Display mode. Dipslay shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
-- To record data, press the pushbutton linked to GPIO13. It will automatically record images with a deadtime inbetween. This deadtime is set by just creating a file named config.txt with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value. The red LED indicates access to the SD card. By pressing pushbutton again, Display mode comes back.
+- Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in Display mode. Dipslay mode shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
+- To record data, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just creating a file named config.txt with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value. The red LED indicates access to the SD card. By pressing pushbutton again, Display mode comes back.
 
 It is mandatory to format the SD card in FAT32 with the maximum sector size possible. The access to the SD card is the bottle neck in Record mode.
 
