@@ -1,6 +1,5 @@
 % Raphael BOICHOT 13/02/2022
 % for any question : raphael.boichot@gmail.com
-
 clear
 clc
 autoexposure='ON' %or OFF
@@ -20,7 +19,6 @@ while flag==0 %infinite loop
     if not(strlength(data)>100)
         disp(data);
     end
-
     if strlength(data)>1000 %This is an image coming
         data=(char(data));
         offset=1; %First byte is always junk (do not know why, probably a Println LF)
@@ -33,28 +31,22 @@ while flag==0 %infinite loop
                 end
             end
             raw=im; %We keep the raw data just in case
-%             subplot(2,1,1);
-%             imagesc(raw(1:120,:))
-%             colormap gray
-%             subplot(2,1,2);
+             subplot(2,1,1);
+             imagesc(raw(1:120,:))
+             colormap gray
+             subplot(2,1,2);
              figure(1)
              voltage=raw(1:120,:);
              histogram(voltage,100)
-        end
-        
-              
+        end              
     maximum=max(max(raw(1:120,:)));
     minimum=min(min(raw(1:120,:)));
     moyenne=mean(mean(raw(1:120,:)));
-
     image_display=uint8(raw(1:120,:));
     image_counter=image_counter+1;
     image_display=imresize(image_display,4,"nearest");
     imwrite(image_display,['./image/output_',num2str(image_counter),'.gif'],'gif');
     figure(2)
     imshow(image_display)
-    end
-
-    
-        
+    end        
     end
