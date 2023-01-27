@@ -1,6 +1,6 @@
 # Mitsubishi-M64282FP-dashcam
 
-A SD card based recorder for the Mitsubishi M64282FP sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
+A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Camera, for the Raspberry Pi Pico. The code was developped under the Arduino IDE with the Earle F. Philhower Raspberry Pi Pico Arduino core. TFT Display driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC.
 
 ![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Showcase.png)
 
@@ -36,7 +36,7 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 **With battery charger**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
-- a [DD05CVSA charghe unit](https://fr.aliexpress.com/item/1005003537981780.html).
+- a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
 
 # Pinout
