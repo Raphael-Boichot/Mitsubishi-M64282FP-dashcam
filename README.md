@@ -27,7 +27,7 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 # Minimal parts
 
-**In bare mode**
+**Powered by the Pi Pico USB port**
 - An Arduino Pi Pico. [Fancy purple Chinese clones](https://fr.aliexpress.com/item/1005003928558306.html) are OK (this is still the genuine RP2040 chip) as long as you do not care that the pinout is completely baroque.
 - a [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html).
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
@@ -36,11 +36,12 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 - two LEDs (red and green) and two resistors of 200-500 Ohms.
 - two [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
 
-**With battery charger**
+**Powered with internal lithium battery**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
 - a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
 - a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
+The device requires a +5V line to drive the sensor and cannot be powered by the VSYS pin only.
 
 # Pinout
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
