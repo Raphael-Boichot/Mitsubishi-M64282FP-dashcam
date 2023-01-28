@@ -43,6 +43,8 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
 
+![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
+
 # To do
 
 - a decent PCB.
