@@ -34,18 +34,16 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 - A way to connect the sensor without destroying the original cable like a [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) or a butchered [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - two LEDs (red and green) and two resistors of 200-500 Ohms.
-- two [push buttons whatetever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
+- two [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
 
 **With battery charger**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
 - a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
-- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashinf the Pi Pico.
+- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
 
 # Pinout
-
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
-
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
 
 # To do
