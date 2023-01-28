@@ -46,6 +46,8 @@ The whole dashcam device requires a +5V line to drive the sensor and cannot unfo
 
 # Pinout
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
+
+# Connection with the sensor
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
 
 # To do
