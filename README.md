@@ -14,7 +14,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 - copy the [Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h) configuration file for the TFT display in this folder.
 - edit the User_Setup_Select.h and modify line 29:
 
-    **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h>           // Default setup is root library folder**
+    **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
     
 - Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 
@@ -23,7 +23,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 - Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in Display mode. Dipslay mode shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
 - To record data, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.txt](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/config.txt) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value. The red LED indicates access to the SD card for recording. By pressing pushbutton again, Display mode comes back.
 
-It is mandatory to format the SD card in FAT32 with the maximum sector size possible. The access to the SD card is the bottleneck in Record mode.
+It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing. The access to the SD card is indeed the bottleneck in Record mode.
 
 # Minimal parts
 
@@ -41,7 +41,8 @@ It is mandatory to format the SD card in FAT32 with the maximum sector size poss
 - a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
 - a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
-The device requires a +5V line to drive the sensor and cannot be powered by the VSYS pin only.
+
+The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only.
 
 # Pinout
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
