@@ -35,7 +35,7 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 - A way to connect the sensor without destroying the original cable like a [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) or a butchered [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
-- 2 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
+- 3 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
 
 **Powered with internal lithium battery**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
