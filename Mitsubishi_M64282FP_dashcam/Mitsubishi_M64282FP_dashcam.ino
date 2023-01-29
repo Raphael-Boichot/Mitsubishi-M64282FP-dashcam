@@ -249,6 +249,7 @@ void loop()
       sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);//update filename
 
       if (HDR_mode == 0) {
+        gpio_put(RED, 1);
         for (int i = 0; i < 128 * 128; i++) {
           BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
         }
@@ -259,18 +260,14 @@ void loop()
         img.setCursor(0, 16);
         img.println(F("HDR in acquisition"));
         img.pushSprite(0, 0);// dump image to display
+        gpio_put(RED, 1);
         for (int i = 0; i < 128 * 128; i++) {//get the current picture with current exposure
           HDRData[i] = lookup_serial[CamData[i]];//while applying autocontrast
         }
         current_exposure = get_exposure(camReg);//get the current exposure register
-        //        Serial.println("image 0");
-        //        Serial.println(get_exposure(camReg), HEX);
         double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};
         for (int i = 0; i < 7; i++) {
           push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
-          //          Serial.print("image ");
-          //          Serial.println(i,DEC);
-          //          Serial.println(get_exposure(camReg), HEX);
           take_a_picture();
           for (int i = 0; i < 128 * 128; i++) {
             HDRData[i] = HDRData[i] + lookup_serial[CamData[i]]; //sum data while applying autocontrast
@@ -283,7 +280,6 @@ void loop()
         push_exposure(camReg, current_exposure, 1); //rewrite the old register
       }
 
-      gpio_put(RED, 1);
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
       if (dataFile) {
