@@ -46,7 +46,7 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
 - a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
 
-The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only.
+The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
 
 # Pinout
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
