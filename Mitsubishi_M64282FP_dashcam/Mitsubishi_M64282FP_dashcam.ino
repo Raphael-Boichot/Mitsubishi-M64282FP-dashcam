@@ -109,15 +109,15 @@ const uint RED =   14; //to pi pico pin GPIO14 indicate recording to SD card of 
 const uint PUSH =  13; //to pi pico pin GPIO13 action button <-> 3.3V
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
-//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout
+//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they cannot be changed
 //   SD_MISO - to pi pico pin GPIO16
 //   SD_MOSI - to pi pico pin GPIO19
 //   SD_CS   - to pi pico pin GPIO17
 //   SD_SCK  - to pi pico pin GPIO18
-const uint chipSelect = 17;//for SD card
+const uint chipSelect = 17;//for SD card, but I recommend not changing it either
 
 //TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
-// pins are configured into the Bodmer TFT e_SPI library, not here
+// pins are configured into the Bodmer TFT e_SPI library, not here, see read.me for details
 // Display LED       to pi pico pin 3V3
 // Display SCK       to pi pico pin GPIO2
 // Display SDA       to pi pico pin GPIO3
@@ -131,7 +131,7 @@ const uint chipSelect = 17;//for SD card
 //This means that 12 bits raw data contain more than 9 bits useful information on this range, enough for diplaying a B and W image
 //with these registers, the ADC outputs between 52 (0x34) and 96 (0x60) in 8 bits or 832 (0x0340) and 1536 (0x0600) in 12 bits
 //registers of the Game Boy Camera in mid light
-unsigned char camReg[8] = {0b10000000, 0b11100000, 0b00000000, 0b00000100, 0b00000001, 0b000000000, 0b00000001, 0b00000000}; //registers
+unsigned char camReg[8] = {0b10000000, 0b11100000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000000}; //registers
 //registers with no border enhancement (gives very soft image)
 //unsigned char camReg[8] = {0b10000000, 0b00000000, 0b00000000, 0b00000100, 0b00000001, 0b000000000, 0b00000001, 0b00000000}; //registers
 
@@ -144,6 +144,7 @@ const unsigned char ASCII_to_num[256] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 unsigned char reg, char1, char2;
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
+unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 const int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 const unsigned char v_min = 52; //minimal voltage returned by the sensor in 8 bits DEC
 const unsigned char v_max = 96; //maximal voltage returned by the sensor in 8 bits DEC
@@ -153,8 +154,11 @@ unsigned long previousTime = 0;
 unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 100 ms to avoid SD card death by chocking, is read from config.txt
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
+unsigned int current_exposure;
 bool recording = 0;//0 = idle mode, 1 = recording mode
+bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 char storage_file_name[20];
+char storage_file_dir[20];
 char storage_deadtime[20];
 
 void setup()
@@ -199,28 +203,35 @@ void setup()
     img.println(F("Card mounted"));
   }
   //
+  deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
+  HDR_mode = get_HDR_mode("/HDR.txt", HDR_mode);//get the HDR mode from HDR.txt
+  sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 16);
+  img.println(F(storage_deadtime));
+  img.setTextColor(TFT_PURPLE);
+  img.setCursor(0, 24);
+  if (HDR_mode == 1) img.println(F("HDR mode ON"));
+  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
   img.pushSprite(0, 0);
+
   Serial.begin(2000000);
   delay(2000);
   ID_file_creator("/ID_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
-  deadtime = get_dead_time("/config.txt", deadtime);//get the dead time for timelapse from config.txt
-  sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   pre_allocate_lookup_tables(lookup_serial, lookup_TFT_RGB565, v_min, v_max);//pre allocate tables for TFT and serial output auto contrast
-
-  // preset the exposure time before displaying to avoid unpleasing result
+  // presets the exposure time before displaying to avoid unpleasing result
   for (int i = 1; i < 25; i++) {
     take_a_picture();
-    auto_exposure(camReg, CamData, BmpData, v_min, v_max);
+    auto_exposure(camReg, CamData, v_min, v_max);
   }
 }
 
 void loop()
 {
   currentTime = millis();
-  take_a_picture();   //data in memory for the moment
-  auto_exposure(camReg, CamData, BmpData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
-  //dump_data_to_serial(CamData);//dump data to serial for debugging - do not use until you know what you are doing !
-  //use ArduiCam_Matlab.m to read the serial in this case
+  take_a_picture(); //data in memory for the moment, one frame
+  auto_exposure(camReg, CamData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
+  //dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 
   img.fillSprite(TFT_BLACK);// prepare the image in ram
   for (int16_t x = 1; x < 128 ; x++) {
@@ -228,24 +239,51 @@ void loop()
       img.drawPixel(x, y + 16, lookup_TFT_RGB565[CamData[x + y * 128]]);
     }
   }
-  if (recording == 0) {// prepare the image in ram for idle mode
-    img.setTextColor(TFT_GREEN);
-    img.setCursor(0, 8);
-    img.println(F("Display mode only"));
-    img.setTextColor(TFT_WHITE);
-    img.setCursor(0, 136);
-    img.println(F("Enjoy live images !"));
-    img.setTextColor(TFT_BLUE);
-    img.setCursor(0, 144);
-    img.println(F(storage_deadtime));
+
+  if (recording == 0) {//just put informations to the ram too
+    display_informations_idle();
   }
   if (recording == 1) {// prepare data for recording mode
     if ((currentTime - previousTime) > deadtime) {// Wait for deadtime set in config.txt
       Next_ID++;// update the file number
       previousTime = currentTime;
-      for (int i = 0; i < 128 * 128; i++) {
-        BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
+      sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);//update filename
+
+      if (HDR_mode == 0) {
+        for (int i = 0; i < 128 * 128; i++) {
+          BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
+        }
       }
+
+      if (HDR_mode == 1) {
+        img.setTextColor(TFT_BLUE);
+        img.setCursor(0, 16);
+        img.println(F("HDR in acquisition"));
+        img.pushSprite(0, 0);// dump image to display
+        for (int i = 0; i < 128 * 128; i++) {//get the current picture with current exposure
+          HDRData[i] = lookup_serial[CamData[i]];//while applying autocontrast
+        }
+        current_exposure = get_exposure(camReg);//get the current exposure register
+        //        Serial.println("image 0");
+        //        Serial.println(get_exposure(camReg), HEX);
+        double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};
+        for (int i = 0; i < 7; i++) {
+          push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
+          //          Serial.print("image ");
+          //          Serial.println(i,DEC);
+          //          Serial.println(get_exposure(camReg), HEX);
+          take_a_picture();
+          for (int i = 0; i < 128 * 128; i++) {
+            HDRData[i] = HDRData[i] + lookup_serial[CamData[i]]; //sum data while applying autocontrast
+          }
+        }
+        //now time to average all this shit
+        for (int i = 0; i < 128 * 128; i++) {
+          BmpData[i] = HDRData[i] >> 3; //8 pictures so divide by 8
+        }
+        push_exposure(camReg, current_exposure, 1); //rewrite the old register
+      }
+
       gpio_put(RED, 1);
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
@@ -256,24 +294,20 @@ void loop()
       }
       gpio_put(RED, 0);
     }
-    sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);
-    img.setTextColor(TFT_RED);
-    img.setCursor(0, 8);
-    img.println(F("Recording Mode"));
-    img.setTextColor(TFT_WHITE);
-    img.setCursor(0, 136);
-    img.println(F(storage_file_name));
-    img.setTextColor(TFT_BLUE);
-    img.setCursor(0, 144);
-    img.println(F(storage_deadtime));
+    //sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);
+    display_informations_recording();
   }
-  img.pushSprite(0, 0);
+
+  img.pushSprite(0, 0);// dump image to display
 
   if ((gpio_get(PUSH) == 1) && recording == 0) { // we want to record: get file/directory#
     Next_ID = get_next_ID("/ID_storage.bin");//get the file number on SD card
     Next_dir = get_next_dir("/ID_storage.bin");//get the folder number on SD card
+    sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
+    SD.mkdir(storage_file_dir);//create next directory
     gpio_put(RED, 1);
     recording = 1;
+    previousTime = currentTime;//To avoid taking a picture while pressing the mode button
     delay(debouncing_delay);//for debouncing
     gpio_put(RED, 0);
   }
@@ -295,53 +329,60 @@ void take_a_picture() {
   camReset();
 }
 
-void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char BmpData[128 * 128], unsigned char v_min, unsigned char v_max) {
+void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
   double exp_regs, new_regs, error, mean_value;
   unsigned int setpoint = (v_max + v_min) >> 1;
   unsigned int accumulator = 0;
   unsigned char pixel;
   unsigned char max_line = 120; //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
   exp_regs = camReg[2] * 256 + camReg[3];// I know, it's a shame to use a double here but we have plenty of ram
-  //Serial.print("Current exposure: ");
-  //Serial.println(exp_regs, DEC);
   for (int i = 0; i < 128 * max_line; i++) {
     pixel = CamData[i];
     accumulator = accumulator + pixel;// accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
   }
   mean_value = accumulator / (128 * max_line);
-  //Serial.print("Average pixel value: ");
-  //Serial.println(mean_value, DEC);// we expect ideally a value of 74 here
-
   error = setpoint - mean_value; // so in case of deviation, registers 2 and 3 are corrected
-  //Serial.print("Error: ");
-  //Serial.println(error, DEC);
-
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   new_regs = exp_regs;
   if (error > 20)                     new_regs = exp_regs * 2;
   if (error < -20)                    new_regs = exp_regs / 2;
-  if ((error < 20) && (error > 5))    new_regs = exp_regs * 1.3;
-  if ((error > -20) && (error < -5))  new_regs = exp_regs / 1.3;
-  if ((error < 5) && (error > 2))     new_regs = exp_regs * 1.03;
-  if ((error > -5) && (error < -2))   new_regs = exp_regs / 1.03;
-  if ((error < 2) && (error > 0.2))   new_regs = exp_regs + 1;
-  if ((error > -2) && (error < 0.2))  new_regs = exp_regs - 1;
-
+  if ((error <= 20) && (error >= 5))    new_regs = exp_regs * 1.3;
+  if ((error >= -20) && (error <= -5))  new_regs = exp_regs / 1.3;
+  if ((error <= 5) && (error >= 2))     new_regs = exp_regs * 1.03;
+  if ((error >= -5) && (error <= -2))   new_regs = exp_regs / 1.03;
+  if ((error <= 2) && (error >= 0.2))   new_regs = exp_regs + 1;
+  if ((error >= -2) && (error <= 0.2))  new_regs = exp_regs - 1;
   // The sensor is limited to 0xFFFF (about 1 second) in exposure but also has strong artifacts below 0x10 (256 µs).
   // Each step is 16 µs
-  if (new_regs < 0x10) {
+  if (new_regs < 0x10) {//minimum of the sensor, below there are verticals artifacts
     new_regs = 0x10;
   }
-  if (new_regs > 0xFFFF) {
+  if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
     new_regs = 0xFFFF;
   }
-
-  //Serial.print("New exposure: ");
-  //Serial.println(new_regs, DEC);
   camReg[2] = int(new_regs / 256);
   camReg[3] = int(new_regs - camReg[2] * 256);
+}
+
+void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
+  double new_regs;
+  new_regs = current_exposure * factor;
+  if (new_regs < 0x10) {//minimum of the sensor, below there are verticals artifacts
+    new_regs = 0x10;
+  }
+  if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
+    new_regs = 0xFFFF;
+  }
+  camReg[2] = int(new_regs / 256);
+  camReg[3] = int(new_regs - camReg[2] * 256);
+}
+
+unsigned int get_exposure(unsigned char camReg[8]) {
+  double exp_regs;
+  exp_regs = camReg[2] * 256 + camReg[3];//
+  return exp_regs;
 }
 
 void camDelay()// Allow a lag in processor cycles to maintain signals long enough
@@ -380,8 +421,7 @@ void camSetRegisters(void)// Sets the sensor 8 registers
 }
 
 void camSetReg(unsigned char regaddr, unsigned char regval)// Sets one of the 8 8-bit registers in the sensor, from 0 to 7, in this order
-//GB camera uses another order but sensor do not mind
-{
+{//GB camera uses another order but sensor do not mind
   unsigned char bitmask;
   for (bitmask = 0x4; bitmask >= 0x1; bitmask >>= 1) {// Write 3-bit address.
     gpio_put(CLOCK, 0);
@@ -455,8 +495,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
     for (x = 0; x < 128; x++) {
       gpio_put(CLOCK, 0);
       camDelay();
-      //pixel = analogRead(VOUT) >> 4;// The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
-      pixel = adc_read();
+      pixel = adc_read();// The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
       CamData[subcounter] = pixel >> 4;
       subcounter = subcounter + 1;
       camDelay();
@@ -570,6 +609,15 @@ unsigned long get_dead_time(const char * path, unsigned long deadtime) {
   return delay_timelapse;
 }
 
+bool get_HDR_mode(const char * path, bool HDR_mode) {
+  if (SD.exists(path)) {
+    File file = SD.open(path);
+    HDR_mode = ASCII_to_num[file.read()];
+    file.close();
+  }
+  return HDR_mode;
+}
+
 void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_dir) {
   uint8_t buf[4];
   File file = SD.open(path, FILE_WRITE);
@@ -585,4 +633,43 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
   buf[0] = Next_dir >> 24;
   file.write(buf, 4);
   file.close();
+}
+
+//////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
+void display_informations_recording() {
+  img.setTextColor(TFT_CYAN);
+  img.setCursor(0, 0);
+  img.println(F("M64282FP Dashcam"));
+  img.setTextColor(TFT_RED);
+  img.setCursor(0, 8);
+  img.println(F("Recording Mode"));
+  img.setTextColor(TFT_WHITE);
+  img.setCursor(0, 136);
+  img.println(F(storage_file_name));
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 144);
+  img.println(F(storage_deadtime));
+  img.setTextColor(TFT_PURPLE);
+  img.setCursor(0, 152);
+  if (HDR_mode == 1) img.println(F("HDR mode ON"));
+  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
+}
+
+void display_informations_idle() {
+  img.setTextColor(TFT_CYAN);
+  img.setCursor(0, 0);
+  img.println(F("M64282FP Dashcam"));
+  img.setTextColor(TFT_GREEN);
+  img.setCursor(0, 8);
+  img.println(F("Display Mode"));
+  img.setTextColor(TFT_WHITE);
+  img.setCursor(0, 136);
+  img.println(F(storage_file_name));
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 144);
+  img.println(F(storage_deadtime));
+  img.setTextColor(TFT_PURPLE);
+  img.setCursor(0, 152);
+  if (HDR_mode == 1) img.println(F("HDR mode ON"));
+  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
 }
