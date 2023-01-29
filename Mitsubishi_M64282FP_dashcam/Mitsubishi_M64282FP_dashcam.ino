@@ -107,6 +107,7 @@ const uint START = 12;  //to pi pico pin GPIO12 Image sensing start, pulled down
 const uint LED =   15; //to pi pico pin GPIO15 indicate exposure delay for the sensor <-> GND
 const uint RED =   14; //to pi pico pin GPIO14 indicate recording to SD card of issue with SD card <-> GND
 const uint PUSH =  13; //to pi pico pin GPIO13 action button <-> 3.3V
+const uint HDR =   20; //to pi pico pin GPIO20 hdron <-> 3.3V
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they cannot be changed
@@ -148,7 +149,7 @@ unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 
 const int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 const unsigned char v_min = 52; //minimal voltage returned by the sensor in 8 bits DEC
 const unsigned char v_max = 96; //maximal voltage returned by the sensor in 8 bits DEC
-const unsigned int debouncing_delay = 1000; //debouncing delay for pushbutton
+const unsigned int debouncing_delay = 500; //debouncing delay for pushbutton
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 100 ms to avoid SD card death by chocking, is read from config.txt
@@ -166,6 +167,7 @@ void setup()
   //digital stuff
   gpio_init(READ);      gpio_set_dir(READ, GPIO_IN);
   gpio_init(PUSH);      gpio_set_dir(PUSH, GPIO_IN);
+  gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);
   gpio_init(LED);       gpio_set_dir(LED, GPIO_OUT);
   gpio_init(RED);       gpio_set_dir(RED, GPIO_OUT);
   gpio_init(CLOCK);     gpio_set_dir(CLOCK, GPIO_OUT);
@@ -204,19 +206,16 @@ void setup()
   }
   //
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
-  HDR_mode = get_HDR_mode("/HDR.txt", HDR_mode);//get the HDR mode from HDR.txt
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   img.setTextColor(TFT_BLUE);
   img.setCursor(0, 16);
   img.println(F(storage_deadtime));
-  img.setTextColor(TFT_PURPLE);
+  img.setTextColor(TFT_ORANGE);
   img.setCursor(0, 24);
-  if (HDR_mode == 1) img.println(F("HDR mode ON"));
-  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
+  img.println(F("Preset exposure..."));
   img.pushSprite(0, 0);
 
   Serial.begin(2000000);
-  delay(2000);
   ID_file_creator("/ID_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
   pre_allocate_lookup_tables(lookup_serial, lookup_TFT_RGB565, v_min, v_max);//pre allocate tables for TFT and serial output auto contrast
   // presets the exposure time before displaying to avoid unpleasing result
@@ -319,6 +318,14 @@ void loop()
     recording = 0;
     delay(debouncing_delay);//get the folder number on SD card
   }
+
+  if (recording == 0) { // Change HDR<->one frame modes
+    if (gpio_get(HDR) == 1) {
+      HDR_mode = !HDR_mode;
+      delay(debouncing_delay);
+    }
+  }
+
 } //end of loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -421,7 +428,7 @@ void camSetRegisters(void)// Sets the sensor 8 registers
 }
 
 void camSetReg(unsigned char regaddr, unsigned char regval)// Sets one of the 8 8-bit registers in the sensor, from 0 to 7, in this order
-{//GB camera uses another order but sensor do not mind
+{ //GB camera uses another order but sensor do not mind
   unsigned char bitmask;
   for (bitmask = 0x4; bitmask >= 0x1; bitmask >>= 1) {// Write 3-bit address.
     gpio_put(CLOCK, 0);
@@ -609,15 +616,6 @@ unsigned long get_dead_time(const char * path, unsigned long deadtime) {
   return delay_timelapse;
 }
 
-bool get_HDR_mode(const char * path, bool HDR_mode) {
-  if (SD.exists(path)) {
-    File file = SD.open(path);
-    HDR_mode = ASCII_to_num[file.read()];
-    file.close();
-  }
-  return HDR_mode;
-}
-
 void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_dir) {
   uint8_t buf[4];
   File file = SD.open(path, FILE_WRITE);
@@ -649,10 +647,15 @@ void display_informations_recording() {
   img.setTextColor(TFT_BLUE);
   img.setCursor(0, 144);
   img.println(F(storage_deadtime));
-  img.setTextColor(TFT_PURPLE);
   img.setCursor(0, 152);
-  if (HDR_mode == 1) img.println(F("HDR mode ON"));
-  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
+  if (HDR_mode == 1) {
+    img.setTextColor(TFT_RED);
+    img.println(F("HDR mode ON"));
+  }
+  if (HDR_mode == 0) {
+    img.setTextColor(TFT_GREEN);
+    img.println(F("HDR mode OFF"));
+  }
 }
 
 void display_informations_idle() {
@@ -670,6 +673,12 @@ void display_informations_idle() {
   img.println(F(storage_deadtime));
   img.setTextColor(TFT_PURPLE);
   img.setCursor(0, 152);
-  if (HDR_mode == 1) img.println(F("HDR mode ON"));
-  if (HDR_mode == 0) img.println(F("HDR mode OFF"));
+  if (HDR_mode == 1) {
+    img.setTextColor(TFT_RED);
+    img.println(F("HDR mode ON"));
+  }
+  if (HDR_mode == 0) {
+    img.setTextColor(TFT_GREEN);
+    img.println(F("HDR mode OFF"));
+  }
 }
