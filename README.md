@@ -54,9 +54,12 @@ The whole dashcam device requires a +5V line to drive the sensor and cannot unfo
 # Connection with the sensor
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
 
-# To do
+# acknowledgments
+- [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects.
+- [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
+- [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions.
 
-- a decent PCB.
-- a decent schematic.
-- some acknowledgments.
-- showcase of images taken with the device.
+# To do (or not)
+
+- a decent PCB because all that shit could enter a Game Boy shell.
+- a decent schematic to cure my addiction to MS Paint.
