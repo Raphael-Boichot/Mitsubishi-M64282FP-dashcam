@@ -35,7 +35,7 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 - An Arduino Pi Pico. [Fancy purple Chinese clones](https://fr.aliexpress.com/item/1005003928558306.html) are OK (this is still the genuine RP2040 chip) as long as you do not care that the pinout is completely baroque.
 - a [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
-- A way to connect the sensor without destroying the original cable like a [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) or a butchered [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
+- A way to connect the sensor without destroying the original cable like a slighly butchered [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) connector or an opened [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
 - 3 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
