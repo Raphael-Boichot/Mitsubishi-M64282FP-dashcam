@@ -26,7 +26,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing. The access to the SD card is indeed the bottleneck in Record mode.
 
-# Example of image output with a stuffed fox inside
+# Example of image output with a stuffed fox as main NPC
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
 
 # Minimal parts
