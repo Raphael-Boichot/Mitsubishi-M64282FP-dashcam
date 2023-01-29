@@ -20,8 +20,9 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 # User manual
 
-- Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in Display mode. Dipslay mode shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
-- To record data, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.txt](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/config.txt) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value. The HDR mode is activated the same way with HDR.txt containing 0 or 1, nothing else. The red LED indicates access to the SD card for recording. By pressing pushbutton again, Display mode comes back.
+- Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
+- To shift to **Recording mode**, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.txt](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/config.txt) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value, the SD can capture each frame if needed. The red LED indicates access to the SD card for recording. By pressing pushbutton again, **Display mode** comes back.
+- To activate **HDR mode**, simply push the HDR pushbutton linked to GPIO20 during **Display mode** (it is decativated during Recording mode).
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing. The access to the SD card is indeed the bottleneck in Record mode.
 
