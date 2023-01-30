@@ -128,10 +128,9 @@ const uint chipSelect = 17;//for SD card, but I recommend not changing it either
 // Display GND       to pi pico pin GND (0V)
 // Display VCC       to pi pico pin VBUS Or +5V
 
-//With these registers, the output voltage is between 0.67 and 1.24 volts (on 3.3 volts). the ADC resolution is 0.8 mV (3.3/2^12)
-//This means that 12 bits raw data contain more than 9 bits useful information on this range, enough for diplaying a B and W image
-//with these registers, the ADC outputs between 52 (0x34) and 96 (0x60) in 8 bits or 832 (0x0340) and 1536 (0x0600) in 12 bits
-//registers of the Game Boy Camera in mid light
+//With these registers, the output voltage is between 0.14 and 3.04 volts (on 3.3 volts). 
+//the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits)
+//registers are close of those from the Game Boy Camera in mid light
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
 //registers with no border enhancement (gives very soft image)
 //unsigned char camReg[8] = {0b10011111, 0b00001000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
