@@ -132,10 +132,9 @@ const uint chipSelect = 17;//for SD card, but I recommend not changing it either
 //This means that 12 bits raw data contain more than 9 bits useful information on this range, enough for diplaying a B and W image
 //with these registers, the ADC outputs between 52 (0x34) and 96 (0x60) in 8 bits or 832 (0x0340) and 1536 (0x0600) in 12 bits
 //registers of the Game Boy Camera in mid light
-unsigned char camReg[8] = {0b10000000, 0b11100000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000000}; //registers
+unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
 //registers with no border enhancement (gives very soft image)
-//unsigned char camReg[8] = {0b10000000, 0b00000000, 0b00000000, 0b00000100, 0b00000001, 0b000000000, 0b00000001, 0b00000000}; //registers
-
+//unsigned char camReg[8] = {0b10011111, 0b00001000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
 
 unsigned int lookup_TFT_RGB565[256];//loockup table to convert gray pixel value to RGB565 for the display
 unsigned char lookup_serial[256];//loockup table for serial output
@@ -147,8 +146,8 @@ unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 const int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
-const unsigned char v_min = 52; //minimal voltage returned by the sensor in 8 bits DEC
-const unsigned char v_max = 96; //maximal voltage returned by the sensor in 8 bits DEC
+const unsigned char v_min = 11; //minimal voltage returned by the sensor in 8 bits DEC
+const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbutton
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -543,18 +542,12 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned int l
 }
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
-  unsigned int pixel;
+  char pixel;
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];//to get data with autocontrast
     //pixel = CamData[i]; //to get data without autocontrast
-    // this part is ultra shitty but I got tons of bug when writing it, to rewrite
-    char1 = pixel;
-    char1 = char1 >> 4;
-    char2 = pixel;
-    char2 = char2 << 4;
-    char2 = char2 >> 4;
-    Serial.write(LUT_serial[char1]);
-    Serial.write(LUT_serial[char2]);
+    if(pixel<=0x0F) Serial.print('0');
+    Serial.print(pixel,HEX);
     Serial.print(" ");
   }
   Serial.println("");
