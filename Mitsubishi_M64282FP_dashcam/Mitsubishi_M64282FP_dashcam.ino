@@ -128,7 +128,7 @@ const uint chipSelect = 17;//for SD card, but I recommend not changing it either
 // Display GND       to pi pico pin GND (0V)
 // Display VCC       to pi pico pin VBUS Or +5V
 
-//With these registers, the output voltage is between 0.14 and 3.04 volts (on 3.3 volts). 
+//With these registers, the output voltage is between 0.14 and 3.04 volts (on 3.3 volts).
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits)
 //registers are close of those from the Game Boy Camera in mid light
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
@@ -159,6 +159,7 @@ bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 char storage_file_name[20];
 char storage_file_dir[20];
 char storage_deadtime[20];
+char exposure_string[20];
 
 void setup()
 {
@@ -347,14 +348,14 @@ void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], un
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   new_regs = exp_regs;
-  if (error > 20)                     new_regs = exp_regs * 2;
-  if (error < -20)                    new_regs = exp_regs / 2;
-  if ((error <= 20) && (error >= 5))    new_regs = exp_regs * 1.3;
-  if ((error >= -20) && (error <= -5))  new_regs = exp_regs / 1.3;
-  if ((error <= 5) && (error >= 2))     new_regs = exp_regs * 1.03;
-  if ((error >= -5) && (error <= -2))   new_regs = exp_regs / 1.03;
-  if ((error <= 2) && (error >= 0.2))   new_regs = exp_regs + 1;
-  if ((error >= -2) && (error <= 0.2))  new_regs = exp_regs - 1;
+  if (error > 80)                     new_regs = exp_regs * 2;
+  if (error < -80)                    new_regs = exp_regs / 2;
+  if ((error <= 80) && (error >= 20))    new_regs = exp_regs * 1.3;
+  if ((error >= -80) && (error <= -20))  new_regs = exp_regs / 1.3;
+  if ((error <= 20) && (error >= 10))     new_regs = exp_regs * 1.03;
+  if ((error >= -20) && (error <= -10))   new_regs = exp_regs / 1.03;
+  if ((error <= 10) && (error >= 1))   new_regs = exp_regs + 1;
+  if ((error >= -10) && (error <= 1))  new_regs = exp_regs - 1;
   // The sensor is limited to 0xFFFF (about 1 second) in exposure but also has strong artifacts below 0x10 (256 µs).
   // Each step is 16 µs
   if (new_regs < 0x10) {//minimum of the sensor, below there are verticals artifacts
@@ -545,8 +546,8 @@ void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];//to get data with autocontrast
     //pixel = CamData[i]; //to get data without autocontrast
-    if(pixel<=0x0F) Serial.print('0');
-    Serial.print(pixel,HEX);
+    if (pixel <= 0x0F) Serial.print('0');
+    Serial.print(pixel, HEX);
     Serial.print(" ");
   }
   Serial.println("");
@@ -625,7 +626,9 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 void display_informations_recording() {
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 0);
-  img.println(F("M64282FP Dashcam"));
+  current_exposure = get_exposure(camReg);//get the current exposure register
+  sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
+  img.println(F(exposure_string));
   img.setTextColor(TFT_RED);
   img.setCursor(0, 8);
   img.println(F("Recording Mode"));
@@ -649,7 +652,9 @@ void display_informations_recording() {
 void display_informations_idle() {
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 0);
-  img.println(F("M64282FP Dashcam"));
+  current_exposure = get_exposure(camReg);//get the current exposure register
+  sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
+  img.println(F(exposure_string));
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 8);
   img.println(F("Display Mode"));
