@@ -229,6 +229,11 @@ void loop()
   currentTime = millis();
   take_a_picture(); //data in memory for the moment, one frame
   auto_exposure(camReg, CamData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
+  current_exposure = get_exposure(camReg);//get the current exposure register
+  if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
+  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
+  if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
+  if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
   //dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 
   img.fillSprite(TFT_BLACK);// prepare the image in ram
@@ -626,8 +631,6 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 void display_informations_recording() {
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 0);
-  current_exposure = get_exposure(camReg);//get the current exposure register
-  sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
   img.println(F(exposure_string));
   img.setTextColor(TFT_RED);
   img.setCursor(0, 8);
@@ -652,8 +655,6 @@ void display_informations_recording() {
 void display_informations_idle() {
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 0);
-  current_exposure = get_exposure(camReg);//get the current exposure register
-  sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
   img.println(F(exposure_string));
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 8);
