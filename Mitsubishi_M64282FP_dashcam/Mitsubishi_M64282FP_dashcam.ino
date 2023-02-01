@@ -107,7 +107,8 @@ const uint START = 12;  //to pi pico pin GPIO12 Image sensing start, pulled down
 const uint LED =   15; //to pi pico pin GPIO15 indicate exposure delay for the sensor <-> GND
 const uint RED =   14; //to pi pico pin GPIO14 indicate recording to SD card of issue with SD card <-> GND
 const uint PUSH =  13; //to pi pico pin GPIO13 action button <-> 3.3V
-const uint HDR =   20; //to pi pico pin GPIO20 hdron <-> 3.3V
+const uint HDR =   20; //to pi pico pin GPIO20 <-> 3.3V
+const uint BORDER = 22; //to pi pico pin GPIO22 <-> 3.3V
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they cannot be changed
@@ -156,6 +157,7 @@ unsigned long file_number;
 unsigned int current_exposure;
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
+bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF
 char storage_file_name[20];
 char storage_file_dir[20];
 char storage_deadtime[20];
@@ -322,6 +324,12 @@ void loop()
   if (recording == 0) { // Change HDR<->one frame modes
     if (gpio_get(HDR) == 1) {
       HDR_mode = !HDR_mode;
+      delay(debouncing_delay);
+    }
+    if (gpio_get(BORDER) == 1) {
+      BORDER_mode = !BORDER_mode;
+      if (BORDER_mode==1) camReg[1]=0b11101000;
+      if (BORDER_mode==0) camReg[1]=0b00001000;
       delay(debouncing_delay);
     }
   }
@@ -650,6 +658,9 @@ void display_informations_recording() {
     img.setTextColor(TFT_GREEN);
     img.println(F("HDR mode OFF"));
   }
+  if (BORDER_mode == 1) {
+    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
+  }
 }
 
 void display_informations_idle() {
@@ -674,5 +685,8 @@ void display_informations_idle() {
   if (HDR_mode == 0) {
     img.setTextColor(TFT_GREEN);
     img.println(F("HDR mode OFF"));
+  }
+  if (BORDER_mode == 1) {
+    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
 }
