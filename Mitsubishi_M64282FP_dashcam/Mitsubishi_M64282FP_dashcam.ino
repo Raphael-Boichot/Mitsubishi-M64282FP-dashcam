@@ -145,8 +145,10 @@ unsigned char reg, char1, char2;
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
-const int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
-const unsigned char v_min = 11; //minimal voltage returned by the sensor in 8 bits DEC
+const unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned int exposure_multiplier = 1; //time delay in processor cycles to cheat the exposure of the sensor
+
+const unsigned char v_min = 25; //minimal voltage returned by the sensor in 8 bits DEC
 const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbutton
 unsigned long currentTime = 0;
@@ -162,6 +164,7 @@ char storage_file_name[20];
 char storage_file_dir[20];
 char storage_deadtime[20];
 char exposure_string[20];
+char multiplier_string[20];
 
 void setup()
 {
@@ -220,7 +223,7 @@ void setup()
   ID_file_creator("/ID_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
   pre_allocate_lookup_tables(lookup_serial, lookup_TFT_RGB565, v_min, v_max);//pre allocate tables for TFT and serial output auto contrast
   // presets the exposure time before displaying to avoid unpleasing result
-  for (int i = 1; i < 25; i++) {
+  for (int i = 1; i < 10; i++) {
     take_a_picture();
     auto_exposure(camReg, CamData, v_min, v_max);
   }
@@ -229,13 +232,19 @@ void setup()
 void loop()
 {
   currentTime = millis();
+    //nigth mode strategy
+  if (current_exposure == 0xFFFF) exposure_multiplier = exposure_multiplier*2;//I reach maximum exposure = let's hack the clock time*2
+  if (current_exposure < 0x1000) exposure_multiplier = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+  
   take_a_picture(); //data in memory for the moment, one frame
   auto_exposure(camReg, CamData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
   current_exposure = get_exposure(camReg);//get the current exposure register
+  
   if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
   if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
+  sprintf(multiplier_string, "%d", exposure_multiplier); //concatenate string for display;
   //dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 
   img.fillSprite(TFT_BLACK);// prepare the image in ram
@@ -328,8 +337,8 @@ void loop()
     }
     if (gpio_get(BORDER) == 1) {
       BORDER_mode = !BORDER_mode;
-      if (BORDER_mode==1) camReg[1]=0b11101000;
-      if (BORDER_mode==0) camReg[1]=0b00001000;
+      if (BORDER_mode == 1) camReg[1] = 0b11101000;
+      if (BORDER_mode == 0) camReg[1] = 0b00001000;
       delay(debouncing_delay);
     }
   }
@@ -384,8 +393,8 @@ void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], un
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   new_regs = current_exposure * factor;
-  if (new_regs < 0x10) {//minimum of the sensor, below there are verticals artifacts
-    new_regs = 0x10;
+  if (new_regs < 0x0010) {//minimum of the sensor, below there are verticals artifacts
+    new_regs = 0x0010;
   }
   if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
     new_regs = 0xFFFF;
@@ -403,6 +412,11 @@ unsigned int get_exposure(unsigned char camReg[8]) {
 void camDelay()// Allow a lag in processor cycles to maintain signals long enough
 {
   for (int i = 0; i < cycles; i++) NOP;
+}
+
+void camSpecialDelay()// Allow a lag in processor cycles to maintain signals long enough
+{
+  for (int i = 0; i < cycles * exposure_multiplier; i++) NOP;
 }
 
 void camInit()// Initialise the IO ports for the camera
@@ -497,12 +511,12 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   gpio_put(LED, 1);
   while (1) {// Wait for READ to go high
     gpio_put(CLOCK, 1);
-    camDelay();
+    camSpecialDelay();
     if (gpio_get(READ) == 1) // READ goes high with rising CLOCK
       break;
     camDelay();
     gpio_put(CLOCK, 0);
-    camDelay();
+    camSpecialDelay();
   }
   camDelay();
   gpio_put(LED, 0);
@@ -643,6 +657,9 @@ void display_informations_recording() {
   img.setTextColor(TFT_RED);
   img.setCursor(0, 8);
   img.println(F("Recording Mode"));
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 128);
+  img.println(F(multiplier_string));
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
   img.println(F(storage_file_name));
@@ -670,13 +687,15 @@ void display_informations_idle() {
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 8);
   img.println(F("Display Mode"));
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 128);
+  img.println(F(multiplier_string));
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
   img.println(F(storage_file_name));
   img.setTextColor(TFT_BLUE);
   img.setCursor(0, 144);
   img.println(F(storage_deadtime));
-  img.setTextColor(TFT_PURPLE);
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
