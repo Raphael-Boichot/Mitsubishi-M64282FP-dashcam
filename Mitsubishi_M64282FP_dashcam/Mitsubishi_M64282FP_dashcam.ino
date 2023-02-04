@@ -9,7 +9,7 @@
 //Beware, I'm not a C developper at all so it won't be a pretty code !
 
 #include "hardware/adc.h" //the GPIO commands are here
-#include "Big_stuff.h"
+#include "big_data.h"
 #include "config.h"
 #include <SPI.h>  //for SD
 #include <SD.h>  //for SD
@@ -208,7 +208,8 @@ void loop()
           HDRData[i] = lookup_serial[CamData[i]];//while applying autocontrast
         }
         current_exposure = get_exposure(camReg);//get the current exposure register
-        double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};
+        double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};//-1EV to +1EV by third roots of 2 steps
+        //double exposure_list[7] = {1, 1, 1, 1, 1, 1, 1};// for multi-exposure or noise reduction
         for (int i = 0; i < 7; i++) {
           push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
           take_a_picture();
@@ -349,7 +350,7 @@ void camDelay()// Allow a lag in processor cycles to maintain signals long enoug
   for (int i = 0; i < cycles; i++) NOP;
 }
 
-void camSpecialDelay()// Allow a lag in processor cycles to maintain signals long enough
+void camSpecialDelay()// Allow an extra lag in processor cycles during exposure to allow night mode
 {
   for (int i = 0; i < cycles * exposure_multiplier; i++) NOP;
 }
@@ -568,7 +569,6 @@ void ID_file_creator(const char * path) {
     //start from a fresh install on SD
     file.write(buf, 8);
     file.close();
-    Serial.println("Fresh configuration file created on SD card");
   }
 }
 
