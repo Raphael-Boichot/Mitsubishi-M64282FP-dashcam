@@ -8,72 +8,34 @@
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //Beware, I'm not a C developper at all so it won't be a pretty code !
 
-#define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
-#define BITS_PER_PIXEL 16             // How many bits per pixel in Sprite, here RGB565 format
-
 #include "hardware/adc.h" //the GPIO commands are here
-#include "BMP_header.h"
-#include <TFT_eSPI.h> // Include the graphics library (this includes the sprite functions)
+#include "Big_stuff.h"
+#include "config.h"
 #include <SPI.h>  //for SD
 #include <SD.h>  //for SD
 
+#ifdef  USE_TFT
+#include <TFT_eSPI.h> // Include the graphics library (this includes the sprite functions)
 TFT_eSPI    tft = TFT_eSPI();         // Create object "tft"
 TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer to "tft" object
 // the pointer is used by pushSprite() to push it onto the TFT
+#endif
 
-// the order of pins has no importance except that VOUT must be on some ADC
-const uint VOUT =  26; //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
-
-//the following pins must be shifted to 3.3V pico side<->5V sensor side
-const uint READ =  7;   //to pi pico pin GPIO7 Read image signal, goes high on rising clock
-const uint CLOCK = 8;   //to pi pico pin GPIO8 Clock input, pulled down internally, no specification given for frequency
-const uint RESET = 9;   //to pi pico pin GPIO9 system reset, pulled down internally, active low, sent on rising edge of clock
-const uint LOAD =  10;  //to pi pico pin GPIO10 parameter set enable, pulled down internally, Raise high as you clear the last bit of each register you send
-const uint SIN =   11;  //to pi pico pin GPIO11 Image sensing start, pulled down internally, has to be high before rising CLOCK
-const uint START = 12;  //to pi pico pin GPIO12 Image sensing start, pulled down internally, has to be high before rising CLOCK
-
-//the following are intended to allow interfering with the device
-const uint LED =   15; //to pi pico pin GPIO15 indicate exposure delay for the sensor <-> GND
-const uint RED =   14; //to pi pico pin GPIO14 indicate recording to SD card of issue with SD card <-> GND
-const uint PUSH =  13; //to pi pico pin GPIO13 action button <-> 3.3V
-const uint HDR =   20; //to pi pico pin GPIO20 <-> 3.3V
-const uint BORDER = 22; //to pi pico pin GPIO22 <-> 3.3V
-// it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
-
-//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they cannot be changed
-//   SD_MISO - to pi pico pin GPIO16
-//   SD_MOSI - to pi pico pin GPIO19
-//   SD_CS   - to pi pico pin GPIO17
-//   SD_SCK  - to pi pico pin GPIO18
-const uint chipSelect = 17;//for SD card, but I recommend not changing it either
-
-//TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
-// pins are configured into the Bodmer TFT e_SPI library, not here, see read.me for details
-// Display LED       to pi pico pin 3V3
-// Display SCK       to pi pico pin GPIO2
-// Display SDA       to pi pico pin GPIO3
-// Display CS        to pi pico pin GPIO4 (can use another pin if desired)
-// Display AO        to pi pico pin GPIO5 (can use another pin if desired)
-// Display RESET     to pi pico pin GPIO6 (can use another pin if desired)
-// Display GND       to pi pico pin GND (0V)
-// Display VCC       to pi pico pin VBUS Or +5V
-
-//With these registers, the output voltage is between 0.14 and 3.04 volts (on 3.3 volts).
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
+//With these registers, the output voltage is between 0.32 and 3.04 volts (on 3.3 volts).
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-//registers with no border enhancement (gives very soft image)
-//unsigned char camReg[8] = {0b10011111, 0b00001000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-
-unsigned int lookup_TFT_RGB565[256];//loockup table to convert gray pixel value to RGB565 for the display
-unsigned char lookup_serial[256];//loockup table for serial output
+const unsigned char v_min = 25; //minimal voltage returned by the sensor in 8 bits DEC (0.32 volts)
+const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
+unsigned int lookup_TFT_RGB565[256];//loockup table to convert gray pixel value to RGB565 for the display, generated in setup() from v_min and v_max
+unsigned char lookup_serial[256];//loockup table for serial output, generated in setup() from v_min and v_max, basically it's an autocontrast
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
+unsigned char Bayer_mask[128 * 128];//loockup table to apply dithering for each image pixel, generated in setup() from v_min and v_max
+unsigned char BayerData[128 * 128];// dithered image data
 unsigned char reg, char1, char2;// some variables for serial output
 const unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned int exposure_multiplier = 1; //time delay in processor cycles to cheat the exposure of the sensor
-const unsigned char v_min = 25; //minimal voltage returned by the sensor in 8 bits DEC
-const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -106,6 +68,7 @@ void setup()
 
   // tft directly addresses the display, im is a memory buffer for sprites
   // Here I create and update a giant 128*16 sprite in memory that I push to the screen when necessary, which is ultra fast
+#ifdef  USE_TFT
   tft.init();
   tft.setRotation(2);
   img.fillScreen(TFT_BLACK);
@@ -116,20 +79,26 @@ void setup()
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 0);
   img.println(F("Initializing SD card..."));
+#endif
 
   //see if the card is present and can be initialized:
-  if (!SD.begin(chipSelect)) {
+  if (!SD.begin(CHIPSELECT)) {
+#ifdef  USE_TFT
     img.setCursor(0, 8);
     img.setTextColor(TFT_RED);
     img.println(F("Card failure !!!"));
+#endif
   }
   else {
+#ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
     img.println(F("Card mounted"));
+#endif
   }
   //
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
+#ifdef  USE_TFT
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   img.setTextColor(TFT_BLUE);
   img.setCursor(0, 16);
@@ -138,10 +107,16 @@ void setup()
   img.setCursor(0, 24);
   img.println(F("Preset exposure..."));
   img.pushSprite(0, 0);
+#endif
 
   Serial.begin(2000000);
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
   pre_allocate_lookup_tables(lookup_serial, lookup_TFT_RGB565, v_min, v_max);//pre allocate tables for TFT and serial output auto contrast
+
+#ifdef USE_DITHERING
+  pre_allocate_Bayer_tables(Bayer_mask, BAYER_matrix);
+#endif
+
   // presets the exposure time before displaying to avoid unpleasing result
   for (int i = 1; i < 10; i++) {
     take_a_picture();
@@ -152,33 +127,59 @@ void setup()
 void loop()
 {
   currentTime = millis();
+
   //nigth mode strategy
+#ifdef USE_OLED
   if (current_exposure == 0xFFFF) exposure_multiplier = exposure_multiplier * 2; //I reach maximum exposure = let's hack the clock time*2
   if (current_exposure < 0x1000) exposure_multiplier = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+#endif
 
   take_a_picture(); //data in memory for the moment, one frame
   auto_exposure(camReg, CamData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
   current_exposure = get_exposure(camReg);//get the current exposure register
 
+#ifdef  USE_DITHERING
+  Dither_image(Bayer_mask, CamData, BayerData);
+#endif
+
+
+#ifdef  USE_TFT
   if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
   if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
   sprintf(multiplier_string, "Clockx%X", exposure_multiplier); //concatenate string for display;
-  //dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
+#endif
 
+#ifdef USE_SERIAL
+  dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
+#endif
+
+#ifdef  USE_TFT
   img.fillSprite(TFT_BLACK);// prepare the image in ram
   for (int16_t x = 1; x < 128 ; x++) {
     for (int16_t y = 0; y < 120; y++) {
+
+#ifndef  USE_DITHERING
       img.drawPixel(x, y + 16, lookup_TFT_RGB565[CamData[x + y * 128]]);
+#endif
+#ifdef  USE_DITHERING
+      img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);
+#endif
+
     }
   }
+#endif
 
   if (recording == 0) {//just put informations to the ram too
+
+#ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
     img.println(F("Display Mode"));
     display_other_informations();
+#endif
+
   }
   if (recording == 1) {// prepare data for recording mode
     if ((currentTime - previousTime) > deadtime) {// Wait for deadtime set in config.txt
@@ -194,10 +195,14 @@ void loop()
       }
 
       if (HDR_mode == 1) {
+
+#ifdef  USE_TFT
         img.setTextColor(TFT_BLUE);
         img.setCursor(0, 16);
         img.println(F("HDR in acquisition"));
         img.pushSprite(0, 0);// dump image to display
+#endif
+
         gpio_put(RED, 1);
         for (int i = 0; i < 128 * 128; i++) {//get the current picture with current exposure
           HDRData[i] = lookup_serial[CamData[i]];//while applying autocontrast
@@ -227,14 +232,19 @@ void loop()
       }
       gpio_put(RED, 0);
     }
+#ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println(F("Recording Mode"));
     display_other_informations();
+#endif
+
     if (deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
   }
 
+#ifdef  USE_TFT
   img.pushSprite(0, 0);// dump image to display
+#endif
 
   if ((gpio_get(PUSH) == 1) && recording == 0) { // we want to record: get file/directory#
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
@@ -493,6 +503,51 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned int l
   }
 }
 
+void pre_allocate_Bayer_tables(unsigned char Bayer_mask[128 * 128], const unsigned char BAYER_matrix [16])
+{
+  int x, y, counter;
+  counter = 0;
+  for (y = 0; y < 128; y++) {
+    for (x = 0; x < 128; x++) {
+      Bayer_mask[counter] = BAYER_matrix[(x & 3) + 4 * (y & 3)];
+      counter = counter + 1;
+    }
+  }
+}
+
+void Dither_image(unsigned char Bayer_mask[128 * 128], unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
+{
+  char pixel, pixel_out;
+  double pixel_bayer;
+  double threshold_step = int(255 / 3);
+  char W = 255; //white
+  char LG = int(255 * 2 / 3); //light gray
+  char DG = int(255 * 1 / 3); //dark gray
+  char B = int(0); //black
+  int counter = 0;
+  pixel_out = 0;
+  for (int y = 0; y < 128; y++) {
+    for (int x = 0; x < 128; x++) {
+      pixel = lookup_serial[CamData[counter]];
+      pixel_bayer = Bayer_mask[counter] / 3; //reduces the Bayer matrix to 1/3 of its value to make 3 ranges separating 4 gray levels
+      if (pixel < DG) {
+        if (pixel > pixel_bayer) pixel_out = DG;
+        else pixel_out = B;
+      }
+      if ((pixel >= LG) & (pixel < DG)) {
+        if (pixel > (pixel_bayer + threshold_step)) pixel_out = LG;
+        else pixel_out = DG;
+      }
+      if (pixel >= DG ) {
+        if (pixel > (pixel_bayer + 2 * threshold_step)) pixel_out = W;
+        else pixel_out = LG;
+      }
+      counter = counter + 1;
+      BayerData[counter] = pixel_out;
+    }
+  }
+}
+
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
@@ -576,6 +631,7 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
 void display_other_informations() {
+#ifdef  USE_TFT
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 0);
   img.println(F(exposure_string));
@@ -600,4 +656,5 @@ void display_other_informations() {
   if (BORDER_mode == 1) {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
+#endif
 }
