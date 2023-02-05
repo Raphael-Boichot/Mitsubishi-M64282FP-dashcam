@@ -38,6 +38,8 @@ These options are available by modifying options in the **config.g** file:
 - **Dithering mode** displays and records images in 2 bits per pixels as the real Game Boy Camera. It is quite a questionable option as the device is precisely intended to output 8 bits images unlike the Game Boy. It uses a 4x4 Bayer matrix as pattern.
 - **No display mode** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 
+Options are cumulative, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
+
 # Minimal parts
 
 **Powered by the Pi Pico USB port**
