@@ -18,7 +18,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
     
 - Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 
-# User manual
+# Basic user manual
 
 - Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
 - To shift to **Recording mode**, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.txt](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/config.txt) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value, the SD can capture each frame if needed. The red LED indicates access to the SD card for recording. By pressing pushbutton again, **Display mode** comes back.
@@ -26,8 +26,17 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
-# Example of image output with a stuffed fox as main NPC
+# Example of image output with a stuffed fox
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
+
+# Advanced options
+
+These options are available by modifying options in the **config.g** file:
+- **Night Mode** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the initial sensor being unable to expose mote than 1 second. Here there is no limit.
+- **Fixed exposure** allows bypassing the autoexposure alogorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly.
+- **Serial mode** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
+- **Dithering mode** displays and records images in 2 bits per pixels as the real Game Boy Camera. It is quite a questionable option as the device is precisely intended to output 8 bits images unlike the Game Boy. It uses a 4x4 Bayer matrix as pattern.
+- **No display mode** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 
 # Minimal parts
 
