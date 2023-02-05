@@ -20,6 +20,8 @@
 #include <SPI.h>  //for SD
 #include <SD.h>  //for SD
 
+// tft directly addresses the display, im is a memory buffer for sprites
+// Here I create and update a giant 128*16 sprite in memory that I push to the screen when necessary, which is ultra fast
 #ifdef  USE_TFT
 #include <TFT_eSPI.h> // Include the graphics library (this includes the sprite functions)
 TFT_eSPI    tft = TFT_eSPI();         // Create object "tft"
@@ -28,11 +30,10 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 #endif
 
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
-//With these registers, the output voltage is between 0.32 and 3.04 volts (on 3.3 volts).
+//With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts).
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-const unsigned char v_min = 25; //minimal voltage returned by the sensor in 8 bits DEC (0.32 volts)
+const unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.32 volts)
 const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
-unsigned int lookup_TFT_RGB565[256];//loockup table to convert 8 bits gray pixel value to RGB565 for the display
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
@@ -52,6 +53,10 @@ unsigned int current_exposure, new_exposure;
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF
+bool sensor_READY = 0;
+bool SDcard_READY = 0;
+
+
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
 
 void setup()
@@ -72,63 +77,50 @@ void setup()
   adc_gpio_init(VOUT);  adc_select_input(0);
   adc_init();
 
-  // tft directly addresses the display, im is a memory buffer for sprites
-  // Here I create and update a giant 128*16 sprite in memory that I push to the screen when necessary, which is ultra fast
+  //see if the sensor is present and responds
+  camReset();// resets the sensor
+  camSetRegisters();// Send 8 registers to the sensor
+  sensor_READY = camTestSensor(); // dumb sensor cycle
+  camReset();
+
 #ifdef  USE_TFT
   tft.init();
   tft.setRotation(2);
-  img.fillScreen(TFT_BLACK);
   img.setColorDepth(BITS_PER_PIXEL);         // Set colour depth first
-  img.createSprite(128, 160);                // then create the sprite
-  img.pushSprite(0, 0);                      // direct memory transfer to the display
-  img.setTextSize(1);
-  img.setTextColor(TFT_WHITE);
-  img.setCursor(0, 0);
-  img.println(F("Initializing SD card..."));
+  img.createSprite(128, 160);                // then create the giant sprite that will be our video ram buffer
+  img.setTextSize(1);                        // characters are 8x8 pixels in size 1, practical !
 #endif
 
-  //see if the card is present and can be initialized:
-  if (!SD.begin(CHIPSELECT)) {
-#ifdef  USE_TFT
-    img.setCursor(0, 8);
-    img.setTextColor(TFT_RED);
-    img.println(F("Card failure !!!"));
-#endif
+  //see if the card is present and can be initialized
+  if (SD.begin(CHIPSELECT)) {
+    SDcard_READY = 1;
   }
   else {
-#ifdef  USE_TFT
-    img.setTextColor(TFT_GREEN);
-    img.setCursor(0, 8);
-    img.println(F("Card mounted"));
-#endif
+    SDcard_READY = 0;
   }
-  //
-  deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
+
 #ifdef  USE_TFT
-  sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
-  img.setTextColor(TFT_BLUE);
-  img.setCursor(0, 16);
-  img.println(F(storage_deadtime));
-  img.setTextColor(TFT_ORANGE);
-  img.setCursor(0, 24);
-  img.println(F("Preset exposure..."));
-  img.pushSprite(0, 0);
+  display_splash_infos();
 #endif
 
   Serial.begin(2000000);
+  deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
+  sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
-  pre_allocate_lookup_tables(lookup_serial, lookup_TFT_RGB565, v_min, v_max);//pre allocate tables for TFT and serial output auto contrast
+  pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
 
 #ifdef USE_DITHERING
   pre_allocate_Bayer_tables(Bayer_mask, BAYER_matrix);
 #endif
 
+#ifndef USE_FIXED_EXPOSURE
   // presets the exposure time before displaying to avoid unpleasing result
   for (int i = 1; i < 10; i++) {
     take_a_picture();
     new_exposure = auto_exposure(camReg, CamData, v_min, v_max);
     push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
   }
+#endif
 }
 
 void loop()
@@ -490,12 +482,69 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   camDelay();
 }
 
-//////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
-void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned int lookup_TFT_RGB565[256], unsigned char v_min, unsigned char v_max) {
-  unsigned char color, red, green, blue;
-  unsigned int Rgb565;
-  double gamma_pixel;
+bool camTestSensor() // Take a picture, read it and send it through the serial port.
+{
+  bool sensor_OK = 1;
+  int x, y;
+  int currentTime;
+  // Camera START sequence
+  gpio_put(CLOCK, 0);
+  camDelay();// ensure load bit is cleared from previous call
+  gpio_put(LOAD, 0);
+  gpio_put(START, 1);// START rises before CLOCK
+  camDelay();
+  gpio_put(CLOCK, 1);
+  camDelay();
+  gpio_put(START, 0);// START valid on rising edge of CLOCK, so can drop now
+  camDelay();
+  gpio_put(CLOCK, 0);
+  camDelay();
+  gpio_put(LED, 1);
+  currentTime = millis();
+  while (1) {// Wait for READ to go high
+    gpio_put(CLOCK, 1);
+    camDelay();
+    if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, everything is OK
+    if ((millis() - previousTime) > 1000) {
+      sensor_OK = 0;
+      break;//the sensor does not respond after 2 seconds = not connected
+    }
+    camDelay();
+    gpio_put(CLOCK, 0);
+    camDelay();
+  }
+  camDelay();
+  gpio_put(LED, 0);
+  for (y = 0; y < 128; y++) {
+    for (x = 0; x < 128; x++) {
+      gpio_put(CLOCK, 0);
+      camDelay();
+      //adc_read();// doing nothing, just performing a loop
+      camDelay();
+      gpio_put(CLOCK, 1);
+      camDelay();
+    } // end for x
+  } /* for y */
+  currentTime = millis();
+  while (gpio_get(READ) == 1) { // Go through the remaining rows
+    gpio_put(CLOCK, 0);
+    camDelay();
+    gpio_put(CLOCK, 1);
+    camDelay();
+    if ((millis() - previousTime) > 1000) {
+      sensor_OK = 0;
+      break;//the sensor does not respond after 2 seconds = not connected
+    }
+  }
+  gpio_put(CLOCK, 0);
+  camDelay();
+  return sensor_OK;
+}
 
+
+//////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
+void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char v_min, unsigned char v_max) {
+  double gamma_pixel;
   for (int i = 0; i < 256; i++) {//first the autocontrat table lookup_serial
     if (i < v_min) {
       lookup_serial[i] = 0x00;
@@ -507,13 +556,6 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned int l
     if (i > v_max) {
       lookup_serial[i] = 0xFF;
     }
-  }
-
-  for (int i = 0; i < 256; i++) {//then the RGB565 table for TFT
-    color = i;
-    red = color;     green = color;     blue = color;
-    Rgb565 = (((red & 0b11111000) << 8) + ((green & 0b11111100) << 3) + (blue >> 3));
-    lookup_TFT_RGB565[i] = Rgb565;
   }
 }
 
@@ -530,7 +572,7 @@ void pre_allocate_Bayer_tables(unsigned char Bayer_mask[128 * 128], const unsign
 }
 
 void Dither_image(unsigned char Bayer_mask[128 * 128], unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
-{//very minimal dithering algorithm
+{ //very minimal dithering algorithm
   char pixel, pixel_out;
   double pixel_bayer;
   double threshold_step = int(255 / 3);
@@ -669,5 +711,43 @@ void display_other_informations() {
   if (BORDER_mode == 1) {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
+#endif
+}
+
+void display_splash_infos() {
+#ifdef  USE_TFT
+  for (int16_t x = 1; x < 128 ; x++) {
+    for (int16_t y = 0; y < 160; y++) {
+      img.drawPixel(x, y , lookup_TFT_RGB565[splashscreen[x + y * 128]]);
+    }
+  }
+  img.setTextColor(TFT_WHITE);
+  img.setCursor(0, 0);
+  img.println(F("SD card:"));
+  if (SDcard_READY == 1) {
+    img.setTextColor(TFT_GREEN);
+    img.setCursor(50, 0);
+    img.println(F("READY"));
+  }
+  else {
+    img.setTextColor(TFT_RED);
+    img.setCursor(50, 0);
+    img.println(F("FAIL"));
+  }
+
+  img.setTextColor(TFT_WHITE);
+  img.setCursor(0, 8);
+  img.println(F("Sensor:"));
+  if (sensor_READY == 1) {
+    img.setTextColor(TFT_GREEN);
+    img.setCursor(50, 8);
+    img.println(F("READY"));
+  }
+  else {
+    img.setTextColor(TFT_RED);
+    img.setCursor(50, 8);
+    img.println(F("FAIL"));
+  }
+  img.pushSprite(0, 0);// dump image to display
 #endif
 }

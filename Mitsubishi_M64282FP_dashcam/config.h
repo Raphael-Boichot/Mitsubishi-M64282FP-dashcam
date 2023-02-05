@@ -5,9 +5,9 @@
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_FIXED_EXPOSURE //mode for astrophotography
 
-#ifdef  USE_FIXED_EXPOSURE //here the result is a fixed exposure of about 10 seconds
-#define FIXED_EXPOSURE 0xFFFF
-#define FIXED_CLOCK_MULTIPLIER 10
+#ifdef  USE_FIXED_EXPOSURE //here the result is a fixed exposure perfect for full moon photography
+#define FIXED_EXPOSURE 2048
+#define FIXED_CLOCK_MULTIPLIER 1
 #endif
 
 #define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
