@@ -8,6 +8,12 @@
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //Beware, I'm not a C developper at all so it won't be a pretty code !
 
+//CamData[128 * 128] contains the raw signal from sensor in 8 bits
+//HDRData[128 * 128] contains an average of raw signal data from sensor for dithering in 32 bits
+//lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits
+//lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565
+//BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bits
+
 #include "hardware/adc.h" //the GPIO commands are here
 #include "big_data.h"
 #include "config.h"
@@ -26,8 +32,8 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
 const unsigned char v_min = 25; //minimal voltage returned by the sensor in 8 bits DEC (0.32 volts)
 const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
-unsigned int lookup_TFT_RGB565[256];//loockup table to convert gray pixel value to RGB565 for the display, generated in setup() from v_min and v_max
-unsigned char lookup_serial[256];//loockup table for serial output, generated in setup() from v_min and v_max, basically it's an autocontrast
+unsigned int lookup_TFT_RGB565[256];//loockup table to convert 8 bits gray pixel value to RGB565 for the display
+unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
@@ -42,7 +48,7 @@ unsigned long previousTime = 0;
 unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 100 ms to avoid SD card death by chocking, is read from config.txt
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
-unsigned int current_exposure;
+unsigned int current_exposure, new_exposure;
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF
@@ -120,7 +126,8 @@ void setup()
   // presets the exposure time before displaying to avoid unpleasing result
   for (int i = 1; i < 10; i++) {
     take_a_picture();
-    auto_exposure(camReg, CamData, v_min, v_max);
+    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);
+    push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
   }
 }
 
@@ -129,13 +136,19 @@ void loop()
   currentTime = millis();
 
   //nigth mode strategy
-#ifdef USE_OLED
+#ifdef NIGHT_MODE
   if (current_exposure == 0xFFFF) exposure_multiplier = exposure_multiplier * 2; //I reach maximum exposure = let's hack the clock time*2
   if (current_exposure < 0x1000) exposure_multiplier = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
 #endif
 
   take_a_picture(); //data in memory for the moment, one frame
-  auto_exposure(camReg, CamData, v_min, v_max); // Deals with autoexposure (registers 2 and 3) to target a mid voltage
+  new_exposure = auto_exposure(camReg, CamData, v_min, v_max);
+
+#ifdef  USE_FIXED_EXPOSURE
+  new_exposure = FIXED_EXPOSURE;
+#endif
+
+  push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
   current_exposure = get_exposure(camReg);//get the current exposure register
 
 #ifdef  USE_DITHERING
@@ -161,10 +174,10 @@ void loop()
     for (int16_t y = 0; y < 120; y++) {
 
 #ifndef  USE_DITHERING
-      img.drawPixel(x, y + 16, lookup_TFT_RGB565[CamData[x + y * 128]]);
+      img.drawPixel(x, y + 16, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);//lookup_serial is autocontrast
 #endif
 #ifdef  USE_DITHERING
-      img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);
+      img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);//BayerData includes auto-contrast
 #endif
 
     }
@@ -187,13 +200,6 @@ void loop()
       previousTime = currentTime;
       sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);//update filename
 
-      if (HDR_mode == 0) {
-        gpio_put(RED, 1);
-        for (int i = 0; i < 128 * 128; i++) {
-          BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
-        }
-      }
-
       if (HDR_mode == 1) {
 
 #ifdef  USE_TFT
@@ -205,7 +211,7 @@ void loop()
 
         gpio_put(RED, 1);
         for (int i = 0; i < 128 * 128; i++) {//get the current picture with current exposure
-          HDRData[i] = lookup_serial[CamData[i]];//while applying autocontrast
+          HDRData[i] = CamData[i];//first image is the current image to have an even number of image with power of 2
         }
         current_exposure = get_exposure(camReg);//get the current exposure register
         double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};//-1EV to +1EV by third roots of 2 steps
@@ -214,16 +220,29 @@ void loop()
           push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
           take_a_picture();
           for (int i = 0; i < 128 * 128; i++) {
-            HDRData[i] = HDRData[i] + lookup_serial[CamData[i]]; //sum data while applying autocontrast
+            HDRData[i] = HDRData[i] + CamData[i]; //sum data
           }
         }
         //now time to average all this shit
         for (int i = 0; i < 128 * 128; i++) {
-          BmpData[i] = HDRData[i] >> 3; //8 pictures so divide by 8
+          CamData[i] = HDRData[i] >> 3; //8 pictures so divide by 8
         }
         push_exposure(camReg, current_exposure, 1); //rewrite the old register
       }
 
+#ifndef  USE_DITHERING
+      for (int i = 0; i < 128 * 128; i++) {
+        BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
+      }
+#endif
+
+#ifdef  USE_DITHERING
+      Dither_image(Bayer_mask, CamData, BayerData);
+      for (int i = 0; i < 128 * 128; i++) {
+        BmpData[i] = BayerData[i];//to get data with dithering (dithering includes auto-contrast)
+      }
+#endif
+      gpio_put(RED, 1);
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
       if (dataFile) {
@@ -289,7 +308,7 @@ void take_a_picture() {
   camReset();
 }
 
-void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
+int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
   double exp_regs, new_regs, error, mean_value;
   unsigned int setpoint = (v_max + v_min) >> 1;
   unsigned int accumulator = 0;
@@ -312,18 +331,9 @@ void auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], un
   if ((error >= -80) && (error <= -20))  new_regs = exp_regs / 1.3;
   if ((error <= 20) && (error >= 10))     new_regs = exp_regs * 1.03;
   if ((error >= -20) && (error <= -10))   new_regs = exp_regs / 1.03;
-  if ((error <= 10) && (error >= 1))   new_regs = exp_regs + 1;
-  if ((error >= -10) && (error <= 1))  new_regs = exp_regs - 1;
-  // The sensor is limited to 0xFFFF (about 1 second) in exposure but also has strong artifacts below 0x10 (256 µs).
-  // Each step is 16 µs
-  if (new_regs < 0x10) {//minimum of the sensor, below there are verticals artifacts
-    new_regs = 0x10;
-  }
-  if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
-    new_regs = 0xFFFF;
-  }
-  camReg[2] = int(new_regs / 256);
-  camReg[3] = int(new_regs - camReg[2] * 256);
+  if ((error <= 10) && (error >= 2))   new_regs = exp_regs + 1;
+  if ((error >= -10) && (error <= 2))  new_regs = exp_regs - 1;
+  return int(new_regs);
 }
 
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
@@ -484,23 +494,25 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned int l
   unsigned char color, red, green, blue;
   unsigned int Rgb565;
   double gamma_pixel;
-  for (int i = 0; i < 256; i++) {
+
+  for (int i = 0; i < 256; i++) {//first the autocontrat table lookup_serial
     if (i < v_min) {
       lookup_serial[i] = 0x00;
-      lookup_TFT_RGB565[i] = 0x0000;
     }
     if ((i >= v_min) && (i <= v_max)) {
       gamma_pixel = ((i - double(v_min)) / (double(v_max) - double(v_min))) * 255;
       lookup_serial[i] = int(gamma_pixel);
-      color = int(gamma_pixel);
-      red = color;     green = color;     blue = color;
-      Rgb565 = (((red & 0b11111000) << 8) + ((green & 0b11111100) << 3) + (blue >> 3));
-      lookup_TFT_RGB565[i] = Rgb565;
     }
     if (i > v_max) {
       lookup_serial[i] = 0xFF;
-      lookup_TFT_RGB565[i] = 0xFFFF;
     }
+  }
+
+  for (int i = 0; i < 256; i++) {//then the RGB565 table for TFT
+    color = i;
+    red = color;     green = color;     blue = color;
+    Rgb565 = (((red & 0b11111000) << 8) + ((green & 0b11111100) << 3) + (blue >> 3));
+    lookup_TFT_RGB565[i] = Rgb565;
   }
 }
 
@@ -517,7 +529,7 @@ void pre_allocate_Bayer_tables(unsigned char Bayer_mask[128 * 128], const unsign
 }
 
 void Dither_image(unsigned char Bayer_mask[128 * 128], unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
-{
+{//very minimal dithering algorithm
   char pixel, pixel_out;
   double pixel_bayer;
   double threshold_step = int(255 / 3);
@@ -529,7 +541,7 @@ void Dither_image(unsigned char Bayer_mask[128 * 128], unsigned char CamData[128
   pixel_out = 0;
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {
-      pixel = lookup_serial[CamData[counter]];
+      pixel = lookup_serial[CamData[counter]];//auto_contrasted values, may range between 0 and 255
       pixel_bayer = Bayer_mask[counter] / 3; //reduces the Bayer matrix to 1/3 of its value to make 3 ranges separating 4 gray levels
       if (pixel < DG) {
         if (pixel > pixel_bayer) pixel_out = DG;

@@ -1,8 +1,13 @@
 //to allow night mode during compilation
 //#define NIGHT_MODE
 #define USE_TFT
-//#define USE_DITHERING
-//#define USE_SERIAL
+//#define USE_DITHERING //to mimick the Game Boy Camera
+//#define USE_SERIAL //mode for outputing image in ascii to the serial console
+//#define USE_FIXED_EXPOSURE //mode for astrophotography
+
+#ifdef  USE_FIXED_EXPOSURE
+#define FIXED_EXPOSURE 0x0100
+#endif
 
 #define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
 #define BITS_PER_PIXEL 16             // How many bits per pixel in Sprite, here RGB565 format
