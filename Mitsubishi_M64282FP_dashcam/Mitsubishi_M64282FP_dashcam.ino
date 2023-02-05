@@ -146,6 +146,7 @@ void loop()
 
 #ifdef  USE_FIXED_EXPOSURE
   new_exposure = FIXED_EXPOSURE;
+  exposure_multiplier = FIXED_CLOCK_MULTIPLIER;
 #endif
 
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
