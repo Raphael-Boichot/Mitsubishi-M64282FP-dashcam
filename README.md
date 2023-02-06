@@ -74,5 +74,6 @@ Hey ?! It's all empty in the shell apart from that crappy connector at the end ?
 
 # To do (or not)
 
-- a decent PCB because all that shit could enter a Game Boy shell.
+- a decent PCB because all that shit could probably enter a Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Paint.
+- improve the dithering algorithm which is just existing for the moment but not optimized to be visually pleasant
