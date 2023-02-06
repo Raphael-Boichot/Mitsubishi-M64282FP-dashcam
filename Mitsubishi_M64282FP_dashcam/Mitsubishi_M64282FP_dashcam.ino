@@ -13,6 +13,8 @@
 //lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits
 //lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565
 //BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bits
+//lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565
+//and so on...
 
 #include "hardware/adc.h" //the GPIO commands are here
 #include "big_data.h"
@@ -43,7 +45,7 @@ unsigned char Bayer_mask[128 * 128];//loockup table to apply dithering for each 
 unsigned char BayerData[128 * 128];// dithered image data
 unsigned char reg, char1, char2;// some variables for serial output
 const unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
-unsigned int exposure_multiplier = 1; //time delay in processor cycles to cheat the exposure of the sensor
+unsigned int exposure_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -113,8 +115,10 @@ void setup()
     }
   }
 
-
+#ifdef USE_SERIAL
   Serial.begin(2000000);
+#endif
+  
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
@@ -149,7 +153,7 @@ void loop()
 
 #ifdef  USE_FIXED_EXPOSURE
   new_exposure = FIXED_EXPOSURE;
-  exposure_multiplier = FIXED_CLOCK_MULTIPLIER;
+  exposure_multiplier = FIXED_CLOCK_DIVIDER;
 #endif
 
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
@@ -165,7 +169,7 @@ void loop()
   if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
-  sprintf(multiplier_string, "Clockx%X", exposure_multiplier); //concatenate string for display;
+  sprintf(multiplier_string, "Clock/%X", exposure_divider); //concatenate string for display;
 #endif
 
 #ifdef USE_SERIAL
@@ -366,7 +370,7 @@ void camDelay()// Allow a lag in processor cycles to maintain signals long enoug
 
 void camSpecialDelay()// Allow an extra lag in processor cycles during exposure to allow night mode
 {
-  for (int i = 0; i < cycles * exposure_multiplier; i++) NOP;
+  for (int i = 0; i < cycles * exposure_divider; i++) NOP;
 }
 
 void camInit()// Initialise the IO ports for the camera
@@ -493,7 +497,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   camDelay();
 }
 
-bool camTestSensor() // Take a picture, read it and send it through the serial port.
+bool camTestSensor() // It fakes a complete cycle to take a picture, if it's not able to go through the whole cycle, there is an issue
 {
   bool sensor_OK = 1;
   int x, y;

@@ -7,7 +7,7 @@
 
 #ifdef  USE_FIXED_EXPOSURE //here the result is a fixed exposure perfect for full moon photography
 #define FIXED_EXPOSURE 2048
-#define FIXED_CLOCK_MULTIPLIER 1
+#define FIXED_CLOCK_DIVIDER 1
 #endif
 
 #define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
