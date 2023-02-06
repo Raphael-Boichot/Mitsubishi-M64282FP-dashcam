@@ -17,6 +17,7 @@
 #include "hardware/adc.h" //the GPIO commands are here
 #include "big_data.h"
 #include "config.h"
+#include "splash.h"
 #include <SPI.h>  //for SD
 #include <SD.h>  //for SD
 
@@ -102,6 +103,16 @@ void setup()
 #ifdef  USE_TFT
   display_splash_infos();
 #endif
+
+  if ((SDcard_READY == 0) | (sensor_READY == 0)) {
+    while (1) {
+      gpio_put(RED, 1);
+      delay(1000);
+      gpio_put(RED, 0);
+      delay(1000);
+    }
+  }
+
 
   Serial.begin(2000000);
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
@@ -748,6 +759,20 @@ void display_splash_infos() {
     img.setCursor(50, 8);
     img.println(F("FAIL"));
   }
+  if ((SDcard_READY == 0) | (sensor_READY == 0)) {
+    img.setTextColor(TFT_RED);
+    img.setCursor(0, 16);
+    img.println(F("CHECK CONNECTIONS"));
+  }
+  else {
+    img.setTextColor(TFT_GREEN);
+    img.setCursor(0, 16);
+    img.println(F("BOOTING..."));
+  }
   img.pushSprite(0, 0);// dump image to display
+
+
+
+  delay(1000);
 #endif
 }
