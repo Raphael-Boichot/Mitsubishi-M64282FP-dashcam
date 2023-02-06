@@ -1,6 +1,6 @@
 a=imread('splash.png');
 
-fid=fopen('Hex_data.txt','w');
+fid=fopen('splash.h','w');
 [hauteur, largeur, pro]=size(a);
 counter=0;
 
