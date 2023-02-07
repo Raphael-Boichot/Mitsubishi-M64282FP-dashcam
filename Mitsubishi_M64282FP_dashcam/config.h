@@ -1,7 +1,7 @@
 //to allow night mode during compilation
 //#define NIGHT_MODE
 #define USE_TFT
-//#define USE_DITHERING //to mimick the Game Boy Camera
+//#define USE_DITHERING //to mimick the Game Boy Camera / experimental at the moment
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_FIXED_EXPOSURE //mode for astrophotography
 

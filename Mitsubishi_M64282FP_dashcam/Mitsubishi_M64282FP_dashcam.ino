@@ -1,4 +1,4 @@
-//By Raphaël BOICHOT, made around 2023-04-27
+//By Raphaël BOICHOT, made around 2023-01-27
 //this is an autonomous recorder for the Mitsubishi M64282FP artificial retina of the Game Boy Camera
 //from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
@@ -34,8 +34,9 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
 //With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts).
+const char signature[20] = {};
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-const unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.32 volts)
+const unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
 const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
@@ -44,12 +45,15 @@ unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 
 unsigned char Bayer_mask[128 * 128];//loockup table to apply dithering for each image pixel, generated in setup() from v_min and v_max
 unsigned char BayerData[128 * 128];// dithered image data
 unsigned char reg, char1, char2;// some variables for serial output
+const double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps
+//const double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
+char num_HDR_images = sizeof(exposure_list) / sizeof( double );
 const unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
-unsigned int exposure_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
+unsigned int clock_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
-unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 100 ms to avoid SD card death by chocking, is read from config.txt
+unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.txt
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
@@ -58,9 +62,7 @@ bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF
 bool sensor_READY = 0;
 bool SDcard_READY = 0;
-
-
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
+char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
 
 void setup()
 {
@@ -77,62 +79,30 @@ void setup()
   gpio_init(START);     gpio_set_dir(START, GPIO_OUT);
 
   //analog stuff
-  adc_gpio_init(VOUT);  adc_select_input(0);
-  adc_init();
+  adc_gpio_init(VOUT);  adc_select_input(0);//there are several ADC channels to choose from
+  adc_init();//mandatory, without it stuck the camera
 
-  //see if the sensor is present and responds
-  camReset();// resets the sensor
-  camSetRegisters();// Send 8 registers to the sensor
-  sensor_READY = camTestSensor(); // dumb sensor cycle
-  camReset();
-
-#ifdef  USE_TFT
-  tft.init();
-  tft.setRotation(2);
-  img.setColorDepth(BITS_PER_PIXEL);         // Set colour depth first
-  img.createSprite(128, 160);                // then create the giant sprite that will be our video ram buffer
-  img.setTextSize(1);                        // characters are 8x8 pixels in size 1, practical !
-#endif
-
-  //see if the card is present and can be initialized
-  if (SD.begin(CHIPSELECT)) {
-    SDcard_READY = 1;
-  }
-  else {
-    SDcard_READY = 0;
-  }
-
-#ifdef  USE_TFT
-  display_splash_infos();
-#endif
-
-  if ((SDcard_READY == 0) | (sensor_READY == 0)) {
-    while (1) {
-      gpio_put(RED, 1);
-      delay(1000);
-      gpio_put(RED, 0);
-      delay(1000);
-    }
-  }
-
-#ifdef USE_SERIAL
+#ifdef USE_SERIAL // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(2000000);
 #endif
-  
+
+  init_sequence();//Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
+  //now if code arrives at this point, this means that sensor and SD card are connected correctly
+
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
 
 #ifdef USE_DITHERING
-  pre_allocate_Bayer_tables(Bayer_mask, BAYER_matrix);
+  pre_allocate_Bayer_tables(Bayer_mask, BAYER_matrix);// a 128*128 table is made here, in order to be directly used as a lookup table for dithering whole image
 #endif
 
 #ifndef USE_FIXED_EXPOSURE
-  // presets the exposure time before displaying to avoid unpleasing result
+  // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
   for (int i = 1; i < 10; i++) {
     take_a_picture();
-    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);
+    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
     push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
   }
 #endif
@@ -141,23 +111,21 @@ void setup()
 void loop()
 {
   currentTime = millis();
-
   //nigth mode strategy
 #ifdef NIGHT_MODE
-  if (current_exposure == 0xFFFF) exposure_multiplier = exposure_multiplier * 2; //I reach maximum exposure = let's hack the clock time*2
-  if (current_exposure < 0x1000) exposure_multiplier = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+  if (current_exposure == 0xFFFF) clock_divider = clock_divider * 2; //I reach maximum exposure = let's divide the clock frequency
+  if (current_exposure < 0x1000) clock_divider = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
 #endif
 
   take_a_picture(); //data in memory for the moment, one frame
-  new_exposure = auto_exposure(camReg, CamData, v_min, v_max);
+  new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
 
 #ifdef  USE_FIXED_EXPOSURE
   new_exposure = FIXED_EXPOSURE;
-  exposure_multiplier = FIXED_CLOCK_DIVIDER;
+  clock_divider = FIXED_CLOCK_DIVIDER;
 #endif
 
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
-  current_exposure = get_exposure(camReg);//get the current exposure register
 
 #ifdef  USE_DITHERING
   Dither_image(Bayer_mask, CamData, BayerData);
@@ -165,15 +133,16 @@ void loop()
 
 
 #ifdef  USE_TFT
+  current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
   if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
   if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
   if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
-  sprintf(multiplier_string, "Clock/%X", exposure_divider); //concatenate string for display;
+  sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
 #endif
 
 #ifdef USE_SERIAL
-  dump_data_to_serial(CamData);//dump data to serial for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
+  dump_data_to_serial(CamData);//dump raw data to serial in ASCII for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 #endif
 
 #ifdef  USE_TFT
@@ -208,23 +177,20 @@ void loop()
       previousTime = currentTime;
       sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);//update filename
 
-      if (HDR_mode == 1) {
+      if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
 
 #ifdef  USE_TFT
         img.setTextColor(TFT_BLUE);
         img.setCursor(0, 16);
         img.println(F("HDR in acquisition"));
+        display_other_informations();
         img.pushSprite(0, 0);// dump image to display
 #endif
 
         gpio_put(RED, 1);
-        for (int i = 0; i < 128 * 128; i++) {//get the current picture with current exposure
-          HDRData[i] = CamData[i];//first image is the current image to have an even number of image with power of 2
-        }
-        current_exposure = get_exposure(camReg);//get the current exposure register
-        double exposure_list[7] = {0.5, 0.69, 0.79, 1, 1.26, 1.44, 2};//-1EV to +1EV by third roots of 2 steps
-        //double exposure_list[7] = {1, 1, 1, 1, 1, 1, 1};// for multi-exposure or noise reduction
-        for (int i = 0; i < 7; i++) {
+        memset(HDRData, 0, sizeof(HDRData));//clean the HDR data array
+        current_exposure = get_exposure(camReg);//store the current exposure register for later
+        for (int i = 0; i < num_HDR_images; i++) {
           push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
           take_a_picture();
           for (int i = 0; i < 128 * 128; i++) {
@@ -233,9 +199,9 @@ void loop()
         }
         //now time to average all this shit
         for (int i = 0; i < 128 * 128; i++) {
-          CamData[i] = HDRData[i] >> 3; //8 pictures so divide by 8
+          CamData[i] = HDRData[i] / num_HDR_images; //do the average
         }
-        push_exposure(camReg, current_exposure, 1); //rewrite the old register
+        push_exposure(camReg, current_exposure, 1); //rewrite the old register stored before
       }
 
 #ifndef  USE_DITHERING
@@ -299,7 +265,7 @@ void loop()
       HDR_mode = !HDR_mode;
       delay(debouncing_delay);
     }
-    if (gpio_get(BORDER) == 1) {
+    if (gpio_get(BORDER) == 1) {// Change raw<->2D enhanced images
       BORDER_mode = !BORDER_mode;
       if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
       if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
@@ -335,12 +301,13 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   new_regs = exp_regs;
   if (error > 80)                     new_regs = exp_regs * 2;
   if (error < -80)                    new_regs = exp_regs / 2;
-  if ((error <= 80) && (error >= 20))    new_regs = exp_regs * 1.3;
-  if ((error >= -80) && (error <= -20))  new_regs = exp_regs / 1.3;
-  if ((error <= 20) && (error >= 10))     new_regs = exp_regs * 1.03;
-  if ((error >= -20) && (error <= -10))   new_regs = exp_regs / 1.03;
+  if ((error <= 80) && (error >= 30))    new_regs = exp_regs * 1.3;
+  if ((error >= -80) && (error <= -30))  new_regs = exp_regs / 1.3;
+  if ((error <= 30) && (error >= 10))     new_regs = exp_regs * 1.03;
+  if ((error >= -30) && (error <= -10))   new_regs = exp_regs / 1.03;
   if ((error <= 10) && (error >= 2))   new_regs = exp_regs + 1;
-  if ((error >= -10) && (error <= 2))  new_regs = exp_regs - 1;
+  if ((error >= -10) && (error <= -2))  new_regs = exp_regs - 1;
+  sprintf(error_string, "Error: %d", int(error)); //concatenate string for display;
   return int(new_regs);
 }
 
@@ -354,7 +321,7 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     new_regs = 0xFFFF;
   }
   camReg[2] = int(new_regs / 256);
-  camReg[3] = int(new_regs - camReg[2] * 256);
+  camReg[3] = int(new_regs - camReg[2] * 256);//Janky, I know...
 }
 
 unsigned int get_exposure(unsigned char camReg[8]) {
@@ -370,7 +337,7 @@ void camDelay()// Allow a lag in processor cycles to maintain signals long enoug
 
 void camSpecialDelay()// Allow an extra lag in processor cycles during exposure to allow night mode
 {
-  for (int i = 0; i < cycles * exposure_divider; i++) NOP;
+  for (int i = 0; i < cycles * clock_divider; i++) NOP;
 }
 
 void camInit()// Initialise the IO ports for the camera
@@ -497,8 +464,8 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   camDelay();
 }
 
-bool camTestSensor() // It fakes a complete cycle to take a picture, if it's not able to go through the whole cycle, there is an issue
-{
+bool camTestSensor() // dummy cycle faking to take a picture, if it's not able to go through the whole cycle, there is an issue
+{ // it basically checks if READ is able to change at the good moment during the sequence
   bool sensor_OK = 1;
   int x, y;
   int currentTime;
@@ -520,9 +487,9 @@ bool camTestSensor() // It fakes a complete cycle to take a picture, if it's not
     gpio_put(CLOCK, 1);
     camDelay();
     if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, everything is OK
-    if ((millis() - previousTime) > 1000) {
+    if ((millis() - currentTime) > 1000) {
       sensor_OK = 0;
-      break;//the sensor does not respond after 2 seconds = not connected
+      break;//the sensor does not respond after 1 second = not connected
     }
     camDelay();
     gpio_put(CLOCK, 0);
@@ -541,14 +508,14 @@ bool camTestSensor() // It fakes a complete cycle to take a picture, if it's not
     } // end for x
   } /* for y */
   currentTime = millis();
-  while (gpio_get(READ) == 1) { // Go through the remaining rows
+  while (gpio_get(READ) == 1) { // Go through the remaining rows, but READ can stay high due to level shifter design
     gpio_put(CLOCK, 0);
     camDelay();
     gpio_put(CLOCK, 1);
     camDelay();
-    if ((millis() - previousTime) > 1000) {
+    if ((millis() - currentTime) > 1000) {
       sensor_OK = 0;
-      break;//the sensor does not respond after 2 seconds = not connected
+      break;//the sensor does not respond after 1 seconds = not connected
     }
   }
   gpio_put(CLOCK, 0);
@@ -706,6 +673,8 @@ void display_other_informations() {
   img.setCursor(0, 0);
   img.println(F(exposure_string));
   img.setTextColor(TFT_BLUE);
+  img.setCursor(64, 128);
+  img.println(F(error_string));
   img.setCursor(0, 128);
   img.println(F(multiplier_string));
   img.setTextColor(TFT_WHITE);
@@ -729,16 +698,36 @@ void display_other_informations() {
 #endif
 }
 
-void display_splash_infos() {
+//the void sequence is made in order to have a dramatic effect
+void init_sequence() {//not 100% sure why, but screen must be initialized before the SD...
 #ifdef  USE_TFT
+  tft.init();
+  tft.setRotation(2);
+  img.setColorDepth(BITS_PER_PIXEL);         // Set colour depth first
+  img.createSprite(128, 160);                // then create the giant sprite that will be our video ram buffer
+  img.setTextSize(1);                        // characters are 8x8 pixels in size 1, practical !
   for (int16_t x = 1; x < 128 ; x++) {
     for (int16_t y = 0; y < 160; y++) {
       img.drawPixel(x, y , lookup_TFT_RGB565[splashscreen[x + y * 128]]);
     }
   }
+  img.pushSprite(0, 0);// dump image to display
+  delay(500);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 0);
   img.println(F("SD card:"));
+  img.pushSprite(0, 0);// dump image to display
+#endif
+
+  //see if the card is present and can be initialized
+  if (SD.begin(CHIPSELECT)) {
+    SDcard_READY = 1;
+  }
+  else {
+    SDcard_READY = 0;
+  }
+
+#ifdef  USE_TFT
   if (SDcard_READY == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 0);
@@ -749,10 +738,19 @@ void display_splash_infos() {
     img.setCursor(50, 0);
     img.println(F("FAIL"));
   }
-
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 8);
   img.println(F("Sensor:"));
+  img.pushSprite(0, 0);// dump image to display
+#endif
+
+  //see if the sensor is present and responds
+  camReset();// resets the sensor
+  camSetRegisters();// Send 8 registers to the sensor
+  sensor_READY = camTestSensor(); // dumb sensor cycle
+  camReset();
+
+#ifdef  USE_TFT
   if (sensor_READY == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 8);
@@ -763,6 +761,7 @@ void display_splash_infos() {
     img.setCursor(50, 8);
     img.println(F("FAIL"));
   }
+
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
     img.setCursor(0, 16);
@@ -771,12 +770,16 @@ void display_splash_infos() {
   else {
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 16);
-    img.println(F("BOOTING..."));
+    img.println(F("NOW BOOTING..."));
   }
   img.pushSprite(0, 0);// dump image to display
-
-
-
-  delay(1000);
 #endif
+  if ((SDcard_READY == 0) | (sensor_READY == 0)) {//get stuck here if any problem to avoid further board damage
+    while (1) {
+      gpio_put(RED, 1);
+      delay(1000);
+      gpio_put(RED, 0);
+      delay(1000);
+    }
+  }
 }
