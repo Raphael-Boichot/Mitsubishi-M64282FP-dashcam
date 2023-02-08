@@ -50,19 +50,6 @@ void loop()
   }
 }
 
-
-
-void intercept_a_picture(unsigned char CamData[128 * 128]) // Take a picture, read it and send it through the serial port.
-{
-  unsigned int subcounter = 0;
-  if (gpio_get(READ) == 0) {
-    while (gpio_get(READ) == 0) {// Wait for READ to go high
-      //do nothing but wait
-    }
-    gpio_put(LED, 1);
-  }
-}
-
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
