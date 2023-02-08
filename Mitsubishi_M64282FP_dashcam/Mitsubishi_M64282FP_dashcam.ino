@@ -20,8 +20,11 @@
 #include "big_data.h"
 #include "config.h"
 #include "splash.h"
+
+#ifdef  USE_SD
 #include <SPI.h>  //for SD
 #include <SD.h>  //for SD
+#endif
 
 // tft directly addresses the display, im is a memory buffer for sprites
 // Here I create and update a giant 128*16 sprite in memory that I push to the screen when necessary, which is ultra fast
@@ -94,9 +97,12 @@ void setup()
   init_sequence();//Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   //now if code arrives at this point, this means that sensor and SD card are connected correctly
 
+#ifdef  USE_SD
   deadtime = get_dead_time("/Delay.txt", deadtime);//get the dead time for timelapse from config.txt
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
+#endif
+
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
 
 #ifdef USE_DITHERING
@@ -222,6 +228,7 @@ void loop()
       }
 #endif
       gpio_put(RED, 1);
+#ifdef  USE_SD
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
       if (dataFile) {
@@ -229,6 +236,7 @@ void loop()
         dataFile.write(BmpData, 128 * 120); //removing last tile line
         dataFile.close();
       }
+#endif
       gpio_put(RED, 0);
     }
 #ifdef  USE_TFT
@@ -246,10 +254,12 @@ void loop()
 #endif
 
   if ((gpio_get(PUSH) == 1) && recording == 0) { // we want to record: get file/directory#
+#ifdef  USE_SD
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
     Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
     sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
     SD.mkdir(storage_file_dir);//create next directory
+#endif
     gpio_put(RED, 1);
     recording = 1;
     previousTime = currentTime;//To avoid taking a picture while pressing the mode button
@@ -611,6 +621,7 @@ void dump_data_to_serial(unsigned char CamData[128 * 128]) {
 
 //////////////////////////////////////////////SD stuff///////////////////////////////////////////////////////////////////////////////////////////
 void ID_file_creator(const char * path) {
+#ifdef  USE_SD
   uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   if (!SD.exists(path)) {
     File file = SD.open(path, FILE_WRITE);
@@ -618,30 +629,36 @@ void ID_file_creator(const char * path) {
     file.write(buf, 8);
     file.close();
   }
+#endif
 }
 
 unsigned long get_next_ID(const char * path) {
+#ifdef  USE_SD
   uint8_t buf[4];
   File file = SD.open(path);
   file.read(buf, 4);
   Next_ID = ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]));
-  return Next_ID;
   file.close();
+#endif
+  return Next_ID;
 }
 
-unsigned long get_next_dir(const char * path) {
+unsigned long get_next_dir(const char * path)
+{
+#ifdef  USE_SD
   uint8_t buf[4];
   File file = SD.open(path);
   file.read(buf, 4);//dumps the 4 first bytes
   file.read(buf, 4);
   Next_dir = ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]));
-  return Next_dir;
   file.close();
+#endif
+  return Next_dir;
 }
 
 unsigned long get_dead_time(const char * path, unsigned long deadtime) {
   unsigned long delay_timelapse = deadtime;
-
+#ifdef  USE_SD
   if (SD.exists(path)) {
     deadtime = 0;
     unsigned char table[20];
@@ -657,10 +674,12 @@ unsigned long get_dead_time(const char * path, unsigned long deadtime) {
     delay_timelapse = deadtime;
     file.close();
   }
+#endif
   return delay_timelapse;
 }
 
 void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_dir) {
+#ifdef  USE_SD
   uint8_t buf[4];
   File file = SD.open(path, FILE_WRITE);
   file.seek(0);
@@ -675,6 +694,7 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
   buf[0] = Next_dir >> 24;
   file.write(buf, 4);
   file.close();
+#endif
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -731,12 +751,14 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #endif
 
   //see if the card is present and can be initialized
+#ifdef  USE_SD
   if (SD.begin(CHIPSELECT)) {
     SDcard_READY = 1;
   }
   else {
     SDcard_READY = 0;
   }
+#endif
 
 #ifdef  USE_TFT
   if (SDcard_READY == 1) {
@@ -785,6 +807,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   }
   img.pushSprite(0, 0);// dump image to display
 #endif
+#ifdef  USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {//get stuck here if any problem to avoid further board damage
     while (1) {
       gpio_put(RED, 1);
@@ -793,4 +816,5 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
       delay(1000);
     }
   }
+#endif
 }
