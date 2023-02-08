@@ -84,4 +84,3 @@ In other words, it should perfectly be possible to interface a MAX153 with the R
 
 - a decent PCB because all that shit could probably enter a Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Paint.
-- improve the dithering algorithm which is just existing for the moment but not optimized to be visually pleasant
