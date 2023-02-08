@@ -74,7 +74,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 In other words, it should perfectly be possible to interface a MAX153 with the Raspberry Pi Pico (or any other µC) to fasten the analog->digital conversion. The Pi Pico can theoretically translate data at 500 ksamples/s (on this project, it reaches 400 ksamples/s) and the MAX153 1Msamples/s. A factor of two is achievable so.
 
 
-# acknowledgments
+# Acknowledgments
 - [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects.
 - [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
 - [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
