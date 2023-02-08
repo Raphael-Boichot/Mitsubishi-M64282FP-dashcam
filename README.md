@@ -26,7 +26,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
-# Example of image output with a stuffed fox
+# Example of test images with a stuffed fox
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
 
 # Advanced options
@@ -59,7 +59,7 @@ Options are cumulative, it is for example possible to record dithered HDR images
 
 The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
 
-# Pinout
+# Pinout (yes it's a mess, I know)
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
 
 # Connection with the sensor
