@@ -1,9 +1,14 @@
-//to allow night mode during compilation
-//#define NIGHT_MODE
-#define USE_TFT
-//#define USE_DITHERING //to mimick the Game Boy Camera / experimental at the moment
+
+//#define NIGHT_MODE //to allow night mode during compilation
+#define USE_TFT //to allow using the TFT screen
+//#define USE_DITHERING //Dithering patterns can be generated here https://herrzatacke.github.io/dither-pattern-gen/
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_FIXED_EXPOSURE //mode for astrophotography
+
+// See for details https://github.com/HerrZatacke/dither-pattern-gen/
+#ifdef  USE_DITHERING
+const unsigned char Dithering_patterns [] = {0x20, 0x5F, 0xA3, 0x4F, 0x92, 0xCF, 0x2B, 0x6B, 0xAE, 0x5B, 0x9E, 0xDA, 0x3F, 0x81, 0xC0, 0x2F, 0x70, 0xB1, 0x4B, 0x8D, 0xCB, 0x3B, 0x7C, 0xBC, 0x27, 0x67, 0xAA, 0x57, 0x9A, 0xD6, 0x23, 0x63, 0xA6, 0x53, 0x96, 0xD2, 0x47, 0x89, 0xC7, 0x37, 0x78, 0xB9, 0x43, 0x85, 0xC4, 0x33, 0x74, 0xB5 };
+#endif
 
 #ifdef  USE_FIXED_EXPOSURE //here the result is a fixed exposure perfect for full moon photography
 #define FIXED_EXPOSURE 2048

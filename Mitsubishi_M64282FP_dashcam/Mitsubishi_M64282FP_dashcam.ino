@@ -42,9 +42,14 @@ unsigned char lookup_serial[256];//autocontrast table generated in setup() from 
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
-unsigned char Bayer_mask[128 * 128];//loockup table to apply dithering for each image pixel, generated in setup() from v_min and v_max
+
+#ifdef USE_DITHERING
+unsigned char Bayer_matW_LG[4 * 4];//Bayer matrix to apply dithering for each image pixel white to light gray
+unsigned char Bayer_matLG_DG[4 * 4];//Bayer matrix to apply dithering for each image pixel light gray to dark gray
+unsigned char Bayer_matDG_B[4 * 4];//Bayer matrix to apply dithering for each image pixel dark gray to dark
 unsigned char BayerData[128 * 128];// dithered image data
-unsigned char reg, char1, char2;// some variables for serial output
+#endif
+
 const double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps
 //const double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );
@@ -95,7 +100,7 @@ void setup()
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
 
 #ifdef USE_DITHERING
-  pre_allocate_Bayer_tables(Bayer_mask, BAYER_matrix);// a 128*128 table is made here, in order to be directly used as a lookup table for dithering whole image
+  pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
 #endif
 
 #ifndef USE_FIXED_EXPOSURE
@@ -128,7 +133,7 @@ void loop()
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
 
 #ifdef  USE_DITHERING
-  Dither_image(Bayer_mask, CamData, BayerData);
+  Dither_image(CamData, BayerData);
 #endif
 
 
@@ -211,7 +216,7 @@ void loop()
 #endif
 
 #ifdef  USE_DITHERING
-      Dither_image(Bayer_mask, CamData, BayerData);
+      Dither_image(CamData, BayerData);
       for (int i = 0; i < 128 * 128; i++) {
         BmpData[i] = BayerData[i];//to get data with dithering (dithering includes auto-contrast)
       }
@@ -365,7 +370,7 @@ void camReset()// Sends a RESET pulse to sensor
 
 void camSetRegisters(void)// Sets the sensor 8 registers
 {
-  for (reg = 0; reg < 8; ++reg) {
+  for (int reg = 0; reg < 8; ++reg) {
     camSetReg(reg, camReg[reg]);
   }
 }
@@ -541,49 +546,55 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char 
   }
 }
 
-void pre_allocate_Bayer_tables(unsigned char Bayer_mask[128 * 128], const unsigned char BAYER_matrix [16])
+void pre_allocate_Bayer_tables()
 {
-  int x, y, counter;
-  counter = 0;
-  for (y = 0; y < 128; y++) {
-    for (x = 0; x < 128; x++) {
-      Bayer_mask[counter] = BAYER_matrix[(x & 3) + 4 * (y & 3)];
+#ifdef USE_DITHERING
+  // this reorganizes the thresholding matrices from Game Boy Camera registers to "Bayer like" matrices
+  int counter = 0;
+  for (int y = 0; y < 4; y++) {
+    for (int x = 0; x < 4; x++) {
+      Bayer_matDG_B[x + 4 * y] = Dithering_patterns [counter];
+      counter = counter + 1;
+      Bayer_matLG_DG[x + 4 * y] = Dithering_patterns [counter];
+      counter = counter + 1;
+      Bayer_matW_LG[x + 4 * y] = Dithering_patterns [counter];
       counter = counter + 1;
     }
   }
+#endif
 }
 
-void Dither_image(unsigned char Bayer_mask[128 * 128], unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
-{ //very minimal dithering algorithm
+void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
+{
+#ifdef USE_DITHERING
+  //very minimal dithering algorithm
   char pixel, pixel_out;
-  double pixel_bayer;
-  double threshold_step = int(255 / 3);
-  char W = 255; //white
-  char LG = int(255 * 2 / 3); //light gray
-  char DG = int(255 * 1 / 3); //dark gray
-  char B = int(0); //black
+  char W = 255; //white as it will apear on the display and in bmop file
+  char LG = 170; //light gray white as it will apear on the display and in bmop file
+  char DG = 110; //dark gray white as it will apear on the display and in bmop file
+  char B = 0; //black white as it will apear on the display and in bmop file
   int counter = 0;
   pixel_out = 0;
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {
       pixel = lookup_serial[CamData[counter]];//auto_contrasted values, may range between 0 and 255
-      pixel_bayer = Bayer_mask[counter] / 3; //reduces the Bayer matrix to 1/3 of its value to make 3 ranges separating 4 gray levels
       if (pixel < DG) {
-        if (pixel > pixel_bayer) pixel_out = DG;
+        if (pixel > Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) pixel_out = DG;
         else pixel_out = B;
       }
       if ((pixel >= LG) & (pixel < DG)) {
-        if (pixel > (pixel_bayer + threshold_step)) pixel_out = LG;
+        if (pixel > Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) pixel_out = LG;
         else pixel_out = DG;
       }
       if (pixel >= DG ) {
-        if (pixel > (pixel_bayer + 2 * threshold_step)) pixel_out = W;
+        if (pixel > Bayer_matW_LG[(x & 3) + 4 * (y & 3)]) pixel_out = W;
         else pixel_out = LG;
       }
       counter = counter + 1;
       BayerData[counter] = pixel_out;
     }
   }
+#endif
 }
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
