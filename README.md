@@ -31,7 +31,7 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 
 # Advanced options
 
-These options are available by modifying options in the **config.h** file:
+These options are available by modifying #defines in the **config.h** file:
 - **Night Mode** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the initial sensor being unable to expose mote than 1 second. Here there is no limit.
 - **Fixed exposure** allows bypassing the autoexposure alogorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly.
 - **Serial mode** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
