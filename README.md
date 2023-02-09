@@ -85,4 +85,4 @@ In other words, it should perfectly be possible to interface a MAX153 with the R
 
 - a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Powerpoint.
-- a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with it's mapper connected.
+- a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
