@@ -1,6 +1,6 @@
 //By Raphaël BOICHOT, made around 2023-04-27
 //this version is to use with the Matlab code to directly probe VOUT into a Game Boy Camera through 33k Ohm resistors on READ and CLOCK
-//Works but slowly and no CLOCH front detection for the moment
+//Works but slowly and no CLOCK front detection for the moment
 //it outputs data over the serial and diplays raw data on screen
 
 #include "hardware/adc.h" //the GPIO commands are here
