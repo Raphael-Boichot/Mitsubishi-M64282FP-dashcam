@@ -16,6 +16,7 @@
 //lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565
 //and so on...
 
+#include "pico/stdlib.h"
 #include "hardware/adc.h" //the GPIO commands are here
 #include "big_data.h"
 #include "config.h"
@@ -90,6 +91,10 @@ void setup()
   adc_gpio_init(VOUT);  adc_select_input(0);//there are several ADC channels to choose from
   adc_init();//mandatory, without it stuck the camera
 
+#ifdef USE_EXTREME_OVERCLOCK
+set_sys_clock_khz(270000, true); // To use at your own risks, increases instability
+#endif
+
 #ifdef USE_SERIAL // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(2000000);
 #endif
@@ -122,12 +127,6 @@ void setup()
 void loop()
 {
   currentTime = millis();
-  //nigth mode strategy
-#ifdef NIGHT_MODE
-  if (current_exposure == 0xFFFF) clock_divider = clock_divider * 2; //I reach maximum exposure = let's divide the clock frequency
-  if (current_exposure < 0x1000) clock_divider = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
-#endif
-
   take_a_picture(); //data in memory for the moment, one frame
   new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
 
@@ -333,9 +332,17 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     new_regs = 0x0010;
   }
   if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
+#ifdef NIGHT_MODE
+    clock_divider = clock_divider + 1 ;
+#endif
     new_regs = 0xFFFF;
   }
-  camReg[2] = int(new_regs / 256);
+
+#ifdef NIGHT_MODE
+  if (current_exposure < 0x1000) clock_divider = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+#endif
+
+  camReg[2] = int(new_regs / 256);//Janky, I know...
   camReg[3] = int(new_regs - camReg[2] * 256);//Janky, I know...
 }
 
