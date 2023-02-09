@@ -6,7 +6,8 @@
 #include "hardware/adc.h" //the GPIO commands are here
 #include "pico/stdlib.h"
 
-
+#define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
+const unsigned int cycles = 12; //time delay in processor cycles
 // the order of pins has no importance except that VOUT must be on some ADC
 const uint VOUT =  26; //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
 
@@ -23,6 +24,7 @@ bool old_state = 0;
 void setup()
 {
   //digital stuff
+  set_sys_clock_khz(266000, true); // 158us
   gpio_init(LED);       gpio_set_dir(LED, GPIO_OUT);
   gpio_init(READ);      gpio_set_dir(READ, GPIO_IN); gpio_pull_down(READ);
   gpio_init(CLOCK);     gpio_set_dir(CLOCK, GPIO_IN); gpio_pull_down(CLOCK);
@@ -30,9 +32,9 @@ void setup()
   //analog stuff
   adc_gpio_init(VOUT);  adc_select_input(0);
   adc_init();
-//set_sys_clock_khz(300000,true);
-delay(2000);
+  delay(10000);
   Serial.begin(2000000);
+    
 }
 
 void loop()
@@ -40,11 +42,12 @@ void loop()
   while (1) {
     new_state = gpio_get(READ);
     if ((new_state == 1) & (old_state == 0)) {
-      Serial.println("Read detected");
+      //Serial.println("Read detected");
       for (int i = 0; i < 128 * 128; i++) {
         CamData[i] = adc_read() >> 4;
+        //camDelay();
       }
-      Serial.println("End of Reading");
+      //Serial.println("End of Reading");
       dump_data_to_serial( CamData);
     }
     old_state = new_state;
@@ -60,4 +63,9 @@ void dump_data_to_serial(unsigned char CamData[128 * 128]) {
     Serial.print(" ");
   }
   Serial.println("");
+}
+
+void camDelay()// Allow a lag in processor cycles to maintain signals long enough
+{
+  for (int i = 0; i < cycles; i++) NOP;
 }
