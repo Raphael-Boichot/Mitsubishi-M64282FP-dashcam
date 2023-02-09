@@ -37,8 +37,9 @@ These options are available by modifying #defines in the **config.h** file:
 - **Serial mode** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
 - **Dithering mode** displays and records images in 2 bits per pixels as the real Game Boy Camera. It is quite a questionable option as the device is precisely intended to output 8 bits images unlike the Game Boy. It uses dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/).
 - **No display mode** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
+- **No SD mode** well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
 
-Options are cumulative, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
+Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
 # Minimal parts
 
@@ -82,5 +83,6 @@ In other words, it should perfectly be possible to interface a MAX153 with the R
 
 # To do (or not)
 
-- a decent PCB because all that shit could probably enter a Game Boy shell at certain point.
-- a decent schematic to cure my addiction to MS Paint.
+- a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
+- a decent schematic to cure my addiction to MS Powerpoint.
+- a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with it's mapper connected.
