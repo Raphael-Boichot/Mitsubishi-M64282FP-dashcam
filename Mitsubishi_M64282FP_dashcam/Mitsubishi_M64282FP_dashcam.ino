@@ -55,20 +55,25 @@ unsigned int clock_divider = 1; //time delay in processor cycles to cheat the ex
 const unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
-unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.txt
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 bool recording = 0;//0 = idle mode, 1 = recording mode
-bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
-bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
-bool DITHER_mode = 0; //1 = Dithering ON, 0 = dithering OFF
-bool NIGHT_mode = 0;//0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
-bool JSON_ready =0;//reserved, for bug on config.txt
+bool JSON_ready = 0; //reserved, for bug on config.txt
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
+
+//default values in case config.txt is not existing/////////////////////////////////////////////////////////////////////////////////////////////
+bool NIGHT_mode = 0;//0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
+bool DITHER_mode = 0; //1 = Dithering ON, 0 = dithering OFF
+bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
+unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.txt
+bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
+int FIXED_delay = 2048;//here the result is a fixed exposure perfect for full moon photography
+int FIXED_divider = 1;//clock divider
 
 //////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +112,6 @@ void setup()
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
 
 #ifdef  USE_SD
-  //Get_JSON_config("/config.txt");//get configuration data if a file exists
   sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
 #endif
@@ -115,14 +119,14 @@ void setup()
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
 
-#ifndef USE_FIXED_EXPOSURE
-  // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
-  for (int i = 1; i < 10; i++) {
-    take_a_picture();
-    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
-    push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
+  if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
+    // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
+    for (int i = 1; i < 10; i++) {
+      take_a_picture();
+      new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
+      push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
+    }
   }
-#endif
 }
 
 //////////////////////////////////////////////Main loop///////////////////////////////////////////////////////////////////////////////////////////
@@ -133,10 +137,10 @@ void loop()
   take_a_picture(); //data in memory for the moment, one frame
   new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
 
-#ifdef  USE_FIXED_EXPOSURE
-  new_exposure = FIXED_EXPOSURE;
-  clock_divider = FIXED_CLOCK_DIVIDER;
-#endif
+if (FIXED_EXPOSURE_mode == 1) { 
+  new_exposure = FIXED_delay;
+  clock_divider = FIXED_divider;
+}
 
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
 
@@ -684,10 +688,10 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 
 bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   // Open file for reading
-  bool JSON_OK=0;
+  bool JSON_OK = 0;
 #ifdef  USE_SD
   if (SD.exists(path)) {
-    JSON_OK=1;
+    JSON_OK = 1;
     File file = SD.open(path);
     StaticJsonDocument<1024> doc;
     DeserializationError error = deserializeJson(doc, file);
@@ -696,10 +700,13 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     DITHER_mode = doc["dithering"];
     BORDER_mode = doc["2dEnhancement"];
     deadtime = doc["delay"];
+    FIXED_EXPOSURE_mode = doc["fixedExposure"];
+    FIXED_delay = doc["fixedDelay"];
+    FIXED_divider = doc["fixedDivider"];
     file.close();
   }
 #endif
-return JSON_OK;
+  return JSON_OK;
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -806,7 +813,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   img.pushSprite(0, 0);// dump image to display
 #endif
 
-JSON_ready=Get_JSON_config("/config.txt");//get configuration data if a file exists
+  JSON_ready = Get_JSON_config("/config.txt"); //get configuration data if a file exists
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {

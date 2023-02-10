@@ -1,8 +1,6 @@
-
 #define USE_TFT //to allow using the TFT screen
 #define USE_SD //to allow recording on SD
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
-//#define USE_FIXED_EXPOSURE //mode for astrophotography
 //#define USE_EXTREME_OVERCLOCK //Use at your own risks !!! Twice faster but out of tolerance for everything and unstable
 
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
@@ -10,11 +8,6 @@ unsigned char Dithering_patterns [] = {0x20, 0x5F, 0xA3, 0x4F, 0x92, 0xCF, 0x2B,
 
 double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
 //const double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
-
-#ifdef  USE_FIXED_EXPOSURE //here the result is a fixed exposure perfect for full moon photography
-#define FIXED_EXPOSURE 2048
-#define FIXED_CLOCK_DIVIDER 1
-#endif
 
 #define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay
 #define BITS_PER_PIXEL 16             // How many bits per pixel in Sprite, here RGB565 format
