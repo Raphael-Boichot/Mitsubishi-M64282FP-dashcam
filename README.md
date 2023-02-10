@@ -25,7 +25,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 - To shift to **Recording mode**, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.txt](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.txt) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value, the SD can capture each frame if needed. The red LED indicates access to the SD card for recording. By pressing pushbutton again, **Display mode** comes back.
 - To activate **HDR mode**, **Dithering mode** or **Border enhancement mode**, simply push the corresponding pushbuttons linked to GPIO20, GPIO21 and GPIO22 during **Display mode** (they are deactivated during Recording mode).
 
-Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **config.h** file. List of exposures taken in HDR mode can also be modified here. 
+Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam/config.h)** file. List of exposures taken in HDR mode can also be modified here. 
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
@@ -38,7 +38,7 @@ Additionally, you can address two other features by entering them in the [config
 
 # Advanced options
 
-These options are available by modifying #defines in the **config.h** file:
+These options are available by modifying #defines in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam/config.h)** file:
 - **Serial mode** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
 - **No display mode** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 - **No SD mode**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
@@ -65,7 +65,7 @@ Options are cumulatives, it is for example possible to record dithered HDR image
 The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
 
 # Pinout (yes it's a mess, I know)
-![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout.png)
+![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout_2.png)
 
 # Connection with the sensor
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
