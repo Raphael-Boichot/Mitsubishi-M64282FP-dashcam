@@ -1,7 +1,10 @@
 { 
-  "nightMode": 0,
-  "hdrMode": 1,
-  "dithering": 0,
-  "2dEnhancement": 1,
-  "delay": 2500
+"nightMode":0,
+"hdrMode":1,
+"dithering":0,
+"2dEnhancement":0,
+"delay":1000
+"fixedExposure":0,
+"fixedDelay":2048,
+"fixedDivider":1
 }
