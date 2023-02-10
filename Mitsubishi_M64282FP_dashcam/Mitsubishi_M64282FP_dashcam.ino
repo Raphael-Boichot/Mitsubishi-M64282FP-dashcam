@@ -137,10 +137,10 @@ void loop()
   take_a_picture(); //data in memory for the moment, one frame
   new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
 
-if (FIXED_EXPOSURE_mode == 1) { 
-  new_exposure = FIXED_delay;
-  clock_divider = FIXED_divider;
-}
+  if (FIXED_EXPOSURE_mode == 1) {
+    new_exposure = FIXED_delay;
+    clock_divider = FIXED_divider;
+  }
 
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
 
@@ -693,7 +693,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   if (SD.exists(path)) {
     JSON_OK = 1;
     File file = SD.open(path);
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc, file);
     NIGHT_mode = doc["nightMode"];
     HDR_mode = doc["hdrMode"];
@@ -703,6 +703,12 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
+    for (int i = 0; i < num_HDR_images; i++) {
+      exposure_list[i] = doc["exposureList"][i];
+    }
+    for (int i = 0; i < 48; i++) {
+      Dithering_patterns [i] = doc["ditherMatrix"][i];
+    }
     file.close();
   }
 #endif
