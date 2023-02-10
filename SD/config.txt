@@ -3,7 +3,7 @@
 "hdrMode":1,
 "dithering":0,
 "2dEnhancement":0,
-"delay":1000
+"delay":1000,
 "fixedExposure":0,
 "fixedDelay":2048,
 "fixedDivider":1
