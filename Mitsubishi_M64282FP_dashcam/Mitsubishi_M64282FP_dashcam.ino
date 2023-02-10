@@ -39,10 +39,9 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
 //With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts).
-const char signature[20] = {};
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-const unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
-const unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
+unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
+unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
@@ -67,6 +66,7 @@ bool DITHER_mode = 0; //1 = Dithering ON, 0 = dithering OFF
 bool NIGHT_mode = 0;//0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
+bool JSON_ready =0;//reserved, for bug on config.txt
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
@@ -806,18 +806,18 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   img.pushSprite(0, 0);// dump image to display
 #endif
 
-bool JSON_ready=Get_JSON_config("/config.txt");//get configuration data if a file exists
+JSON_ready=Get_JSON_config("/config.txt");//get configuration data if a file exists
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 16);
-    img.println(F("JSON FOUND"));
+    img.println(F("READY"));
   }
   else {
     img.setTextColor(TFT_ORANGE);
     img.setCursor(50, 16);
-    img.println(F("NO JSON"));
+    img.println(F("NOT FOUND"));
   }
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
