@@ -66,7 +66,7 @@ char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
 //default values in case config.txt is not existing/////////////////////////////////////////////////////////////////////////////////////////////
-bool NIGHT_mode = 0;//0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 bool DITHER_mode = 0; //1 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
@@ -611,8 +611,8 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
         if (pixel > Bayer_matW_LG[(x & 3) + 4 * (y & 3)]) pixel_out = W;
         else pixel_out = LG;
       }
-      counter = counter + 1;
       BayerData[counter] = pixel_out;
+      counter = counter + 1;
     }
   }
 }
