@@ -68,7 +68,7 @@ char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or 
 //default values in case config.txt is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
-bool DITHER_mode = 0; //1 = Dithering ON, 0 = dithering OFF
+bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
 unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.txt
 bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
@@ -276,22 +276,22 @@ void loop()
     delay(debouncing_delay);//get the folder number on SD card
   }
 
-  if (recording == 0) { // Change HDR<->one frame modes
-    if (gpio_get(HDR) == 1) {
-      HDR_mode = !HDR_mode;
-      delay(debouncing_delay);
-    }
-    if (gpio_get(DITHER) == 1) {
-      DITHER_mode = !DITHER_mode;
-      delay(debouncing_delay);
-    }
-    if (gpio_get(BORDER) == 1) {// Change raw<->2D enhanced images
-      BORDER_mode = !BORDER_mode;
-      if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
-      if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
-      delay(debouncing_delay);
-    }
+  //if (recording == 0) { // Change HDR<->one frame modes
+  if (gpio_get(HDR) == 1) {
+    HDR_mode = !HDR_mode;
+    delay(debouncing_delay);
   }
+  if (gpio_get(DITHER) == 1) {
+    DITHER_mode = !DITHER_mode;
+    delay(debouncing_delay);
+  }
+  if (gpio_get(BORDER) == 1) {// Change raw<->2D enhanced images
+    BORDER_mode = !BORDER_mode;
+    if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
+    if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
+    delay(debouncing_delay);
+  }
+  //}
 } //end of loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
