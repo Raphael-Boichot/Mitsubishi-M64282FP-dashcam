@@ -1,6 +1,6 @@
 #define USE_TFT //to allow using the TFT screen
 #define USE_SD //to allow recording on SD
-//#define USE_SERIAL //mode for outputing image in ascii to the serial console
+#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_EXTREME_OVERCLOCK //Use at your own risks !!! Twice faster but out of tolerance for everything and unstable
 
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
