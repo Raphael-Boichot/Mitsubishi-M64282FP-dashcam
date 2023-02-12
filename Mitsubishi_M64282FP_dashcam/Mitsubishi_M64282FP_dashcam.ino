@@ -326,8 +326,8 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   if ((error >= -80) && (error <= -30))  new_regs = exp_regs / 1.3;
   if ((error <= 30) && (error >= 10))     new_regs = exp_regs * 1.03;
   if ((error >= -30) && (error <= -10))   new_regs = exp_regs / 1.03;
-  if ((error <= 10) && (error >= 2))   new_regs = exp_regs + 1;
-  if ((error >= -10) && (error <= -2))  new_regs = exp_regs - 1;
+  if ((error <= 10) && (error >= 4))   new_regs = exp_regs + 1;//this level is critical to avoid flickering in full sun, 3-4 is nice
+  if ((error >= -10) && (error <= -4))  new_regs = exp_regs - 1;//this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error)); //concatenate string for display;
   return int(new_regs);
 }
