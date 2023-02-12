@@ -8,6 +8,8 @@ listing = dir('*.bmp');
 for i=1:1:length(listing)
     name=listing(i).name
     frame=imread(name);
+    %frame=rot90(frame);%90° rotation
+    %frame=rot90(frame);%90° rotation
     data(:,:,i)=frame;
     scaled=imresize(frame,upscaling_factor,'nearest');
     writeVideo(vidfile, scaled);
@@ -20,10 +22,10 @@ for i=1:1:length(listing)
 end
 close(vidfile)
 average=mean(data,3);
-colormap gray
 minimum=min(min(min(average)));
 maximum=max(max(max(average)));
 average=(average-minimum)*(255/(maximum-minimum));
 average=uint8(average);
 average=imresize(average,upscaling_factor,'nearest');
 imwrite(average,'Output.png')
+imshow(average);
