@@ -23,6 +23,7 @@
 #include "big_data.h"
 #include "config.h"
 #include "splash.h"
+#include "prettyborder.h"
 
 #ifdef  USE_SD
 #include <SPI.h>  //for SD
@@ -45,6 +46,7 @@ unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
+unsigned char BigBmpData[160 * 144];// sensor data with autocontrast and pretty border ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 unsigned char Bayer_matW_LG[4 * 4];//Bayer matrix to apply dithering for each image pixel white to light gray
 unsigned char Bayer_matLG_DG[4 * 4];//Bayer matrix to apply dithering for each image pixel light gray to dark gray
@@ -66,6 +68,7 @@ char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
 //default values in case config.txt is not existing/////////////////////////////////////////////////////////////////////////////////////////////
+bool PRETTYBORDER_mode = 0;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
 bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
@@ -118,6 +121,7 @@ void setup()
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
+  pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
 
   if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
     // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
@@ -228,14 +232,26 @@ void loop()
           BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
         }
       }
+
+      if (PRETTYBORDER_mode == 1) make_image_with_pretty_borders();
+
       gpio_put(RED, 1);
 #ifdef  USE_SD
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
       if (dataFile) {
-        dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
-        dataFile.write(BmpData, 128 * 120); //removing last tile line
-        dataFile.close();
+        if (PRETTYBORDER_mode == 0)
+        {
+          dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
+          dataFile.write(BmpData, 128 * 120); //removing last tile line
+          dataFile.close();
+        }
+        if (PRETTYBORDER_mode == 1)
+        {
+          dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 128*120 image
+          dataFile.write(BigBmpData, 160 * 144); //removing last tile line
+          dataFile.close();
+        }
       }
 #endif
       gpio_put(RED, 0);
@@ -606,6 +622,34 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
   }
 }
 
+void make_image_with_pretty_borders()
+{
+  int image_counter = 8 * 128; //remove the 8 first pixel line like a Game Boy Camera
+  int pretty_image_counter = 16 * 160; //beginning of first pixel to fill
+  for (int line = 0; line < 112; line++) {//line counter
+    pretty_image_counter = pretty_image_counter + 16;
+    for (int x = 0; x < 128; x++) {//column counter
+      BigBmpData[pretty_image_counter] = BmpData[image_counter];
+      pretty_image_counter++;
+      image_counter++;
+    }
+    pretty_image_counter = pretty_image_counter + 16;
+  }
+}
+
+void pre_allocate_image_with_pretty_borders()
+{
+  memset(BigBmpData, 0, sizeof(BigBmpData));//clean the BigBmpData data array
+  int counter = 0;
+  for (int y = 0; y < 144; y++) {
+    for (int x = 0; x < 160; x++) {
+      BigBmpData[counter] = Dithering_palette[prettyborder[counter]];//ensures that the palette matches with the dithering palette in any case
+      counter = counter + 1;
+    }
+  }
+}
+
+
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
@@ -684,6 +728,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     File file = SD.open(path);
     StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc, file);
+    PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
     HDR_mode = doc["hdrMode"];
     DITHER_mode = doc["dithering"];
