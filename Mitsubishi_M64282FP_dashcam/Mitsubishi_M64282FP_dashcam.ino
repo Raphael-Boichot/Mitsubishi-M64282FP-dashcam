@@ -853,7 +853,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   img.pushSprite(0, 0);// dump image to display
 #endif
 
-  JSON_ready = Get_JSON_config("/config.txt"); //get configuration data if a file exists
+  JSON_ready = Get_JSON_config("/config.json"); //get configuration data if a file exists
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {
