@@ -196,14 +196,19 @@ void loop()
       if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
 
 #ifdef  USE_TFT
+#ifndef  USE_SNEAK_MODE
         img.setTextColor(TFT_BLUE);
         img.setCursor(0, 16);
         img.println(F("HDR in acquisition"));
         display_other_informations();
         img.pushSprite(0, 0);// dump image to display
 #endif
+#endif
 
+#ifndef  USE_SNEAK_MODE
         gpio_put(RED, 1);
+#endif
+
         memset(HDRData, 0, sizeof(HDRData));//clean the HDR data array
         current_exposure = get_exposure(camReg);//store the current exposure register for later
         for (int i = 0; i < num_HDR_images; i++) {
@@ -235,7 +240,10 @@ void loop()
 
       if (PRETTYBORDER_mode == 1) make_image_with_pretty_borders();
 
+#ifndef  USE_SNEAK_MODE
       gpio_put(RED, 1);
+#endif
+
 #ifdef  USE_SD
       File dataFile = SD.open(storage_file_name, FILE_WRITE);
       // if the file is writable, write to it:
@@ -257,16 +265,22 @@ void loop()
       gpio_put(RED, 0);
     }
 #ifdef  USE_TFT
+#ifndef  USE_SNEAK_MODE
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println(F("Recording Mode"));
     display_other_informations();
 #endif
+#endif
 
     if (deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
   }
 
+
 #ifdef  USE_TFT
+#ifdef  USE_SNEAK_MODE
+  if (recording == 1) img.fillScreen(TFT_BLACK);
+#endif
   img.pushSprite(0, 0);// dump image to display
 #endif
 
@@ -277,7 +291,11 @@ void loop()
     sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
     SD.mkdir(storage_file_dir);//create next directory
 #endif
+
+#ifndef  USE_SNEAK_MODE
     gpio_put(RED, 1);
+#endif
+
     recording = 1;
     previousTime = currentTime;//To avoid taking a picture while pressing the mode button
     delay(debouncing_delay);//for debouncing
@@ -474,7 +492,11 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   camDelay();
   gpio_put(CLOCK, 0);
   camDelay();
+
+#ifndef  USE_SNEAK_MODE
   gpio_put(LED, 1);
+#endif
+
   while (1) {// Wait for READ to go high
     gpio_put(CLOCK, 1);
     camSpecialDelay();
@@ -526,7 +548,9 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
   camDelay();
   gpio_put(CLOCK, 0);
   camDelay();
+#ifndef  USE_SNEAK_MODE
   gpio_put(LED, 1);
+#endif
   currentTime = millis();
   while (1) {// Wait for READ to go high
     gpio_put(CLOCK, 1);
@@ -757,9 +781,9 @@ void display_other_informations() {
   img.setCursor(0, 0);
   img.println(F(exposure_string));
   img.setTextColor(TFT_BLUE);
-  img.setCursor(64, 128);
+  img.setCursor(64, 126);
   img.println(F(error_string));
-  img.setCursor(0, 128);
+  img.setCursor(0, 126);
   img.println(F(multiplier_string));
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
@@ -882,7 +906,11 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #ifdef  USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {//get stuck here if any problem to avoid further board damage
     while (1) {
+
+#ifndef  USE_SNEAK_MODE
       gpio_put(RED, 1);
+#endif
+
       delay(1000);
       gpio_put(RED, 0);
       delay(1000);
