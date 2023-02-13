@@ -39,9 +39,11 @@ Additionally, you can address two other features by entering them in the [config
 # Advanced options
 
 These options are available by modifying #defines in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam/config.h)** file:
-- **Serial mode** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
-- **No display mode** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
-- **No SD mode**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
+- **USE_SERIAL** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
+- **USE_TFT** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
+- **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
+- **USE_EXTREME_OVERCLOCK** allows multiplying the clock frequency by a factor of 2. Use at your own risks.
+- **USE_SNEAK_MODE** disable LEDS and display in recording mode.
 
 Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
