@@ -1,11 +1,12 @@
 #define USE_TFT //to allow using the TFT screen
 #define USE_SD //to allow recording on SD
-#define USE_SERIAL //mode for outputing image in ascii to the serial console
+//#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_EXTREME_OVERCLOCK //Use at your own risks !!! Twice faster but out of tolerance for everything and unstable
 
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
 unsigned char Dithering_patterns [] = { 0x2A, 0x5E, 0x9B, 0x51, 0x8B, 0xCA, 0x33, 0x69, 0xA6, 0x5A, 0x97, 0xD6, 0x44, 0x7C, 0xBA, 0x37, 0x6D, 0xAA, 0x4D, 0x87, 0xC6, 0x40, 0x78, 0xB6, 0x30, 0x65, 0xA2, 0x57, 0x93, 0xD2, 0x2D, 0x61, 0x9E, 0x54, 0x8F, 0xCE, 0x4A, 0x84, 0xC2, 0x3D, 0x74, 0xB2, 0x47, 0x80, 0xBE, 0x3A, 0x71, 0xAE };
 double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
+unsigned char Dithering_palette[4] = {0x00, 0x55, 0xAA, 0xFF};//colors as they will appear in the bmp file and display after dithering
 //const double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
 
 #define NOP __asm__ __volatile__ ("nop\n\t") //// minimal possible delay

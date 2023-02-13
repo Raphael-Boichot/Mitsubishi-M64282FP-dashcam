@@ -50,9 +50,9 @@ unsigned char Bayer_matW_LG[4 * 4];//Bayer matrix to apply dithering for each im
 unsigned char Bayer_matLG_DG[4 * 4];//Bayer matrix to apply dithering for each image pixel light gray to dark gray
 unsigned char Bayer_matDG_B[4 * 4];//Bayer matrix to apply dithering for each image pixel dark gray to dark
 unsigned char BayerData[128 * 128];// dithered image data
-const unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned int clock_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
-const unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
+unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long Next_ID, Next_dir;//for directories and filenames
@@ -335,8 +335,8 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   new_regs = current_exposure * factor;
-  if (new_regs < 0x030) {//minimum of the sensor for these registers, below there are verticals artifacts
-    new_regs = 0x030;//minimum of the sensor for these registers, below there are verticals artifacts
+  if (new_regs < 0x0010) {//minimum of the sensor for these registers, below there are verticals artifacts
+    new_regs = 0x0010;//minimum of the sensor for these registers, below there are verticals artifacts
   }
   if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
@@ -590,20 +590,16 @@ void pre_allocate_Bayer_tables()
 void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128])
 { //dithering algorithm
   char pixel, pixel_out;
-  char W = 0xFF; //white as it will appear in the bmp file
-  char LG = 0xAA; //light gray as it will appear in the bmp file
-  char DG = 0x55; //dark gray as it will appear in the bmp file
-  char B = 0x00; //black as it will appear in the bmp file
   int counter = 0;
   pixel_out = 0;
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {
       //pixel = CamData[counter];//non auto_contrasted values, may range between 0 and 255
       pixel = lookup_serial[CamData[counter]];//auto_contrasted values, may range between 0 and 255
-      pixel_out = W;
-      if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) pixel_out = B;
-      if ((pixel >= Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matLG_DG[(x & 3) + 4 * (y & 3)])) pixel_out = DG;
-      if ((pixel >= Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matW_LG[(x & 3) + 4 * (y & 3)]))pixel_out = LG;
+      pixel_out = Dithering_palette[3];
+      if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) pixel_out = Dithering_palette[0];
+      if ((pixel >= Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matLG_DG[(x & 3) + 4 * (y & 3)])) pixel_out = Dithering_palette[1];
+      if ((pixel >= Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matW_LG[(x & 3) + 4 * (y & 3)]))pixel_out = Dithering_palette[2];
       BayerData[counter] = pixel_out;
       counter = counter + 1;
     }
