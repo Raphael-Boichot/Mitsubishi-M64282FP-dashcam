@@ -67,7 +67,8 @@ bool JSON_ready = 0; //reserved, for bug on config.txt
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
-//default values in case config.txt is not existing/////////////////////////////////////////////////////////////////////////////////////////////
+//default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
+bool LOWBATTERY_mode = 0;//0 = normal use, 1 = display off while recording
 bool PRETTYBORDER_mode = 0;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
@@ -196,13 +197,14 @@ void loop()
       if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
 
 #ifdef  USE_TFT
-#ifndef  USE_SNEAK_MODE
+if (LOWBATTERY_mode == 0)
+{
         img.setTextColor(TFT_BLUE);
         img.setCursor(0, 16);
         img.println(F("HDR in acquisition"));
         display_other_informations();
         img.pushSprite(0, 0);// dump image to display
-#endif
+}
 #endif
 
 #ifndef  USE_SNEAK_MODE
@@ -265,12 +267,13 @@ void loop()
       gpio_put(RED, 0);
     }
 #ifdef  USE_TFT
-#ifndef  USE_SNEAK_MODE
+if (LOWBATTERY_mode == 0)
+{
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println(F("Recording Mode"));
     display_other_informations();
-#endif
+}
 #endif
 
     if (deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
@@ -278,10 +281,7 @@ void loop()
 
 
 #ifdef  USE_TFT
-#ifdef  USE_SNEAK_MODE
-  if (recording == 1) img.fillScreen(TFT_BLACK);
-#endif
-  img.pushSprite(0, 0);// dump image to display
+if (LOWBATTERY_mode == 0) img.pushSprite(0, 0);// dump image to display
 #endif
 
   if ((gpio_get(PUSH) == 1) && recording == 0) { // we want to record: get file/directory#
@@ -369,8 +369,8 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   new_regs = current_exposure * factor;
-  if (new_regs < 0x0010) {//minimum of the sensor for these registers, below there are verticals artifacts
-    new_regs = 0x0010;//minimum of the sensor for these registers, below there are verticals artifacts
+  if (new_regs < 0x0030) {//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    new_regs = 0x0030;//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
   }
   if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
@@ -910,7 +910,6 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #ifndef  USE_SNEAK_MODE
       gpio_put(RED, 1);
 #endif
-
       delay(1000);
       gpio_put(RED, 0);
       delay(1000);
