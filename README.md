@@ -43,7 +43,7 @@ These options are available by modifying #defines in the **[config.h](https://gi
 - **USE_TFT** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 - **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
 - **USE_EXTREME_OVERCLOCK** allows multiplying the clock frequency by a factor of 2. Use at your own risks.
-- **USE_SNEAK_MODE** disable LEDS and display in recording mode.
+- **USE_SNEAK_MODE** disable LEDS in recording mode.
 
 Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
@@ -57,12 +57,13 @@ Options are cumulatives, it is for example possible to record dithered HDR image
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
 - 4 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
+- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current than the Pi Pico itself (in case of long timelapses for example.
 
 **Powered with internal lithium battery**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
 - a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
 - Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
-- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
+- another [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
 
 The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
 
