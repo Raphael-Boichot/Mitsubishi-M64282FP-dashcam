@@ -53,19 +53,19 @@ Options are cumulatives, it is for example possible to record dithered HDR image
 # Minimal parts
 
 **Powered by the Pi Pico USB port**
-- An Arduino Pi Pico. [Fancy purple Chinese clones](https://fr.aliexpress.com/item/1005003928558306.html) are OK (this is still the genuine RP2040 chip) as long as you do not care that the pinout is completely baroque.
+- an Arduino Pi Pico. [Fancy purple Chinese clones](https://fr.aliexpress.com/item/1005003928558306.html) are OK (this is still the genuine RP2040 chip) as long as you do not care that the pinout is completely baroque.
 - a [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
-- A way to connect the sensor without destroying the original cable like a slighly butchered [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) connector or an opened [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
-- A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
+- a way to connect the sensor without destroying the original cable like a slighly butchered [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) connector or an opened [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
+- a [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
 - 4 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
-- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current than the Pi Pico itself (for saving battery in case of long timelapses for example).
+- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
 **Powered with internal lithium battery**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
 - a [DD05CVSA charger unit](https://fr.aliexpress.com/item/1005003537981780.html).
-- Any LiPo stolen in any electronic toy. The device draws nothing, even a 200 mA.h is enough to play with the device outside for hours.
+- any LiPo stolen in any electronic toy. The device draws nothing, even a tiny 200 mA.h is enough to play with the device outside for hours.
 - another [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the circuit when off or for flashing the Pi Pico.
 
 The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
