@@ -57,7 +57,7 @@ Options are cumulatives, it is for example possible to record dithered HDR image
 - A [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
 - 4 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
-- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current than the Pi Pico itself (in case of long timelapses for example.
+- a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current than the Pi Pico itself (for saving battery in case of long timelapses for example).
 
 **Powered with internal lithium battery**
 - an [USB breakout board of any kind](https://fr.aliexpress.com/item/4000385426649.html).
