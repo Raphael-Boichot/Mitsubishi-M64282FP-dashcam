@@ -23,7 +23,9 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 - Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** shows what the Mitsubishi sensor sends without recording anything. The green LED indicate the exposure time. It can go from 256 µs to 1 second depending on lighting conditions.
 - To shift to **Recording mode**, press the pushbutton linked to GPIO13. It will automatically record BMP images with a deadtime inbetween. This deadtime is set by just dropping a file named [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) at the root of SD card with that deadtime value entered in ms (if no file, default deadtime is 2000 ms). There is no minimal value, the SD can capture each frame if needed. The red LED indicates access to the SD card for recording. By pressing pushbutton again, **Display mode** comes back.
-- To activate **HDR mode**, **Dithering mode** or **Border enhancement mode**, simply push the corresponding pushbuttons linked to GPIO20, GPIO21 and GPIO22 during **Display mode** (they are deactivated during Recording mode).
+- To activate **HDR mode**, **Dithering mode** or **Border enhancement mode**, simply push the corresponding pushbuttons linked to GPIO20, GPIO21 and GPIO22.
+
+**HDR mode** take several images from -1EV to +1EV and make an average of them before recording. This increases the dynamic of the sensor. **Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. **Border enhancement mode** operates a 2D border detection on the image, which is a native function of the sensor. Native images without this mode are very soft but less noisy too. This mode is indicated on the display by a fancy **magenta border**.
 
 Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam/config.h)** or  **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. List of exposures taken in HDR mode can also be modified here. **Config.json, if it exists, has priority on config.h.**
 
@@ -31,7 +33,8 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 
 Additionally, you can address two other features by entering them in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json):
 - **Night Mode** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the initial sensor being unable to expose mote than 1 second. Here there is no limit.
-- **Fixed exposure** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly.
+- **Fixed exposure** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time (between 0x030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
+- **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
 
 # Example of test images with a stuffed fox
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
