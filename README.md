@@ -36,6 +36,8 @@ Additionally, you can address three other features by entering them in the [conf
 - **Fixed exposure** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
 
+Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
+
 # Example of test images with a stuffed fox
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
 
@@ -47,8 +49,6 @@ These options are available by modifying #defines in the **[config.h](https://gi
 - **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
 - **USE_EXTREME_OVERCLOCK** allows multiplying the clock frequency by a factor of 2. Use at your own risks.
 - **USE_SNEAK_MODE** disable LEDS in recording mode.
-
-Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
 # Minimal parts
 
