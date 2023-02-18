@@ -60,6 +60,7 @@ unsigned long previousTime = 0;
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
+bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
@@ -67,25 +68,12 @@ bool JSON_ready = 0; //reserved, for bug on config.txt
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
-//default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
-bool LOWBATTERY_mode = 0;//0 = normal use, 1 = display off while recording
-bool PRETTYBORDER_mode = 0;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
-bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
-bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
-bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
-bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
-unsigned long deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.txt
-bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
-int FIXED_delay = 2048;//here the result is a fixed exposure perfect for full moon photography
-int FIXED_divider = 1;//clock divider
-
 //////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup()
 {
   //interface input/output
   gpio_init(PUSH);      gpio_set_dir(PUSH, GPIO_IN);
-  gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);
   gpio_init(BORDER);    gpio_set_dir(BORDER, GPIO_IN);
   gpio_init(DITHER);    gpio_set_dir(DITHER, GPIO_IN);
   gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);
@@ -116,7 +104,7 @@ void setup()
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
 
 #ifdef  USE_SD
-  sprintf(storage_deadtime, "Delay: %d ms", deadtime); //concatenate string for display
+  sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
 #endif
 
@@ -178,154 +166,84 @@ void loop()
   }
 #endif
 
-  if (recording == 0) {//just put informations to the ram too
-
+  if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the ram too
 #ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
     img.println(F("Display Mode"));
     display_other_informations();
+    img.pushSprite(0, 0);// dump image to display
 #endif
-
   }
-  if (recording == 1) {// prepare data for recording mode
-    if ((currentTime - previousTime) > deadtime) {// Wait for deadtime set in config.txt
-      Next_ID++;// update the file number
-      previousTime = currentTime;
-      sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID);//update filename
 
-      if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
-
+  if (recording == 1) {// prepare data for recording in timelapse mode
 #ifdef  USE_TFT
-if (LOWBATTERY_mode == 0)
-{
-        img.setTextColor(TFT_BLUE);
-        img.setCursor(0, 16);
-        img.println(F("HDR in acquisition"));
-        display_other_informations();
-        img.pushSprite(0, 0);// dump image to display
-}
-#endif
-
-#ifndef  USE_SNEAK_MODE
-        gpio_put(RED, 1);
-#endif
-
-        memset(HDRData, 0, sizeof(HDRData));//clean the HDR data array
-        current_exposure = get_exposure(camReg);//store the current exposure register for later
-        for (int i = 0; i < num_HDR_images; i++) {
-          push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
-          take_a_picture();
-          for (int i = 0; i < 128 * 128; i++) {
-            HDRData[i] = HDRData[i] + CamData[i]; //sum data
-          }
-        }
-        //now time to average all this shit
-        for (int i = 0; i < 128 * 128; i++) {
-          CamData[i] = HDRData[i] / num_HDR_images; //do the average
-        }
-        push_exposure(camReg, current_exposure, 1); //rewrite the old register stored before
-      }
-
-      if (DITHER_mode == 1) {
-        Dither_image(CamData, BayerData);
-        for (int i = 0; i < 128 * 128; i++) {
-          BmpData[i] = BayerData[i];//to get data with dithering (dithering includes auto-contrast)
-        }
-      }
-      else
-      {
-        for (int i = 0; i < 128 * 128; i++) {
-          BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
-        }
-      }
-
-      if (PRETTYBORDER_mode == 1) make_image_with_pretty_borders();
-
-#ifndef  USE_SNEAK_MODE
-      gpio_put(RED, 1);
-#endif
-
-#ifdef  USE_SD
-      File dataFile = SD.open(storage_file_name, FILE_WRITE);
-      // if the file is writable, write to it:
-      if (dataFile) {
-        if (PRETTYBORDER_mode == 0)
-        {
-          dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
-          dataFile.write(BmpData, 128 * 120); //removing last tile line
-          dataFile.close();
-        }
-        if (PRETTYBORDER_mode == 1)
-        {
-          dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 128*120 image
-          dataFile.write(BigBmpData, 160 * 144); //removing last tile line
-          dataFile.close();
-        }
-      }
-#endif
-      gpio_put(RED, 0);
-    }
-#ifdef  USE_TFT
-if (LOWBATTERY_mode == 0)
-{
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println(F("Recording Mode"));
+    img.println(F("Recording..."));
     display_other_informations();
-}
+    img.pushSprite(0, 0);// dump image to display
 #endif
+    if ((currentTime - previousTime) > TIMELAPSE_deadtime) recording_loop();// Wait for deadtime set in config.txt
+    if (TIMELAPSE_deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+  }//end of recording loop
 
-    if (deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
-  }
-
-
+  if (image_TOKEN == 1) { // prepare data for recording in single picture mode
 #ifdef  USE_TFT
-if (LOWBATTERY_mode == 0) img.pushSprite(0, 0);// dump image to display
+    img.setTextColor(TFT_RED);
+    img.setCursor(0, 8);
+    img.println(F("Picture taken !"));
+    display_other_informations();
+    img.pushSprite(0, 0);// dump image to display
 #endif
-
-  if ((gpio_get(PUSH) == 1) && recording == 0) { // we want to record: get file/directory#
-#ifdef  USE_SD
-    Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
-    Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
-    sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
-    SD.mkdir(storage_file_dir);//create next directory
-#endif
-
-#ifndef  USE_SNEAK_MODE
-    gpio_put(RED, 1);
-#endif
-
-    recording = 1;
-    previousTime = currentTime;//To avoid taking a picture while pressing the mode button
-    delay(debouncing_delay);//for debouncing
-    gpio_put(RED, 0);
-  }
-
-  if ((gpio_get(PUSH) == 1) && recording == 1) { // we want to stop recording
-    Next_dir++;// update next directory
+    recording_loop();// Wait for deadtime set in config.txt
+    image_TOKEN = 0;
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
-    gpio_put(RED, 0);
-    recording = 0;
-    delay(debouncing_delay);//get the folder number on SD card
+    delay(250);
+  }//end of recording loop
+
+  if ((TIMELAPSE_mode == 0) && (gpio_get(PUSH) == 1)) { //camera mode acts like if user requires just one picture
+    Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
+    Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card, just to store it in memory and rewrite it at the end
+    image_TOKEN = 1;
   }
 
-  //if (recording == 0) { // Change HDR<->one frame modes
+  if (TIMELAPSE_mode == 1)
+  {
+    if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
+      Next_dir++; // update next directory
+      store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
+      recording = 0;
+      short_fancy_delay();
+    }
+
+    if ((gpio_get(PUSH) == 1) && (recording == 0)) { // we want to record: get file/directory#
+#ifdef  USE_SD
+      Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
+      Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
+      sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
+      SD.mkdir(storage_file_dir);//create next directory
+#endif
+      recording = 1;
+      previousTime = currentTime;
+      short_fancy_delay();
+    }
+  }
+
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;
-    delay(debouncing_delay);
+    short_fancy_delay();
   }
   if (gpio_get(DITHER) == 1) {
     DITHER_mode = !DITHER_mode;
-    delay(debouncing_delay);
+    short_fancy_delay();
   }
   if (gpio_get(BORDER) == 1) {// Change raw<->2D enhanced images
     BORDER_mode = !BORDER_mode;
     if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
     if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
-    delay(debouncing_delay);
+    short_fancy_delay();
   }
-  //}
 } //end of loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -496,39 +414,45 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
 #ifndef  USE_SNEAK_MODE
   gpio_put(LED, 1);
 #endif
-
-  while (1) {// Wait for READ to go high
+  bool skip_loop = 0;
+  while (1)
+  { // Wait for READ to go high, this is the loop waiting foe exposure
     gpio_put(CLOCK, 1);
     camSpecialDelay();
-    if (gpio_get(READ) == 1) // READ goes high with rising CLOCK
-      break;
+    if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, normal ending
+    if (((gpio_get(PUSH) == 1) & (image_TOKEN == 0)) | (gpio_get(HDR) == 1) | (gpio_get(DITHER) == 1) | (gpio_get(BORDER) == 1)) { //any button is pushed, skip sensor stuff
+      skip_loop = 1;
+      camReset();
+      break;  // we want to do something, skip next steps
+    }
     camDelay();
     gpio_put(CLOCK, 0);
-    camSpecialDelay();
+    camDelay();
   }
-  camDelay();
   gpio_put(LED, 0);
-  for (y = 0; y < 128; y++) {
-    for (x = 0; x < 128; x++) {
+  if (skip_loop == 0) {//procedure not interrupted by user
+    for (y = 0; y < 128; y++) {
+      for (x = 0; x < 128; x++) {
+        gpio_put(CLOCK, 0);
+        camDelay();
+        pixel = adc_read();// The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
+        CamData[subcounter] = pixel >> 4;//record only
+        subcounter = subcounter + 1;
+        camDelay();
+        gpio_put(CLOCK, 1);
+        camDelay();
+      } // end for x
+    } /* for y */
+
+    while (gpio_get(READ) == 1) { // Go through the remaining rows
       gpio_put(CLOCK, 0);
-      camDelay();
-      pixel = adc_read();// The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
-      CamData[subcounter] = pixel >> 4;
-      subcounter = subcounter + 1;
       camDelay();
       gpio_put(CLOCK, 1);
       camDelay();
-    } // end for x
-  } /* for y */
-
-  while (gpio_get(READ) == 1) { // Go through the remaining rows
+    }
     gpio_put(CLOCK, 0);
     camDelay();
-    gpio_put(CLOCK, 1);
-    camDelay();
   }
-  gpio_put(CLOCK, 0);
-  camDelay();
 }
 
 bool camTestSensor() // dummy cycle faking to take a picture, if it's not able to go through the whole cycle, there is an issue
@@ -562,7 +486,6 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
     }
     camDelay();
     gpio_put(CLOCK, 0);
-    camDelay();
   }
   camDelay();
   gpio_put(LED, 0);
@@ -594,10 +517,79 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
 
 
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
+void recording_loop()
+{
+  Next_ID++;// update the file number
+  previousTime = currentTime;
+  if (TIMELAPSE_mode == 1) sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID); //update filename
+  if (TIMELAPSE_mode == 0) sprintf(storage_file_name, "/Camera/%09d.bmp", Next_ID); //update filename
+
+  if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
+
+#ifndef  USE_SNEAK_MODE
+    gpio_put(RED, 1);
+#endif
+
+    memset(HDRData, 0, sizeof(HDRData));//clean the HDR data array
+    current_exposure = get_exposure(camReg);//store the current exposure register for later
+    for (int i = 0; i < num_HDR_images; i++) {
+      push_exposure(camReg, current_exposure, exposure_list[i]);//vary the exposure
+      take_a_picture();
+      for (int i = 0; i < 128 * 128; i++) {
+        HDRData[i] = HDRData[i] + CamData[i]; //sum data
+      }
+    }
+    //now time to average all this shit
+    for (int i = 0; i < 128 * 128; i++) {
+      CamData[i] = HDRData[i] / num_HDR_images; //do the average
+    }
+    push_exposure(camReg, current_exposure, 1); //rewrite the old register stored before
+  }
+
+  if (DITHER_mode == 1) {
+    Dither_image(CamData, BayerData);
+    for (int i = 0; i < 128 * 128; i++) {
+      BmpData[i] = BayerData[i];//to get data with dithering (dithering includes auto-contrast)
+    }
+  }
+  else
+  {
+    for (int i = 0; i < 128 * 128; i++) {
+      BmpData[i] = lookup_serial[CamData[i]];//to get data with autocontrast
+    }
+  }
+
+  if (PRETTYBORDER_mode == 1) make_image_with_pretty_borders();
+
+#ifndef  USE_SNEAK_MODE
+  gpio_put(RED, 1);
+#endif
+
+#ifdef  USE_SD
+  File dataFile = SD.open(storage_file_name, FILE_WRITE);
+  // if the file is writable, write to it:
+  if (dataFile) {
+    if (PRETTYBORDER_mode == 0)
+    {
+      dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
+      dataFile.write(BmpData, 128 * 120); //removing last tile line
+      dataFile.close();
+    }
+    if (PRETTYBORDER_mode == 1)
+    {
+      dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 128*120 image
+      dataFile.write(BigBmpData, 160 * 144); //removing last tile line
+      dataFile.close();
+    }
+  }
+#endif
+  gpio_put(RED, 0);
+}
+
 
 void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char v_min, unsigned char v_max) {
   double gamma_pixel;
-  for (int i = 0; i < 256; i++) {//first the autocontrat table lookup_serial
+  for (int i = 0; i < 256; i++) {//building the autocontrat table lookup_serial
     if (i < v_min) {
       lookup_serial[i] = 0x00;
     }
@@ -752,21 +744,22 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     File file = SD.open(path);
     StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc, file);
+    TIMELAPSE_mode = doc["timelapseMode"];
+    TIMELAPSE_deadtime = doc["timelapseDelay"];
     PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
-    HDR_mode = doc["hdrMode"];
-    DITHER_mode = doc["dithering"];
     BORDER_mode = doc["2dEnhancement"];
-    deadtime = doc["delay"];
-    FIXED_EXPOSURE_mode = doc["fixedExposure"];
-    FIXED_delay = doc["fixedDelay"];
-    FIXED_divider = doc["fixedDivider"];
+    HDR_mode = doc["hdrMode"];
     for (int i = 0; i < num_HDR_images; i++) {
-      exposure_list[i] = doc["exposureList"][i];
+      exposure_list[i] = doc["hdrExposures"][i];
     }
+    DITHER_mode = doc["ditheringMode"];
     for (int i = 0; i < 48; i++) {
       Dithering_patterns [i] = doc["ditherMatrix"][i];
     }
+    FIXED_EXPOSURE_mode = doc["fixedExposure"];
+    FIXED_delay = doc["fixedDelay"];
+    FIXED_divider = doc["fixedDivider"];
     file.close();
   }
 #endif
@@ -774,11 +767,30 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
+void short_fancy_delay() {
+#ifndef  USE_SNEAK_MODE
+  for (int i = 0; i < 10; i++) {
+    gpio_put(RED, 1);
+    delay(25);
+    gpio_put(RED, 0);
+    delay(25);
+  }
+#endif
+}
 
 void display_other_informations() {
 #ifdef  USE_TFT
-  img.setTextColor(TFT_CYAN);
+
   img.setCursor(0, 0);
+  img.setTextColor(TFT_CYAN);
+  if (TIMELAPSE_mode == 0) {
+    img.println(F("Regular Camera mode"));
+  }
+  if (TIMELAPSE_mode == 1) {
+    img.println(F("Time Lapse Mode"));
+  }
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(0, 18);
   img.println(F(exposure_string));
   img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
@@ -788,13 +800,13 @@ void display_other_informations() {
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
   img.println(F(storage_file_name));
-  img.setTextColor(TFT_BLUE);
+  img.setTextColor(TFT_GREEN);
   img.setCursor(0, 144);
   img.println(F(storage_deadtime));
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
-    img.println(F("HDR mode ON"));
+    img.println(F("HDR ON / USE TRIPOD!"));
   }
   if (HDR_mode == 0) {
     img.setTextColor(TFT_GREEN);
