@@ -21,9 +21,11 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 # Basic user manual
 
-- Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** shows what the Mitsubishi sensor sends without recording anything. The green LED indicates the exposure time. It can go from approx 1 ms to 1 second depending on lighting conditions. The red LED indicates access to the SD card for recording. 
+First of all, the device is basically a timelapse machine. The regular camera mode is just coded as a timelapse of one image. It uses a configuration file placed at the root of SD card which has priority on the internal default parameters. The device cannot boot without a working sensor and a working SD card. Status of sensor, SD card and configuration file are indicated on the splashscreen.
+
+- Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** do nothing else than showing on display what the Mitsubishi sensor sees. The green LED indicates the exposure time. It can go from approx 1 ms to 1 second depending on lighting conditions. The red LED indicates access to the SD card for recording. 
 - To shift to **Recording mode**, press the pushbutton linked to GPIO13. It will either automatically record BMP images with a deadtime inbetween ("Timelapse mode" activated), or act as a regular camera ("Timelapse mode" deactivated). Shifting from one mode to the other is made by pushing the button linked to GPIO22. 
-- In **Timelapse mode**, the deadtime between pictures is set by just by modifying the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) (value entered in ms, if no file, default deadtime is 2000 ms). During each recording session, images are stored in a different folder.
+- In **Timelapse mode**, the deadtime between pictures is set by just by modifying the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) (value entered in ms, if no file, default deadtime is 2000 ms). During each recording session, images are stored in a different folder. Timelapse mode has virtually no ending, it can go as long as the SD card is not full.
 - In **Regular camera mode**, pressing the button just records one image in the **/camera** folder. If the button stays pushed, images are recorded continuously with a debouncing delay of 250 ms. It acts more or less as a burst mode.
 
 To activate **HDR mode** or **Dithering mode** , simply push the corresponding pushbuttons linked to GPIO20 and GPIO21.
