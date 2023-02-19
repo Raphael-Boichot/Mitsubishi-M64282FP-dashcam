@@ -60,7 +60,7 @@ unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
-unsigned int max_files_per_folder = 100;
+unsigned int max_files_per_folder = 1000;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
@@ -215,7 +215,7 @@ void loop()
   {
 
     files_on_folder++;
-    if (files_on_folder == 1000) {//because up to 1000 files per folder stalling or errors in writing can happens
+    if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
       files_on_folder = 0;
       Next_dir++;
     }
