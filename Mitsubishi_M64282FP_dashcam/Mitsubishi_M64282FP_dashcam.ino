@@ -59,6 +59,8 @@ unsigned long previousTime = 0;
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
+unsigned int files_on_folder = 0;
+unsigned int max_files_per_folder = 100;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
@@ -211,10 +213,18 @@ void loop()
 
   if (TIMELAPSE_mode == 1)
   {
+
+    files_on_folder++;
+    if (files_on_folder == 1000) {//because up to 1000 files per folder stalling or errors in writing can happens
+      files_on_folder = 0;
+      Next_dir++;
+    }
+
     if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
       Next_dir++; // update next directory
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
       recording = 0;
+      files_on_folder = 0;
       short_fancy_delay();
     }
 
