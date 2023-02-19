@@ -99,8 +99,13 @@ In other words, it should perfectly be possible to interface a MAX153 with the R
 - [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
 - [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) for the Arduino code I started from.
 
+# Known flaws
+- In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 5 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I have no idea why but this is related to the SD library. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode.
+- In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without many conditions/exceptions.
+
 # To do (or not)
 - attach buttons to interrupts to increase reactivity.
+- display the SD card filling in % at boot ot during recording.
 - a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Powerpoint.
 - a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
