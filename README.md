@@ -97,7 +97,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 - [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) for the Arduino code I started from.
 
 # Known flaws
-- In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 5 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I have no idea why but this is related to the SD library. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode.
+- In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I think the higher the number of files in a folder, the longer the writing, which is unfixable. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode, seems to be fixed by using SD sector size bigger than the image file size.
 - In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without many conditions/exceptions.
 
 # To do (or not)
