@@ -13,10 +13,10 @@ unsigned char Dithering_palette[4] = {0x00, 0x55, 0xAA, 0xFF};//colors as they w
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;//0 = use s a regular camera, 1 = recorder for timelapses
 unsigned long TIMELAPSE_deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.json
-bool PRETTYBORDER_mode = 0;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
+bool PRETTYBORDER_mode = 1;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
-bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
-bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
+bool HDR_mode = 1; //0 = regular capture, 1 = HDR mode
+bool DITHER_mode = 1; //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
 bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
 int FIXED_delay = 2048;//here the result is a fixed exposure perfect for full moon photography
@@ -39,10 +39,10 @@ int FIXED_divider = 1;//clock divider
 //the following are intended to allow interfering with the device
 #define LED 15    //to pi pico pin GPIO15 indicate exposure delay for the sensor <-> GND
 #define RED 14    //to pi pico pin GPIO14 indicate recording to SD card of issue with SD card <-> GND
-#define PUSH 13   //to pi pico pin GPIO13 action button <-> 3.3V
-#define HDR 20    //to pi pico pin GPIO20 <-> 3.3V
-#define BORDER 22 //to pi pico pin GPIO22 <-> 3.3V
-#define DITHER 21 //to pi pico pin GPIO22 <-> 3.3V
+#define PUSH 13   //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
+#define HDR 20    //to pi pico pin GPIO20 <-> 3.3V - HDR mode
+#define TLC 22    //to pi pico pin GPIO22 <-> 3.3V - timelapse<->regular camera mode
+#define DITHER 21 //to pi pico pin GPIO22 <-> 3.3V - dithering with Bayer matrix
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
@@ -55,6 +55,8 @@ int FIXED_divider = 1;//clock divider
 //TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
 // pins are configured into the Bodmer TFT e_SPI library, DO NOT CHANGE HERE, see read.me for details
 // Display LED       to pi pico pin 3V3
+// Display TFT_MISO  to pi pico pin GPIO0  // RESERVED BUT NOT USED, just to avoid a compiling message
+// Display TOUCH_CS  to pi pico pin GPIO1  // RESERVED BUT NOT USED, just to avoid a compiling message
 // Display SCK       to pi pico pin GPIO2
 // Display SDA       to pi pico pin GPIO3
 // Display CS        to pi pico pin GPIO4 (can use another pin if desired)
@@ -62,3 +64,15 @@ int FIXED_divider = 1;//clock divider
 // Display RESET     to pi pico pin GPIO6 (can use another pin if desired)
 // Display GND       to pi pico pin GND (0V)
 // Display VCC       to pi pico pin VBUS Or +5V
+
+// some real settings used by the Mitsubishi sensor on Game Boy Camera, except exposure
+// reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0
+// reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 set edge / type of edge
+// reg2 = 0b00000001; % C17 C16 C15 C14 C13 C12 C11 C10 / exposure time by 4096 ms steps (max 1.0486 s)
+// reg3 = 0b00000000; % C07 C06 C05 C04 C03 C02 C01 C00 / exposure time by 16 µs steps (max 4096 ms)
+// reg4 = 0b00000001; % P7 P6 P5 P4 P3 P2 P1 P0 filtering kernels, always 0x01 on a GB camera, but can be different here
+// reg5 = 0b00000000; % M7 M6 M5 M4 M3 M2 M1 M0 filtering kernels, always 0x00 on a GB camera, but can be different here
+// reg6 = 0b00000001; % X7 X6 X5 X4 X3 X2 X1 X0 filtering kernels, always 0x01 on a GB camera, but can be different here
+// reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0
+
+// P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly

@@ -1,4 +1,4 @@
-//By Raphaël BOICHOT, made around 2023-01-27
+//By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
 //this is an autonomous recorder for the Mitsubishi M64282FP artificial retina of the Game Boy Camera
 //from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
@@ -6,8 +6,7 @@
 //Made to be compiled on the Arduino IDE, using these libraries:
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
-//https://arduinojson.org/ for config.txt file support
-//Beware, I'm not a C developper at all so it won't be a pretty code !
+//https://arduinojson.org/ for config.json file support
 
 //CamData[128 * 128] contains the raw signal from sensor in 8 bits
 //HDRData[128 * 128] contains an average of raw signal data from sensor for dithering in 32 bits
@@ -39,7 +38,7 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 #endif
 
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
-//With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts).
+//With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
 unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
 unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
@@ -65,7 +64,7 @@ bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20];
+char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20], remaining_deadtime[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
 //////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,10 +72,10 @@ char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or 
 void setup()
 {
   //interface input/output
-  gpio_init(PUSH);      gpio_set_dir(PUSH, GPIO_IN);
-  gpio_init(BORDER);    gpio_set_dir(BORDER, GPIO_IN);
-  gpio_init(DITHER);    gpio_set_dir(DITHER, GPIO_IN);
-  gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);
+  gpio_init(PUSH);      gpio_set_dir(PUSH, GPIO_IN);//action button to record
+  gpio_init(TLC);       gpio_set_dir(TLC, GPIO_IN);//timelapse<->regular camera mode
+  gpio_init(DITHER);    gpio_set_dir(DITHER, GPIO_IN);//dithering with Bayer matrix
+  gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);//HDR mode
   gpio_init(LED);       gpio_set_dir(LED, GPIO_OUT);//green LED
   gpio_init(RED);       gpio_set_dir(RED, GPIO_OUT);//red LED
 
@@ -102,15 +101,17 @@ void setup()
 
   init_sequence();//Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
+  sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime); //concatenate string for display
 
 #ifdef  USE_SD
-  sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime); //concatenate string for display
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
 #endif
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
   pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
+  if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
+  if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
 
   if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
     // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
@@ -185,8 +186,8 @@ void loop()
     img.pushSprite(0, 0);// dump image to display
 #endif
     if ((currentTime - previousTime) > TIMELAPSE_deadtime) recording_loop();// Wait for deadtime set in config.txt
-    if (TIMELAPSE_deadtime > 10000) sleep_ms(2000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
-  }//end of recording loop
+    if (TIMELAPSE_deadtime > 10000) sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+  }//end of recording loop for timelapse
 
   if (image_TOKEN == 1) { // prepare data for recording in single picture mode
 #ifdef  USE_TFT
@@ -199,8 +200,8 @@ void loop()
     recording_loop();// Wait for deadtime set in config.txt
     image_TOKEN = 0;
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
-    delay(250);
-  }//end of recording loop
+    delay(250);//long enough for debouncing, fast enough for a decent burst mode
+  }//end of recording loop for regular camera mode
 
   if ((TIMELAPSE_mode == 0) && (gpio_get(PUSH) == 1)) { //camera mode acts like if user requires just one picture
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
@@ -231,17 +232,15 @@ void loop()
   }
 
   if (gpio_get(HDR) == 1) {
-    HDR_mode = !HDR_mode;
+    HDR_mode = !HDR_mode;//self explanatory
     short_fancy_delay();
   }
   if (gpio_get(DITHER) == 1) {
-    DITHER_mode = !DITHER_mode;
+    DITHER_mode = !DITHER_mode;//self explanatory
     short_fancy_delay();
   }
-  if (gpio_get(BORDER) == 1) {// Change raw<->2D enhanced images
-    BORDER_mode = !BORDER_mode;
-    if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
-    if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
+  if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
+    TIMELAPSE_mode = !TIMELAPSE_mode;//self explanatory
     short_fancy_delay();
   }
 } //end of loop
@@ -251,8 +250,8 @@ void loop()
 void take_a_picture() {
   camReset();// resets the sensor
   camSetRegisters();// Send 8 registers to the sensor
-  camReadPicture(CamData); // get pixels, dump them in RawCamData
-  camReset();
+  camReadPicture(CamData); // get pixels, dump them in CamData
+  camReset();// probably not usefull but who knows...
 }
 
 int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
@@ -420,7 +419,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
     gpio_put(CLOCK, 1);
     camSpecialDelay();
     if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, normal ending
-    if (((gpio_get(PUSH) == 1) & (image_TOKEN == 0)) | (gpio_get(HDR) == 1) | (gpio_get(DITHER) == 1) | (gpio_get(BORDER) == 1)) { //any button is pushed, skip sensor stuff
+    if (((gpio_get(PUSH) == 1) & (image_TOKEN == 0)) | (gpio_get(HDR) == 1) | (gpio_get(DITHER) == 1) | (gpio_get(TLC) == 1)) { //any button is pushed, skip sensor stuff
       skip_loop = 1;
       camReset();
       break;  // we want to do something, skip next steps
@@ -455,7 +454,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   }
 }
 
-bool camTestSensor() // dummy cycle faking to take a picture, if it's not able to go through the whole cycle, there is an issue
+bool camTestSensor() // dummy cycle faking to take a picture, if it's not able to go through the whole cycle, the camera will stop with error message
 { // it basically checks if READ is able to change at the good moment during the sequence
   bool sensor_OK = 1;
   int x, y;
@@ -583,7 +582,10 @@ void recording_loop()
     }
   }
 #endif
+
+#ifndef  USE_SNEAK_MODE
   gpio_put(RED, 0);
+#endif
 }
 
 
@@ -780,7 +782,6 @@ void short_fancy_delay() {
 
 void display_other_informations() {
 #ifdef  USE_TFT
-
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
@@ -802,7 +803,11 @@ void display_other_informations() {
   img.println(F(storage_file_name));
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 144);
-  img.println(F(storage_deadtime));
+  if (recording == 0) img.println(F(storage_deadtime));
+  if (recording == 1) {
+    sprintf(remaining_deadtime, "Delay: %d ms", TIMELAPSE_deadtime - (currentTime - previousTime)); //concatenate string for display
+    img.println(F(remaining_deadtime));
+  }
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
