@@ -79,7 +79,7 @@ The whole dashcam device requires a +5V line to drive the sensor and cannot unfo
 # Pinout (yes it's a mess, I know)
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout_2.png)
 
-RESET button is not mandatory but very practical. The device should normally never crash but if the sensor is deconnected, it may freeze the loop as the code wait some some response of the sensor. So reseating cable and RESET is the fix. There is honestly no room for other features without using the ADC pins.
+RESET button is not mandatory but very practical. The device should normally never crash but if the sensor is deconnected, it may freeze the loop as the code waits for some response of the sensor. So reseating cable and RESET is the fix. There is honestly no room for other features without using the ADC pins.
 
 # Connection with the sensor
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
