@@ -90,19 +90,17 @@ Hey ?! It's all empty in the shell apart from that crappy connector at the end ?
 
 According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper.
 
-# Acknowledgments
-- [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects.
-- [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
-- [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
-- [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) for the Arduino code I started from.
-
 # Known flaws
 - In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I think the higher the number of files in a folder, the longer the writing, which is unfixable, so the files are limited to 1000 per folder. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode, seems to be fixed by using SD sector size bigger than the image file size.
 - In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without many conditions/exceptions.
 
 # To do (or not)
-- attach buttons to interrupts to increase reactivity.
-- display the SD card filling in % at boot ot during recording.
 - a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Powerpoint.
 - a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
+
+# Acknowledgments
+- [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects.
+- [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
+- [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
+- [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) for the Arduino code I started from.
