@@ -51,11 +51,13 @@ unsigned char Bayer_matW_LG[4 * 4];//Bayer matrix to apply dithering for each im
 unsigned char Bayer_matLG_DG[4 * 4];//Bayer matrix to apply dithering for each image pixel light gray to dark gray
 unsigned char Bayer_matDG_B[4 * 4];//Bayer matrix to apply dithering for each image pixel dark gray to dark
 unsigned char BayerData[128 * 128];// dithered image data
-unsigned int cycles = 12; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned int cycles = 7; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned int clock_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
 unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
+unsigned long currentTime_exp = 0;
+unsigned long previousTime_exp = 0;
 unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
@@ -66,7 +68,8 @@ bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20], error_string[20], remaining_deadtime[20];
+char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
+char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
 //////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,11 +147,12 @@ void loop()
 
 #ifdef  USE_TFT
   current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
-  if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
-  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
-  if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
-  if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
+//  if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
+//  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
+//  if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
+//  if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
   sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
+  sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
 #endif
 
 #ifdef USE_SERIAL
@@ -173,7 +177,7 @@ void loop()
 #ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
-    img.println(F("Display Mode"));
+    img.println("Display Mode");
     display_other_informations();
     img.pushSprite(0, 0);// dump image to display
 #endif
@@ -183,7 +187,7 @@ void loop()
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println(F("Recording..."));
+    img.println("Recording...");
     display_other_informations();
     img.pushSprite(0, 0);// dump image to display
 #endif
@@ -195,7 +199,7 @@ void loop()
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println(F("Picture taken !"));
+    img.println("Picture taken !");
     display_other_informations();
     img.pushSprite(0, 0);// dump image to display
 #endif
@@ -424,6 +428,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   gpio_put(LED, 1);
 #endif
   bool skip_loop = 0;
+  previousTime_exp=millis();
   while (1)
   { // Wait for READ to go high, this is the loop waiting foe exposure
     gpio_put(CLOCK, 1);
@@ -438,6 +443,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
     gpio_put(CLOCK, 0);
     camDelay();
   }
+  currentTime_exp=millis()-previousTime_exp;//to dislay the real exposure time, not the registers
   gpio_put(LED, 0);
   if (skip_loop == 0) {//procedure not interrupted by user
     for (y = 0; y < 128; y++) {
@@ -795,25 +801,26 @@ void display_other_informations() {
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
-    img.println(F("Regular Camera mode"));
+    img.println("Regular Camera mode");
   }
   if (TIMELAPSE_mode == 1) {
-    img.println(F("Time Lapse Mode"));
+    img.println("Time Lapse Mode");
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(0, 18);
-  img.println(F(exposure_string));
+  //img.println(exposure_string);//in register value
+  img.println(exposure_string_ms);//in ms
   img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
-  img.println(F(error_string));
+  img.println(error_string);
   img.setCursor(0, 126);
-  img.println(F(multiplier_string));
+  img.println(multiplier_string);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
-  img.println(F(storage_file_name));
+  img.println(storage_file_name);
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 144);
-  if (recording == 0) img.println(F(storage_deadtime));
+  if (recording == 0) img.println(storage_deadtime);
   if (recording == 1) {
     sprintf(remaining_deadtime, "Delay: %d ms", TIMELAPSE_deadtime - (currentTime - previousTime)); //concatenate string for display
     img.println(F(remaining_deadtime));
@@ -821,11 +828,11 @@ void display_other_informations() {
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
-    img.println(F("HDR ON / USE TRIPOD!"));
+    img.println("HDR ON / USE TRIPOD!");
   }
   if (HDR_mode == 0) {
     img.setTextColor(TFT_GREEN);
-    img.println(F("HDR mode OFF"));
+    img.println("HDR mode OFF");
   }
   if (BORDER_mode == 1) {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
@@ -850,7 +857,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   delay(500);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 0);
-  img.println(F("SD card:"));
+  img.println("SD card:");
   img.pushSprite(0, 0);// dump image to display
 #endif
 
@@ -868,16 +875,16 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   if (SDcard_READY == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 0);
-    img.println(F("READY"));
+    img.println("READY");
   }
   else {
     img.setTextColor(TFT_RED);
     img.setCursor(50, 0);
-    img.println(F("FAIL"));
+    img.println("FAIL");
   }
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 8);
-  img.println(F("Sensor:"));
+  img.println("Sensor:");
   img.pushSprite(0, 0);// dump image to display
 #endif
 
@@ -891,16 +898,16 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   if (sensor_READY == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 8);
-    img.println(F("READY"));
+    img.println("READY");
   }
   else {
     img.setTextColor(TFT_RED);
     img.setCursor(50, 8);
-    img.println(F("FAIL"));
+    img.println("FAIL");
   }
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 16);
-  img.println(F("Config:"));
+  img.println("Config:");
   img.pushSprite(0, 0);// dump image to display
 #endif
 
@@ -910,22 +917,22 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   if (JSON_ready == 1) {
     img.setTextColor(TFT_GREEN);
     img.setCursor(50, 16);
-    img.println(F("READY"));
+    img.println("READY");
   }
   else {
     img.setTextColor(TFT_ORANGE);
     img.setCursor(50, 16);
-    img.println(F("NOT FOUND"));
+    img.println("NOT FOUND");
   }
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
     img.setCursor(0, 24);
-    img.println(F("CHECK CONNECTIONS"));
+    img.println("CHECK CONNECTIONS");
   }
   else {
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 24);
-    img.println(F("NOW BOOTING..."));
+    img.println("NOW BOOTING...");
   }
   img.pushSprite(0, 0);// dump image to display
 #endif
