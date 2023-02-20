@@ -145,16 +145,6 @@ void loop()
 
   if (DITHER_mode == 1) Dither_image(CamData, BayerData);
 
-#ifdef  USE_TFT
-  current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
-//  if (current_exposure > 0x0FFF) sprintf(exposure_string, "Exposure: %X", current_exposure); //concatenate string for display
-//  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "Exposure: 0%X", current_exposure); //concatenate string for display;
-//  if (current_exposure <= 0x00FF) sprintf(exposure_string, "Exposure: 00%X", current_exposure); //concatenate string for display;
-//  if (current_exposure <= 0x000F) sprintf(exposure_string, "Exposure: 000%X", current_exposure); //concatenate string for display;
-  sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
-  sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
-#endif
-
 #ifdef USE_SERIAL
   dump_data_to_serial(CamData);//dump raw data to serial in ASCII for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 #endif
@@ -428,7 +418,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   gpio_put(LED, 1);
 #endif
   bool skip_loop = 0;
-  previousTime_exp=millis();
+  previousTime_exp = millis();
   while (1)
   { // Wait for READ to go high, this is the loop waiting foe exposure
     gpio_put(CLOCK, 1);
@@ -443,7 +433,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
     gpio_put(CLOCK, 0);
     camDelay();
   }
-  currentTime_exp=millis()-previousTime_exp;//to dislay the real exposure time, not the registers
+  currentTime_exp = millis() - previousTime_exp; //to dislay the real exposure time, not the registers
   gpio_put(LED, 0);
   if (skip_loop == 0) {//procedure not interrupted by user
     for (y = 0; y < 128; y++) {
@@ -798,6 +788,20 @@ void short_fancy_delay() {
 
 void display_other_informations() {
 #ifdef  USE_TFT
+
+current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
+if (current_exposure > 0x0FFF) sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
+if (current_exposure <= 0x0FFF) sprintf(exposure_string, "REG: 0%X", current_exposure); //concatenate string for display;
+if (current_exposure <= 0x00FF) sprintf(exposure_string, "REG: 00%X", current_exposure); //concatenate string for display;
+if (current_exposure <= 0x000F) sprintf(exposure_string, "REG: 000%X", current_exposure); //concatenate string for display;
+
+sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
+
+if (currentTime_exp>1000) sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
+if (currentTime_exp<=1000) sprintf(exposure_string_ms, "Exposure: 0%d ms", currentTime_exp); //concatenate string for display;
+if (currentTime_exp<=100) sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp); //concatenate string for display;
+if (currentTime_exp<=10) sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp); //concatenate string for display;
+
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
@@ -807,13 +811,14 @@ void display_other_informations() {
     img.println("Time Lapse Mode");
   }
   img.setTextColor(TFT_BLUE);
-  img.setCursor(0, 18);
+  img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);//in ms
   img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
-  img.println(error_string);
-  img.setCursor(0, 126);
+  img.println(exposure_string);
+  //img.println(error_string);
+  img.setCursor(8, 126);
   img.println(multiplier_string);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
