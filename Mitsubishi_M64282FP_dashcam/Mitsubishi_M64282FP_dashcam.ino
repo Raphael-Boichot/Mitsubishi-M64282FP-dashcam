@@ -62,14 +62,14 @@ unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
-unsigned int max_files_per_folder = 1000;
+unsigned int max_files_per_folder = 255;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
-char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20];
+char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
 //////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,6 +178,9 @@ void loop()
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println("Recording...");
+    sprintf(files_on_folder_string, "%X/%X", files_on_folder,max_files_per_folder);
+    img.setCursor(84, 8);
+    img.println(files_on_folder_string);
     display_other_informations();
     img.pushSprite(0, 0);// dump image to display
 #endif
@@ -207,13 +210,6 @@ void loop()
 
   if (TIMELAPSE_mode == 1)
   {
-
-    files_on_folder++;
-    if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
-      files_on_folder = 0;
-      Next_dir++;
-    }
-
     if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
       Next_dir++; // update next directory
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
@@ -586,6 +582,16 @@ void recording_loop()
       dataFile.write(BigBmpData, 160 * 144); //removing last tile line
       dataFile.close();
     }
+
+    if (TIMELAPSE_mode == 1)
+    {
+      files_on_folder++;
+      if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
+        files_on_folder = 0;
+        store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
+        Next_dir++;
+      }
+    }
   }
 #endif
 
@@ -789,18 +795,18 @@ void short_fancy_delay() {
 void display_other_informations() {
 #ifdef  USE_TFT
 
-current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
-if (current_exposure > 0x0FFF) sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
-if (current_exposure <= 0x0FFF) sprintf(exposure_string, "REG: 0%X", current_exposure); //concatenate string for display;
-if (current_exposure <= 0x00FF) sprintf(exposure_string, "REG: 00%X", current_exposure); //concatenate string for display;
-if (current_exposure <= 0x000F) sprintf(exposure_string, "REG: 000%X", current_exposure); //concatenate string for display;
+  current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
+  if (current_exposure > 0x0FFF) sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
+  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "REG: 0%X", current_exposure); //concatenate string for display;
+  if (current_exposure <= 0x00FF) sprintf(exposure_string, "REG: 00%X", current_exposure); //concatenate string for display;
+  if (current_exposure <= 0x000F) sprintf(exposure_string, "REG: 000%X", current_exposure); //concatenate string for display;
 
-sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
+  sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
 
-if (currentTime_exp>1000) sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
-if (currentTime_exp<=1000) sprintf(exposure_string_ms, "Exposure: 0%d ms", currentTime_exp); //concatenate string for display;
-if (currentTime_exp<=100) sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp); //concatenate string for display;
-if (currentTime_exp<=10) sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp); //concatenate string for display;
+  if (currentTime_exp > 1000) sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
+  if (currentTime_exp <= 1000) sprintf(exposure_string_ms, "Exposure: 0%d ms", currentTime_exp); //concatenate string for display;
+  if (currentTime_exp <= 100) sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp); //concatenate string for display;
+  if (currentTime_exp <= 10) sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp); //concatenate string for display;
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
