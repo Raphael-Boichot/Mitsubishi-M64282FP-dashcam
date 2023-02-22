@@ -96,10 +96,6 @@ void setup()
   adc_gpio_init(VOUT);  adc_select_input(0);//there are several ADC channels to choose from
   adc_init();//mandatory, without it stuck the camera
 
-#ifdef USE_EXTREME_OVERCLOCK
-  set_sys_clock_khz(270000, true); // To use at your own risks, increases instability
-#endif
-
 #ifdef USE_SERIAL // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(2000000);
 #endif
@@ -229,7 +225,7 @@ void loop()
       Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
       if (MOVIEMAKER_mode == 1) {
         Next_ID++;
-        sprintf(storage_file_name, "/Movie/%09d.raw", Next_ID); //update filename
+        sprintf(storage_file_name, "/Raw_data/%07d.raw", Next_ID); //update filename
       }
       recording = 1;
       previousTime = currentTime;
@@ -529,9 +525,9 @@ void recording_loop()
   if ((MOVIEMAKER_mode == 0)|(image_TOKEN == 1)) Next_ID++;// update the file number, but not in movie maker mode
   previousTime = currentTime;
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode == 0) sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID); //update filename
+    if (MOVIEMAKER_mode == 0) sprintf(storage_file_name, "/%06d/%07d.bmp", Next_dir, Next_ID); //update filename
   }
-  if (TIMELAPSE_mode == 0) sprintf(storage_file_name, "/Camera/%09d.bmp", Next_ID); //update filename
+  if (TIMELAPSE_mode == 0) sprintf(storage_file_name, "/Camera/%07d.bmp", Next_ID); //update filename
 
   if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
 

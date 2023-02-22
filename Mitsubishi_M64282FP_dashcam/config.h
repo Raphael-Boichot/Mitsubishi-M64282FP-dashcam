@@ -1,7 +1,6 @@
 #define USE_TFT //to allow using the TFT screen
 #define USE_SD //to allow recording on SD
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
-//#define USE_EXTREME_OVERCLOCK //Use at your own risks !!! Twice faster but out of tolerance for everything and unstable
 //#define USE_SNEAK_MODE //deactivates the LEDs
 
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
@@ -13,11 +12,11 @@ unsigned char Dithering_palette[4] = {0x00, 0x55, 0xAA, 0xFF};//colors as they w
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;//0 = use s a regular camera, 1 = recorder for timelapses
 bool MOVIEMAKER_mode = 0; //0 = save as BMP (slow), 1 = save as raw stream (fast)
-unsigned long TIMELAPSE_deadtime = 2000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.json
+unsigned long TIMELAPSE_deadtime = 1000; //to introduce a deadtime for timelapses in ms. Default is 2000 ms to avoid SD card death by chocking, is read from config.json
 bool PRETTYBORDER_mode = 1;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
-bool HDR_mode = 1; //0 = regular capture, 1 = HDR mode
-bool DITHER_mode = 1; //0 = Dithering ON, 0 = dithering OFF
+bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
+bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
 bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
 int FIXED_delay = 2048;//here the result is a fixed exposure perfect for full moon photography
@@ -43,7 +42,7 @@ int FIXED_divider = 1;//clock divider
 #define PUSH 13   //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
 #define HDR 20    //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define TLC 22    //to pi pico pin GPIO22 <-> 3.3V - timelapse<->regular camera mode
-#define DITHER 21 //to pi pico pin GPIO22 <-> 3.3V - dithering with Bayer matrix
+#define DITHER 21 //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
