@@ -588,6 +588,8 @@ void recording_loop()
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
         dataFile.write("RAW_8BIT_128x120");//Just a marker
+        dataFile.write("REGISTER");//Just a marker
+        dataFile.write(camReg,8);//camera registers from the preceding image, close to the current one
         dataFile.write(BmpData, 128 * 120);
         dataFile.close();
       }
@@ -603,6 +605,8 @@ void recording_loop()
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
         dataFile.write("RAW_8BIT_160x144");//Just a marker
+        dataFile.write("REGISTER");//Just a marker
+        dataFile.write(camReg,8);//camera registers from the preceding image, close to the current one
         dataFile.write(BigBmpData, 160 * 144);
         dataFile.close();
       }
