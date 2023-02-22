@@ -84,7 +84,7 @@ The whole dashcam device requires a +5V line to drive the sensor and cannot unfo
 
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout_2.png)
 
-RESET button is not mandatory but very practical. The device should normally never crash but if the sensor is deconnected, it may freeze the loop as the code waits for some response of the sensor. So reseating cable and RESET is the fix. There is honestly no room for other features without using the ADC pins.
+RESET button is not mandatory but very practical. The device should normally never crash but if the sensor is deconnected, it may freeze the loop as the code waits for some response of the sensor. So reseating cable and RESET is the fix. There is honestly no room for other features without using the ADC pins which I prefer keeping safe. The second core of the Pico is never used and is reserved for a wifi or USB future output (if any).
 
 # Connection with the sensor
 
@@ -98,14 +98,15 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 
 # Known flaws
 
-- In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I think the higher the number of files in a folder, the longer the writing, which is unfixable, so the files are limited to 1000 per folder. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode, seems to be fixed by using SD sector size bigger than the image file size.
-- In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without many conditions/exceptions.
+- In **timelapse mode**, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I think the higher the number of files in a folder, the longer the writing, which is unfixable, so the files are limited to 1000 per folder. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode. The fix is to activate the **Raw recording mode** if you really mind the framerate stability.
+- In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without addind a ton of conditions/exceptions.
 
 # To do (or not)
 
-- a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
-- a decent schematic to cure my addiction to MS Powerpoint.
-- a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
+- A decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
+- A decent schematic to cure my addiction to MS Powerpoint.
+- A live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
+- Exploit the second core to output images on wifi or via USB to simulate a webcam.
 
 # Acknowledgments
 
