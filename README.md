@@ -30,7 +30,7 @@ First of all, the device is basically a timelapse machine. The regular camera mo
 - In **Timelapse mode**, the deadtime between pictures is set by just by modifying the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) (value entered in ms, if no file, default deadtime is 2000 ms). During each recording session, images are stored in a different folder. Timelapse mode has virtually no ending, it can go as long as the SD card is not full.
 - In **Regular camera mode**, pressing the button just records one image in the **/camera** folder. If the button stays pushed, images are recorded continuously with a debouncing delay of 250 ms. It acts more or less as a burst mode.
 
-To activate **HDR mode** or **Dithering mode** , simply push the corresponding pushbuttons linked to GPIO20 and GPIO21.
+To activate **HDR mode** or **Dithering mode**, simply push the corresponding pushbuttons linked to GPIO20 and GPIO21.
 
 **HDR mode** take several images from -1EV to +1EV and make an average of them before recording. This increases the dynamic of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json).
 
@@ -43,11 +43,12 @@ Additionally, you can address other features by entering them in the [config.jso
 - **Fixed exposure** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
 - **2D enhancement mode** activates (default state) or removes the 2D image enhancement processed by the sensor. The raw images (without 2D enhancement) looks blurry but they are not: this is the weak native resolution of the sensor that creates this feeling.
-- **Raw recording mode** available in **time lapse mode only**, records sensor data as a single file in the **/movie folder**. It needs a separate tool for extracting an animation ([provided here](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Tools/Movie_and_Gif_Maker_from_raw_data.m)). The 32 first bytes are keywords, image sizes and registers, the following are raw data for one image in reading order, easy to recover with any other tool ! This mode allows recording at a solid 4 fps for long time with good light conditions. It is disabled in **Regular camera mode** (command is just ignored).
+- **Raw recording mode** available in **time lapse mode only**, records sensor data as a single file in the **/movie** folder. It needs a separate tool for extracting an animation ([provided here](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Tools/Movie_and_Gif_Maker_from_raw_data.m)). The 32 first bytes are keywords, image sizes and registers, the following are raw data for one image in reading order, easy to recover with any other tool ! This mode allows recording at a solid 4 fps for long time with good light conditions. It is disabled in **Regular camera mode** (command is just ignored).
 
 Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
 # Example of test images with a stuffed fox
+
 ![comparison](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Comparison.png)
 
 # Advanced options
@@ -80,11 +81,13 @@ These options are available only by modifying the #defines in the **[config.h](h
 The whole dashcam device requires a +5V line to drive the sensor and cannot unfortunately be powered by the VSYS pin only. If you're in a nerdy day you normally have all of the parts somewhere in the drawers. From scratch all parts will cost you about 15€.
 
 # Pinout (yes it's a mess, I know)
+
 ![pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Pinout_2.png)
 
 RESET button is not mandatory but very practical. The device should normally never crash but if the sensor is deconnected, it may freeze the loop as the code waits for some response of the sensor. So reseating cable and RESET is the fix. There is honestly no room for other features without using the ADC pins.
 
 # Connection with the sensor
+
 ![cable pinout](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Cable_pinout.png)
 
 Hey ?! It's all empty in the shell apart from that crappy connector at the end ? Yes, you can trash the main camera PCB, or better give it to me to avoid dispersal of heavy metals, I will recycle it well, don't worry. The camera PCB is not required is this mod.
@@ -94,15 +97,18 @@ Hey ?! It's all empty in the shell apart from that crappy connector at the end ?
 According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper.
 
 # Known flaws
+
 - In timelapse mode, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). I think the higher the number of files in a folder, the longer the writing, which is unfixable, so the files are limited to 1000 per folder. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode, seems to be fixed by using SD sector size bigger than the image file size.
 - In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without many conditions/exceptions.
 
 # To do (or not)
+
 - a decent PCB because all that shit would probably enter a regular Game Boy shell at certain point.
 - a decent schematic to cure my addiction to MS Powerpoint.
 - a live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected.
 
 # Acknowledgments
+
 - [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects.
 - [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
 - [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
