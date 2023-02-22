@@ -62,7 +62,7 @@ unsigned long Next_ID, Next_dir;//for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
-unsigned int max_files_per_folder = 255;
+unsigned int max_files_per_folder = 4095;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
@@ -178,7 +178,7 @@ void loop()
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println("Recording...");
-    sprintf(files_on_folder_string, "%X/%X", files_on_folder,max_files_per_folder);
+    sprintf(files_on_folder_string, "%X/%X", files_on_folder, max_files_per_folder);
     img.setCursor(84, 8);
     img.println(files_on_folder_string);
     display_other_informations();
@@ -211,20 +211,26 @@ void loop()
   if (TIMELAPSE_mode == 1)
   {
     if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
-      Next_dir++; // update next directory
+      if (MOVIEMAKER_mode == 0) Next_dir++; // update next directory except in moviemaker mode
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
       recording = 0;
       files_on_folder = 0;
       short_fancy_delay();
     }
-
     if ((gpio_get(PUSH) == 1) && (recording == 0)) { // we want to record: get file/directory#
+
+      if (MOVIEMAKER_mode == 0) {
+        Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
+        sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
 #ifdef  USE_SD
-      Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
-      Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
-      sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
-      SD.mkdir(storage_file_dir);//create next directory
+        SD.mkdir(storage_file_dir);//create next directory
 #endif
+      }
+      Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
+      if (MOVIEMAKER_mode == 1) {
+        Next_ID++;
+        sprintf(storage_file_name, "/Movie/%09d.raw", Next_ID); //update filename
+      }
       recording = 1;
       previousTime = currentTime;
       short_fancy_delay();
@@ -520,9 +526,11 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop()
 {
-  Next_ID++;// update the file number
+  if ((MOVIEMAKER_mode == 0)|(image_TOKEN == 1)) Next_ID++;// update the file number, but not in movie maker mode
   previousTime = currentTime;
-  if (TIMELAPSE_mode == 1) sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID); //update filename
+  if (TIMELAPSE_mode == 1) {
+    if (MOVIEMAKER_mode == 0) sprintf(storage_file_name, "/%06d/%09d.bmp", Next_dir, Next_ID); //update filename
+  }
   if (TIMELAPSE_mode == 0) sprintf(storage_file_name, "/Camera/%09d.bmp", Next_ID); //update filename
 
   if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
@@ -572,15 +580,32 @@ void recording_loop()
   if (dataFile) {
     if (PRETTYBORDER_mode == 0)
     {
-      dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
-      dataFile.write(BmpData, 128 * 120); //removing last tile line
-      dataFile.close();
+      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+        dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
+        dataFile.write(BmpData, 128 * 120); //removing last tile line
+        dataFile.close();
+      }
+
+      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+        dataFile.write("RAW_8BIT_128x120");//Just a marker
+        dataFile.write(BmpData, 128 * 120);
+        dataFile.close();
+      }
     }
+
     if (PRETTYBORDER_mode == 1)
     {
-      dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 128*120 image
-      dataFile.write(BigBmpData, 160 * 144); //removing last tile line
-      dataFile.close();
+      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+        dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
+        dataFile.write(BigBmpData, 160 * 144); //removing last tile line
+        dataFile.close();
+      }
+
+      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+        dataFile.write("RAW_8BIT_160x144");//Just a marker
+        dataFile.write(BigBmpData, 160 * 144);
+        dataFile.close();
+      }
     }
 
     if (TIMELAPSE_mode == 1)
@@ -589,7 +614,7 @@ void recording_loop()
       if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
         files_on_folder = 0;
         store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
-        Next_dir++;
+        if (MOVIEMAKER_mode == 0) Next_dir++;
       }
     }
   }
@@ -759,6 +784,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc, file);
     TIMELAPSE_mode = doc["timelapseMode"];
+    MOVIEMAKER_mode = doc["timelapserawrecordingMode"];
     TIMELAPSE_deadtime = doc["timelapseDelay"];
     PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
@@ -814,7 +840,8 @@ void display_other_informations() {
     img.println("Regular Camera mode");
   }
   if (TIMELAPSE_mode == 1) {
-    img.println("Time Lapse Mode");
+    if (MOVIEMAKER_mode==0) img.println("Time Lapse Mode BMP");
+    if (MOVIEMAKER_mode==1) img.println("Time Lapse Mode RAW");
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
