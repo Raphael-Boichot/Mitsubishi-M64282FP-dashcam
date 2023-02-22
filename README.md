@@ -57,7 +57,6 @@ These options are available only by modifying the #defines in the **[config.h](h
 - **USE_SERIAL** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
 - **USE_TFT** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 - **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
-- **USE_EXTREME_OVERCLOCK** allows multiplying the clock frequency by a factor of 2. Use at your own risks.
 - **USE_SNEAK_MODE** disable LEDS in recording mode.
 
 # Minimal parts
