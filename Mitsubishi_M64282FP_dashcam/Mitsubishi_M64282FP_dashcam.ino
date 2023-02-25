@@ -1,6 +1,6 @@
 //By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
 //this is an autonomous recorder for the Mitsubishi M64282FP artificial retina of the Game Boy Camera
-//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05
+//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05: https://github.com/BackupGGCode/avr-gameboy-cam
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
 //version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
