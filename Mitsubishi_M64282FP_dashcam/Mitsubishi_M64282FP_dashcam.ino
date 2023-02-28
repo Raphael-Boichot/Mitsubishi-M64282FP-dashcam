@@ -1,6 +1,6 @@
 //By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
 //this is an autonomous recorder for the Mitsubishi M64282FP artificial retina of the Game Boy Camera
-//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05: https://github.com/BackupGGCode/avr-gameboy-cam
+//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
 //version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
@@ -169,7 +169,7 @@ void loop()
 #endif
   }
 
-  if (recording == 1) {// prepare data for recording in timelapse mode
+  if ((recording == 1)&(image_TOKEN == 0)) {// prepare for recording in timelapse mode
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
@@ -184,7 +184,7 @@ void loop()
     if (TIMELAPSE_deadtime > 10000) sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
   }//end of recording loop for timelapse
 
-  if (image_TOKEN == 1) { // prepare data for recording in single picture mode
+  if ((image_TOKEN == 1)&(recording == 0)) { // prepare for recording one shot
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
@@ -522,7 +522,7 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop()
 {
-  if ((MOVIEMAKER_mode == 0)|(image_TOKEN == 1)) Next_ID++;// update the file number, but not in movie maker mode
+  if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) Next_ID++; // update the file number, but not in movie maker mode
   previousTime = currentTime;
   if (TIMELAPSE_mode == 1) {
     if (MOVIEMAKER_mode == 0) sprintf(storage_file_name, "/%06d/%07d.bmp", Next_dir, Next_ID); //update filename
@@ -585,7 +585,7 @@ void recording_loop()
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
         dataFile.write("RAW_8BIT_128x120");//Just a marker
         dataFile.write("REGISTER");//Just a marker
-        dataFile.write(camReg,8);//camera registers from the preceding image, close to the current one
+        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BmpData, 128 * 120);
         dataFile.close();
       }
@@ -602,7 +602,7 @@ void recording_loop()
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
         dataFile.write("RAW_8BIT_160x144");//Just a marker
         dataFile.write("REGISTER");//Just a marker
-        dataFile.write(camReg,8);//camera registers from the preceding image, close to the current one
+        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BigBmpData, 160 * 144);
         dataFile.close();
       }
@@ -840,8 +840,8 @@ void display_other_informations() {
     img.println("Regular Camera mode");
   }
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode==0) img.println("Time Lapse Mode BMP");
-    if (MOVIEMAKER_mode==1) img.println("Time Lapse Mode RAW");
+    if (MOVIEMAKER_mode == 0) img.println("Time Lapse Mode BMP");
+    if (MOVIEMAKER_mode == 1) img.println("Time Lapse Mode RAW");
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
@@ -883,6 +883,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #ifdef  USE_TFT
   tft.init();
   tft.setRotation(2);
+  //tft.invertDisplay(1);
   img.setColorDepth(BITS_PER_PIXEL);         // Set colour depth first
   img.createSprite(128, 160);                // then create the giant sprite that will be our video ram buffer
   img.setTextSize(1);                        // characters are 8x8 pixels in size 1, practical !
