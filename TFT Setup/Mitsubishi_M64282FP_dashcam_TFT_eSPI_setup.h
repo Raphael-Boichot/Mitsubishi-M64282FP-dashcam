@@ -122,8 +122,8 @@
 // to be toggled during setup, so in these cases the TFT_CS line must be defined and connected.
 
 // For the Pico use these #define lines
-#define TFT_MISO  0  // not used here, just to avoid a compiling message
-#define TOUCH_CS  1  // not used here, just to avoid a compiling message
+#define TFT_MISO  23  // not used here, just to avoid a compiling message
+#define TOUCH_CS  24  // not used here, just to avoid a compiling message
 #define TFT_SCLK  2  // Display SCK
 #define TFT_MOSI  3  // Display SDA/MOSI
 #define TFT_CS    4  // Chip select control pin
