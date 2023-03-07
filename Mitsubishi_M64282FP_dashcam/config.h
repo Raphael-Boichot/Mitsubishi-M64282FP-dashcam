@@ -55,8 +55,8 @@ int FIXED_divider = 1;//clock divider
 //TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
 // pins are configured into the Bodmer TFT e_SPI library, DO NOT CHANGE HERE, see read.me for details
 // Display LED       to pi pico pin 3V3
-// Display TFT_MISO  to pi pico pin GPIO23  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO0
-// Display TOUCH_CS  to pi pico pin GPIO24  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO1
+// Display TFT_MISO  to pi pico pin GPIO99  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO0
+// Display TOUCH_CS  to pi pico pin GPIO99  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO1
 // Display SCK       to pi pico pin GPIO2
 // Display SDA       to pi pico pin GPIO3
 // Display CS        to pi pico pin GPIO4 (can use another pin if desired)

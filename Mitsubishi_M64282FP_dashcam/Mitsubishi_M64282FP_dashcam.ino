@@ -106,6 +106,8 @@ void setup()
 
 #ifdef  USE_SD
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
+  Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
+  Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
 #endif
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
@@ -159,7 +161,7 @@ void loop()
   }
 #endif
 
-  if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the ram too
+  if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the display
 #ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
@@ -169,7 +171,7 @@ void loop()
 #endif
   }
 
-  if ((recording == 1)&(image_TOKEN == 0)) {// prepare for recording in timelapse mode
+  if ((recording == 1) & (image_TOKEN == 0)) { // prepare for recording in timelapse mode
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
@@ -184,7 +186,7 @@ void loop()
     if (TIMELAPSE_deadtime > 10000) sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
   }//end of recording loop for timelapse
 
-  if ((image_TOKEN == 1)&(recording == 0)) { // prepare for recording one shot
+  if ((image_TOKEN == 1) & (recording == 0)) { // prepare for recording one shot
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
@@ -194,13 +196,17 @@ void loop()
 #endif
     recording_loop();// Wait for deadtime set in config.txt
     image_TOKEN = 0;
+#ifdef  USE_SD
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
+#endif
     delay(250);//long enough for debouncing, fast enough for a decent burst mode
   }//end of recording loop for regular camera mode
 
   if ((TIMELAPSE_mode == 0) && (gpio_get(PUSH) == 1)) { //camera mode acts like if user requires just one picture
+#ifdef  USE_SD
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
     Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card, just to store it in memory and rewrite it at the end
+#endif
     image_TOKEN = 1;
   }
 
@@ -208,7 +214,11 @@ void loop()
   {
     if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
       if (MOVIEMAKER_mode == 0) Next_dir++; // update next directory except in moviemaker mode
+
+#ifdef  USE_SD
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
+#endif
+
       recording = 0;
       files_on_folder = 0;
       short_fancy_delay();
@@ -216,13 +226,15 @@ void loop()
     if ((gpio_get(PUSH) == 1) && (recording == 0)) { // we want to record: get file/directory#
 
       if (MOVIEMAKER_mode == 0) {
+#ifdef  USE_SD
         Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
         sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
-#ifdef  USE_SD
         SD.mkdir(storage_file_dir);//create next directory
 #endif
       }
+#ifdef  USE_SD
       Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
+#endif
       if (MOVIEMAKER_mode == 1) {
         Next_ID++;
         sprintf(storage_file_name, "/Raw_data/%07d.raw", Next_ID); //update filename
