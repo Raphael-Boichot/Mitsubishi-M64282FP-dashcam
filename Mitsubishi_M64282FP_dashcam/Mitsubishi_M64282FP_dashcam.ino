@@ -138,8 +138,22 @@ void loop()
     new_exposure = FIXED_delay;
     clock_divider = FIXED_divider;
   }
-
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
+
+/////////////////////////////////////////
+  if (gpio_get(HDR) == 1) {
+    HDR_mode = !HDR_mode;//self explanatory
+    short_fancy_delay();
+  }
+  if (gpio_get(DITHER) == 1) {
+    DITHER_mode = !DITHER_mode;//self explanatory
+    short_fancy_delay();
+  }
+  if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
+    TIMELAPSE_mode = !TIMELAPSE_mode;//self explanatory
+    short_fancy_delay();
+  }
+////////////////////////////////////////
 
   if (DITHER_mode == 1) Dither_image(CamData, BayerData);
 
@@ -243,19 +257,6 @@ void loop()
       previousTime = currentTime;
       short_fancy_delay();
     }
-  }
-
-  if (gpio_get(HDR) == 1) {
-    HDR_mode = !HDR_mode;//self explanatory
-    short_fancy_delay();
-  }
-  if (gpio_get(DITHER) == 1) {
-    DITHER_mode = !DITHER_mode;//self explanatory
-    short_fancy_delay();
-  }
-  if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
-    TIMELAPSE_mode = !TIMELAPSE_mode;//self explanatory
-    short_fancy_delay();
   }
 } //end of loop
 
@@ -430,7 +431,7 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   bool skip_loop = 0;
   previousTime_exp = millis();
   while (1)
-  { // Wait for READ to go high, this is the loop waiting foe exposure
+  { // Wait for READ to go high, this is the loop waiting for exposure
     gpio_put(CLOCK, 1);
     camSpecialDelay();
     if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, normal ending
