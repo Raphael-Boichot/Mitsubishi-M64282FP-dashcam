@@ -1,7 +1,7 @@
 clc
 clear
 upscaling_factor=4;%...upscaling factor
-delay=0.05;%delay between pictures for animated gifs
+delay=0.2;%delay between pictures for animated gifs
 
 listing = dir('*.raw');
 for i=1:1:length(listing)
@@ -17,11 +17,11 @@ for i=1:1:length(listing)
     k = strfind(data,'RAW_8BIT_');
     mkdir(['./',name(1:end-4)]);
     for i=1:1:length(k)-1
-        offset=k(i)+33;
+        offset=k(i)+32;
         pixel_data=data_raw(offset:offset+(height)*width-1);
-        %minimum=min(min(pixel_data(128:end-128*8)));
-        %maximum=max(max(pixel_data(128:end-128*8)));
-        %pixel_data=(pixel_data-minimum)*(255/(maximum-minimum));
+%         minimum=min(min(pixel_data(128:end-128*8)));
+%         maximum=max(max(pixel_data(128:end-128*8)));
+%         pixel_data=(pixel_data-minimum)*(255/(maximum-minimum));
         pixels=uint8(rot90(reshape(pixel_data,width,height),3));
         pixels=fliplr(pixels);
         imshow(pixels);
