@@ -15,9 +15,13 @@ for i=1:1:length(listing)
     width=str2double(data(10:12));
     data=convertCharsToStrings(data);
     k = strfind(data,'RAW_8BIT_');
+    mkdir(['./',name(1:end-4)]);
     for i=1:1:length(k)-1
-        offset=k(i)+32;
-        pixel_data=data_raw(offset:offset+height*width-1);
+        offset=k(i)+33;
+        pixel_data=data_raw(offset:offset+(height)*width-1);
+        minimum=min(min(pixel_data(128:end-128*8)));
+        maximum=max(max(pixel_data(128:end-128*8)));
+        pixel_data=(pixel_data-minimum)*(255/(maximum-minimum));
         pixels=uint8(rot90(reshape(pixel_data,width,height),3));
         pixels=fliplr(pixels);
         imshow(pixels);
@@ -30,11 +34,8 @@ for i=1:1:length(listing)
         else
             imwrite(imind,map,[name(1:end-4),'.gif'],'gif','WriteMode','append','DelayTime',delay);
         end
-        
-        
+        imwrite(scaled,['./',name(1:end-4),'/',name(1:end-4),num2str(i,'%04d'),'.png'])
     end
-    
-   
     close(vidfile)
 end
 
