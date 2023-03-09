@@ -68,6 +68,7 @@ bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
+bool is_writing_data = 0; //reserved, for second core
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
 char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
@@ -95,6 +96,11 @@ void setup()
   //analog stuff
   adc_gpio_init(VOUT);  adc_select_input(0);//there are several ADC channels to choose from
   adc_init();//mandatory, without it stuck the camera
+
+#ifdef USE_OVERCLOCKING
+  cycles = 15;//about twice as fast as the regular 133 MHz
+  set_sys_clock_khz(250000, true);//about twice as fast as the regular 133 MHz
+#endif
 
 #ifdef USE_SERIAL // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(2000000);
@@ -126,6 +132,11 @@ void setup()
   }
 }
 
+void setup1()
+{
+  //do nothing for the moment
+}
+
 //////////////////////////////////////////////Main loop///////////////////////////////////////////////////////////////////////////////////////////
 
 void loop()
@@ -140,7 +151,7 @@ void loop()
   }
   push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
 
-/////////////////////////////////////////
+  /////////////////////////////////////////
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
     short_fancy_delay();
@@ -153,7 +164,7 @@ void loop()
     TIMELAPSE_mode = !TIMELAPSE_mode;//self explanatory
     short_fancy_delay();
   }
-////////////////////////////////////////
+  ////////////////////////////////////////
 
   if (DITHER_mode == 1) Dither_image(CamData, BayerData);
 
@@ -259,6 +270,15 @@ void loop()
     }
   }
 } //end of loop
+
+void loop1()// core 1 deals with SD card only
+{
+  //  if (is_writing_data ==1){
+  //  is_writing_data = 0;
+  //  dump_data_to_SD_card();
+  //  }
+}
+
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -583,54 +603,21 @@ void recording_loop()
   gpio_put(RED, 1);
 #endif
 
+  is_writing_data = 1;//core 1 will deal with this task/////////////////////////////////////////////////////////
+  dump_data_to_SD_card();
+  is_writing_data = 0;
+
 #ifdef  USE_SD
-  File dataFile = SD.open(storage_file_name, FILE_WRITE);
-  // if the file is writable, write to it:
-  if (dataFile) {
-    if (PRETTYBORDER_mode == 0)
-    {
-      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
-        dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
-        dataFile.write(BmpData, 128 * 120); //removing last tile line
-        dataFile.close();
-      }
-
-      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_128x120");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
-        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
-        dataFile.write(BmpData, 128 * 120);
-        dataFile.close();
-      }
-    }
-
-    if (PRETTYBORDER_mode == 1)
-    {
-      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
-        dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
-        dataFile.write(BigBmpData, 160 * 144); //removing last tile line
-        dataFile.close();
-      }
-
-      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_160x144");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
-        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
-        dataFile.write(BigBmpData, 160 * 144);
-        dataFile.close();
-      }
-    }
-
-    if (TIMELAPSE_mode == 1)
-    {
-      files_on_folder++;
-      if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
-        files_on_folder = 0;
-        store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
-        if (MOVIEMAKER_mode == 0) Next_dir++;
-      }
+  if (TIMELAPSE_mode == 1)
+  {
+    files_on_folder++;
+    if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
+      files_on_folder = 0;
+      store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
+      if (MOVIEMAKER_mode == 0) Next_dir++;
     }
   }
+
 #endif
 
 #ifndef  USE_SNEAK_MODE
@@ -817,6 +804,48 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   }
 #endif
   return JSON_OK;
+}
+
+void dump_data_to_SD_card() {
+#ifdef  USE_SD
+  File dataFile = SD.open(storage_file_name, FILE_WRITE);
+  // if the file is writable, write to it:
+  if (dataFile) {
+    if (PRETTYBORDER_mode == 0)
+    {
+      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+        dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
+        dataFile.write(BmpData, 128 * 120); //removing last tile line
+        dataFile.close();
+      }
+
+      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+        dataFile.write("RAW_8BIT_128x120");//Just a marker
+        dataFile.write("REGISTER");//Just a marker
+        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
+        dataFile.write(BmpData, 128 * 120);
+        dataFile.close();
+      }
+    }
+
+    if (PRETTYBORDER_mode == 1)
+    {
+      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+        dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
+        dataFile.write(BigBmpData, 160 * 144); //removing last tile line
+        dataFile.close();
+      }
+
+      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+        dataFile.write("RAW_8BIT_160x144");//Just a marker
+        dataFile.write("REGISTER");//Just a marker
+        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
+        dataFile.write(BigBmpData, 160 * 144);
+        dataFile.close();
+      }
+    }
+  }
+#endif
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
