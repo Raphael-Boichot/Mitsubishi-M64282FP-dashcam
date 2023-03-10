@@ -68,12 +68,11 @@ bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
-bool is_writing_data = 0; //reserved, for second core
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
 char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 
-//////////////////////////////////////////////Setup/////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup()
 {
@@ -102,7 +101,7 @@ void setup()
   set_sys_clock_khz(250000, true);//about twice as fast as the regular 133 MHz
 #endif
 
-#ifdef USE_SERIAL // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
+#ifdef DEBUG_MODE // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(2000000);
 #endif
 
@@ -132,14 +131,10 @@ void setup()
   }
 }
 
-void setup1()
-{
-  //do nothing for the moment
-}
 
-//////////////////////////////////////////////Main loop///////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
 
-void loop()
+void loop()// core 1 deals with SD card only
 {
   currentTime = millis();
   take_a_picture(); //data in memory for the moment, one frame
@@ -269,14 +264,6 @@ void loop()
       short_fancy_delay();
     }
   }
-} //end of loop
-
-void loop1()// core 1 deals with SD card only
-{
-  //  if (is_writing_data ==1){
-  //  is_writing_data = 0;
-  //  dump_data_to_SD_card();
-  //  }
 }
 
 
@@ -603,9 +590,7 @@ void recording_loop()
   gpio_put(RED, 1);
 #endif
 
-  is_writing_data = 1;//core 1 will deal with this task/////////////////////////////////////////////////////////
-  dump_data_to_SD_card();
-  is_writing_data = 0;
+dump_data_to_SD_card();//////////////////////cannot move this to core 1 without bug, set aside for the moment
 
 #ifdef  USE_SD
   if (TIMELAPSE_mode == 1)
@@ -617,7 +602,6 @@ void recording_loop()
       if (MOVIEMAKER_mode == 0) Next_dir++;
     }
   }
-
 #endif
 
 #ifndef  USE_SNEAK_MODE
@@ -703,7 +687,6 @@ void pre_allocate_image_with_pretty_borders()
     }
   }
 }
-
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
@@ -806,7 +789,8 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   return JSON_OK;
 }
 
-void dump_data_to_SD_card() {
+void dump_data_to_SD_card() 
+{
 #ifdef  USE_SD
   File dataFile = SD.open(storage_file_name, FILE_WRITE);
   // if the file is writable, write to it:
@@ -827,7 +811,6 @@ void dump_data_to_SD_card() {
         dataFile.close();
       }
     }
-
     if (PRETTYBORDER_mode == 1)
     {
       if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
