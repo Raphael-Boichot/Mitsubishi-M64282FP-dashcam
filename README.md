@@ -106,7 +106,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 - A decent schematic to cure my addiction to MS Powerpoint.
 - A live analog recorder based on this project to interface with a Game Boy Camera sensor in real use with its mapper connected - [done !](https://github.com/Raphael-Boichot/Game-Boy-camera-sniffer)
 - Exploit the second core to output images on wifi or via USB to simulate a webcam.
-- Write an [Action sampler](https://www.leshopretro.com/blog/test-lomography-action-sampler) mode because it is fun.
+- Write an [Action sampler](https://www.youtube.com/watch?v=QiS-yoN2gmI) mode because it is fun.
 
 # Acknowledgments
 
