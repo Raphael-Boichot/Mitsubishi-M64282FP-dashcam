@@ -68,6 +68,7 @@ bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
+bool LOCK_exposure = 0; //reserved, for locking exposure
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
 char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
@@ -81,8 +82,10 @@ void setup()
   gpio_init(TLC);       gpio_set_dir(TLC, GPIO_IN);//timelapse<->regular camera mode
   gpio_init(DITHER);    gpio_set_dir(DITHER, GPIO_IN);//dithering with Bayer matrix
   gpio_init(HDR);       gpio_set_dir(HDR, GPIO_IN);//HDR mode
+  gpio_init(LOCK);      gpio_set_dir(LOCK, GPIO_IN);//LOCK exposure
   gpio_init(LED);       gpio_set_dir(LED, GPIO_OUT);//green LED
   gpio_init(RED);       gpio_set_dir(RED, GPIO_OUT);//red LED
+  gpio_init(INT);       gpio_set_dir(INT, GPIO_OUT);//internal LED
 
   //sensor input/output
   gpio_init(READ);      gpio_set_dir(READ, GPIO_IN);
@@ -134,19 +137,27 @@ void setup()
 
 //////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
 
-void loop()// core 1 deals with SD card only
+void loop()
 {
   currentTime = millis();
   take_a_picture(); //data in memory for the moment, one frame
-  new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
+  new_exposure = auto_exposure(camReg, CamData, v_min, v_max); // self explanatory
 
   if (FIXED_EXPOSURE_mode == 1) {
     new_exposure = FIXED_delay;
     clock_divider = FIXED_divider;
   }
-  push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
+  if (LOCK_exposure == 0) {
+    push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
+  }
 
   /////////////////////////////////////////
+  if (gpio_get(LOCK) == 1) {
+    LOCK_exposure = !LOCK_exposure;//self explanatory
+    short_fancy_delay();
+  }
+  gpio_put(INT, LOCK_exposure);
+
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
     short_fancy_delay();
@@ -161,7 +172,9 @@ void loop()// core 1 deals with SD card only
   }
   ////////////////////////////////////////
 
-  if (DITHER_mode == 1) Dither_image(CamData, BayerData);
+  if (DITHER_mode == 1) {
+    Dither_image(CamData, BayerData);
+  }
 
 #ifdef USE_SERIAL
   dump_data_to_serial(CamData);//dump raw data to serial in ASCII for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
@@ -202,8 +215,12 @@ void loop()// core 1 deals with SD card only
     display_other_informations();
     img.pushSprite(0, 0);// dump image to display
 #endif
-    if ((currentTime - previousTime) > TIMELAPSE_deadtime) recording_loop();// Wait for deadtime set in config.txt
-    if (TIMELAPSE_deadtime > 10000) sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    if ((currentTime - previousTime) > TIMELAPSE_deadtime) {
+      recording_loop();// Wait for deadtime set in config.txt
+    }
+    if (TIMELAPSE_deadtime > 10000) {
+      sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    }
   }//end of recording loop for timelapse
 
   if ((image_TOKEN == 1) & (recording == 0)) { // prepare for recording one shot
@@ -319,7 +336,9 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
   }
 
   if (NIGHT_mode == 1) {
-    if (current_exposure < 0x1000) clock_divider = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+    if (current_exposure < 0x1000) {
+      clock_divider = 1 ;//Normal situation is to be always 1, so that clock is about 1MHz
+    }
   }
 
   camReg[2] = int(new_regs / 256);//Janky, I know...
@@ -379,12 +398,10 @@ void camSetReg(unsigned char regaddr, unsigned char regval)// Sets one of the 8 
     gpio_put(CLOCK, 0);
     camDelay();
     gpio_put(LOAD, 0);// ensure load bit is cleared from previous call
-    if (regaddr & bitmask)
-    {
+    if (regaddr & bitmask) {
       gpio_put(SIN, 1);// Set the SIN bit
     }
-    else
-    {
+    else {
       gpio_put(SIN, 0);
     }
     camDelay();
@@ -396,17 +413,16 @@ void camSetReg(unsigned char regaddr, unsigned char regval)// Sets one of the 8 
   for (bitmask = 128; bitmask >= 1; bitmask >>= 1) {// Write the 8-bits register
     gpio_put(CLOCK, 0);
     camDelay();
-    if (regval & bitmask)
-    {
+    if (regval & bitmask) {
       gpio_put(SIN, 1);// set the SIN bit
     }
-    else
-    {
+    else {
       gpio_put(SIN, 0);
     }
     camDelay();
-    if (bitmask == 1)
+    if (bitmask == 1) {
       gpio_put(LOAD, 1);// Assert load at rising edge of CLOCK
+    }
     gpio_put(CLOCK, 1);
     camDelay();
     gpio_put(SIN, 0);
@@ -441,8 +457,10 @@ void camReadPicture(unsigned char CamData[128 * 128]) // Take a picture, read it
   { // Wait for READ to go high, this is the loop waiting for exposure
     gpio_put(CLOCK, 1);
     camSpecialDelay();
-    if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, normal ending
-    if (((gpio_get(PUSH) == 1) & (image_TOKEN == 0)) | (gpio_get(HDR) == 1) | (gpio_get(DITHER) == 1) | (gpio_get(TLC) == 1)) { //any button is pushed, skip sensor stuff
+    if (gpio_get(READ) == 1) {
+      break;// READ goes high with rising CLOCK, normal ending
+    }
+    if (((gpio_get(PUSH) == 1) & (image_TOKEN == 0)) | (gpio_get(HDR) == 1) | (gpio_get(DITHER) == 1) | (gpio_get(TLC) == 1) | (gpio_get(LOCK) == 1)) { //any button is pushed, skip sensor stuff
       skip_loop = 1;
       camReset();
       break;  // we want to do something, skip next steps
@@ -502,7 +520,9 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
   while (1) {// Wait for READ to go high
     gpio_put(CLOCK, 1);
     camDelay();
-    if (gpio_get(READ) == 1) break;// READ goes high with rising CLOCK, everything is OK
+    if (gpio_get(READ) == 1) {
+      break;// READ goes high with rising CLOCK, everything is OK
+    }
     if ((millis() - currentTime) > 1000) {
       sensor_OK = 0;
       break;//the sensor does not respond after 1 second = not connected
@@ -542,12 +562,18 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop()
 {
-  if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) Next_ID++; // update the file number, but not in movie maker mode
+  if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) {
+    Next_ID++; // update the file number, but not in movie maker mode
+  }
   previousTime = currentTime;
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode == 0) sprintf(storage_file_name, "/%06d/%07d.bmp", Next_dir, Next_ID); //update filename
+    if (MOVIEMAKER_mode == 0) {
+      sprintf(storage_file_name, "/%06d/%07d.bmp", Next_dir, Next_ID); //update filename
+    }
   }
-  if (TIMELAPSE_mode == 0) sprintf(storage_file_name, "/Camera/%07d.bmp", Next_ID); //update filename
+  if (TIMELAPSE_mode == 0) {
+    sprintf(storage_file_name, "/Camera/%07d.bmp", Next_ID); //update filename
+  }
 
   if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
 
@@ -584,13 +610,15 @@ void recording_loop()
     }
   }
 
-  if (PRETTYBORDER_mode == 1) make_image_with_pretty_borders();
+  if (PRETTYBORDER_mode == 1) {
+    make_image_with_pretty_borders();
+  }
 
 #ifndef  USE_SNEAK_MODE
   gpio_put(RED, 1);
 #endif
 
-dump_data_to_SD_card();//////////////////////cannot move this to core 1 without bug, set aside for the moment
+  dump_data_to_SD_card();//////////////////////cannot move this to core 1 without bug, set aside for the moment
 
 #ifdef  USE_SD
   if (TIMELAPSE_mode == 1)
@@ -599,7 +627,9 @@ dump_data_to_SD_card();//////////////////////cannot move this to core 1 without 
     if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
       files_on_folder = 0;
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
-      if (MOVIEMAKER_mode == 0) Next_dir++;
+      if (MOVIEMAKER_mode == 0) {
+        Next_dir++;
+      }
     }
   }
 #endif
@@ -652,9 +682,15 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
       //pixel = CamData[counter];//non auto_contrasted values, may range between 0 and 255
       pixel = lookup_serial[CamData[counter]];//auto_contrasted values, may range between 0 and 255
       pixel_out = Dithering_palette[3];
-      if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) pixel_out = Dithering_palette[0];
-      if ((pixel >= Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matLG_DG[(x & 3) + 4 * (y & 3)])) pixel_out = Dithering_palette[1];
-      if ((pixel >= Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matW_LG[(x & 3) + 4 * (y & 3)]))pixel_out = Dithering_palette[2];
+      if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
+        pixel_out = Dithering_palette[0];
+      }
+      if ((pixel >= Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matLG_DG[(x & 3) + 4 * (y & 3)])) {
+        pixel_out = Dithering_palette[1];
+      }
+      if ((pixel >= Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matW_LG[(x & 3) + 4 * (y & 3)])) {
+        pixel_out = Dithering_palette[2];
+      }
       BayerData[counter] = pixel_out;
       counter = counter + 1;
     }
@@ -693,7 +729,9 @@ void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];//to get data with autocontrast
     //pixel = CamData[i]; //to get data without autocontrast
-    if (pixel <= 0x0F) Serial.print('0');
+    if (pixel <= 0x0F) {
+      Serial.print('0');
+    }
     Serial.print(pixel, HEX);
     Serial.print(" ");
   }
@@ -789,7 +827,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   return JSON_OK;
 }
 
-void dump_data_to_SD_card() 
+void dump_data_to_SD_card()
 {
 #ifdef  USE_SD
   File dataFile = SD.open(storage_file_name, FILE_WRITE);
@@ -836,9 +874,9 @@ void short_fancy_delay() {
 #ifndef  USE_SNEAK_MODE
   for (int i = 0; i < 10; i++) {
     gpio_put(RED, 1);
-    delay(25);
+    delay(20);
     gpio_put(RED, 0);
-    delay(25);
+    delay(20);
   }
 #endif
 }
@@ -847,17 +885,33 @@ void display_other_informations() {
 #ifdef  USE_TFT
 
   current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
-  if (current_exposure > 0x0FFF) sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
-  if (current_exposure <= 0x0FFF) sprintf(exposure_string, "REG: 0%X", current_exposure); //concatenate string for display;
-  if (current_exposure <= 0x00FF) sprintf(exposure_string, "REG: 00%X", current_exposure); //concatenate string for display;
-  if (current_exposure <= 0x000F) sprintf(exposure_string, "REG: 000%X", current_exposure); //concatenate string for display;
+  if (current_exposure > 0x0FFF) {
+    sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
+  }
+  if (current_exposure <= 0x0FFF) {
+    sprintf(exposure_string, "REG: 0%X", current_exposure); //concatenate string for display;
+  }
+  if (current_exposure <= 0x00FF) {
+    sprintf(exposure_string, "REG: 00%X", current_exposure); //concatenate string for display;
+  }
+  if (current_exposure <= 0x000F) {
+    sprintf(exposure_string, "REG: 000%X", current_exposure); //concatenate string for display;
+  }
 
   sprintf(multiplier_string, "Clock/%X", clock_divider); //concatenate string for display;
 
-  if (currentTime_exp > 1000) sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
-  if (currentTime_exp <= 1000) sprintf(exposure_string_ms, "Exposure: 0%d ms", currentTime_exp); //concatenate string for display;
-  if (currentTime_exp <= 100) sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp); //concatenate string for display;
-  if (currentTime_exp <= 10) sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp); //concatenate string for display;
+  if (currentTime_exp > 1000) {
+    sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp); //concatenate string for display;
+  }
+  if (currentTime_exp <= 1000) {
+    sprintf(exposure_string_ms, "Exposure: 0%d ms", currentTime_exp); //concatenate string for display;
+  }
+  if (currentTime_exp <= 100) {
+    sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp); //concatenate string for display;
+  }
+  if (currentTime_exp <= 10) {
+    sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp); //concatenate string for display;
+  }
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
@@ -865,8 +919,12 @@ void display_other_informations() {
     img.println("Regular Camera mode");
   }
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode == 0) img.println("Time Lapse Mode BMP");
-    if (MOVIEMAKER_mode == 1) img.println("Time Lapse Mode RAW");
+    if (MOVIEMAKER_mode == 0) {
+      img.println("Time Lapse Mode BMP");
+    }
+    if (MOVIEMAKER_mode == 1) {
+      img.println("Time Lapse Mode RAW");
+    }
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
@@ -883,7 +941,9 @@ void display_other_informations() {
   img.println(storage_file_name);
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 144);
-  if (recording == 0) img.println(storage_deadtime);
+  if (recording == 0) {
+    img.println(storage_deadtime);
+  }
   if (recording == 1) {
     sprintf(remaining_deadtime, "Delay: %d ms", TIMELAPSE_deadtime - (currentTime - previousTime)); //concatenate string for display
     img.println(F(remaining_deadtime));
@@ -1008,6 +1068,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #ifndef  USE_SNEAK_MODE
       gpio_put(RED, 1);
 #endif
+
       delay(1000);
       gpio_put(RED, 0);
       delay(1000);

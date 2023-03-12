@@ -39,12 +39,14 @@ int FIXED_divider = 1;//clock divider
 #define START 12  //to pi pico pin GPIO12 Image sensing start, pulled down internally, has to be high before rising CLOCK
 
 //the following are intended to allow interfering with the device
+#define INT 25    //to pi pico pin GPIO25 internal LED;
 #define LED 15    //to pi pico pin GPIO15 indicate exposure delay for the sensor <-> GND
 #define RED 14    //to pi pico pin GPIO14 indicate recording to SD card of issue with SD card <-> GND
 #define PUSH 13   //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
-#define HDR 20    //to pi pico pin GPIO20 <-> 3.3V - HDR mode
+#define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define TLC 22    //to pi pico pin GPIO22 <-> 3.3V - timelapse<->regular camera mode
 #define DITHER 21 //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
+#define LOCK 0   //to pi pico pin GPIO0  <-> 3.3V - Lock exposure
 // it is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
