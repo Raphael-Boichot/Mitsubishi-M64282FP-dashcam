@@ -100,7 +100,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 - In **timelapse mode**, if the delay between shots is set to 0 ms, recording first starts at about 4 fps, then gradually decreases to 2 fps in about 2 minutes while the access to SD card is becoming slower (the rest of the code is not affected). In fact the higher the number of files in a folder, the longer the writing, which is unfixable, so the files are limited to 1024 per folder. Sometimes the access to SD also stalls for 4-5 seconds, generally in fast recording mode. The fix is to activate the **Raw recording mode** if you really mind the framerate stability.
 - In regular camera mode, the sensor is asked to record a new image when button is pushed rather than taking the pre-recorded image within the ram (like a regular Game Boy Camera would do for example). This is not really a flaw but a design that allows using the HDR mode and the burst mode with a quite short code without addind a ton of conditions/exceptions.
 
-# To do (or not)
+# To do
 
 - Move LEDs to GPIO 0 and 1;
 - Add an exposure locking option on one of the two freed GPIOs
