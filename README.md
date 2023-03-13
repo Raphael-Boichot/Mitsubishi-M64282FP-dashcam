@@ -104,9 +104,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 
 # Kind warning
 
-The code comes as it. If you're not happy with the current implementation and the Arduino IDE, build your own and debug it ! Tuning the timing parameters was extremely long and tedious and I won't debug any other variant of the current schematic, of the current code or with another IDE as it is perfectly working.
-
-Push request with tested and working improvements are of course still welcomed.
+The code and current design come as it. If you're not happy with the current hardware and the Arduino IDE, build your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
 # Acknowledgments
 
