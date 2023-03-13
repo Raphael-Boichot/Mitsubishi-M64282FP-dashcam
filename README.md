@@ -70,7 +70,7 @@ These options are available only by modifying the #defines in the **[config.h](h
 - a way to connect the sensor without destroying the original cable like a slighly butchered [JST ZH1.5MM 9 Pin](https://fr.aliexpress.com/item/32920487056.html) connector or an opened [replacement cable](https://www.digikey.com/en/products/base-product/jst-sales-america-inc/455/A09ZR09Z/588181) (choose B model).
 - a [8x12 cm prototype board](https://fr.aliexpress.com/item/1005001636510673.html) while waiting for a real PCB.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
-- 5 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
+- 6 [push buttons whatever their size or height](https://fr.aliexpress.com/item/1005003251295065.html).
 - a [microswitch](https://fr.aliexpress.com/item/1005003938856402.html) to cut the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
 **Powered with internal lithium battery**
