@@ -14,7 +14,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 - Import or install the Bodmer [TFT_eSPI library](https://github.com/Bodmer/TFT_eSPI) via the Arduino library manager.
 - Locate the TFT_eSPI library: **\Arduino\libraries\TFT_eSPI** folder in your Arduino libraries
     
-- copy the [configuration file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/TFT%20Setup/Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h) for the TFT display in this folder.
+- copy the [configuration file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160_Dashboy_Camera/128x160_TFT%20Setup) for the TFT display in this folder.
 - edit the User_Setup_Select.h and modify line 29:
 
     **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
