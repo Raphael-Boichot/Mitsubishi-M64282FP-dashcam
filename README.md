@@ -59,7 +59,7 @@ These options are available only by modifying the #defines in the **[config.h](h
 
 Other #defines are reserved for debugging and dev.
 
-# Minimal parts
+# Parts
 
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor.
@@ -74,6 +74,8 @@ Other #defines are reserved for debugging and dev.
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
+The device is meant to be used with NiMH batteries. I very dislike lithium batteries because they are dangerous to store, not recycled and non generic at all.
+
 # PCB and connection with the sensor
 
 PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images).
@@ -84,10 +86,11 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 
 - Solder the lower parts: diodes, resistors, level shifters, push buttons, JST connector, microswitches, capacitor, Pi Pico and DC-DC converter. **Pi Pico must be mandatorily soldered at the castellated holes, without pin headers or spacer, directly on the PCB**, levels shifters and DC-DC converters can be soldered with male pin headers.
 - Solder the display **by ensuring to have enough clearance to slide the SD card above the Pi Pico**. Best is to use female pin headers to secure the distance between display and main PCB but the default pins are long enough if you solder them just showing out of the back PCB surface.
+- Trim the pin connectors from the back side of PCB.
 - At this step, flash the Pi Pico and verify that the device boots and the display works.
-- Solder the JST connectors to the tiny adapter board (INPUT and NORMAL OUT if you use a cable similar to the default sensor one) or just bend the pins of a female JST connector and plug it into the JST extension cable.
-- Trim the AA battery holder ON/OFF switch and place it in On position, solder the battery terminals.
-- Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or hotglue in order to allow reversing the mod if necessary.
+- Solder the JST connectors to the [tiny adapter board](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/Sensor%20to%20PCB%20adapter%20board) (INPUT and NORMAL OUT if you use a cable similar to the default sensor one linked in **Parts**) or just bend straight the pins of a female JST connector and plug it into the JST extension cable to inverse its gender.
+- Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
+- Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 
 # Link to the board with a spare JST connector and a JST extension cable
