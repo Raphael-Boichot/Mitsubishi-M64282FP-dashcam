@@ -4,7 +4,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 
 # Picture of the device
 
-![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/PCB_version_2.0.png)
+![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
 # Multi-systems installation guide
 
@@ -49,10 +49,6 @@ Additionally, you can address other features by entering them in the [config.jso
 
 Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
-# Example of test images with a stuffed fox
-
-![comparison]()
-
 # Advanced options
 
 These options are available only by modifying the #defines in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Mitsubishi_M64282FP_dashcam/config.h)** file, which requires compiling the code:
@@ -92,9 +88,13 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or hotglue in order to allow reversing the mod if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 
+# Link to the board with a spare JST connector and a JST extension cable
+
+![connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
+
 # Some technical thought for free
 
-According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper.
+According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper. A working copy of this experiment [is proposed here](https://github.com/Raphael-Boichot/Game-Boy-camera-sniffer).
 
 # Kind warning
 
