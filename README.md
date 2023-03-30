@@ -26,7 +26,7 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
 First of all, the device is basically a timelapse machine. The regular camera mode is just coded as a timelapse of one image. It uses a configuration file placed at the root of SD card which has priority on the internal default parameters. The device cannot boot without a working sensor and a working SD card. Status of sensor, SD card and configuration file are indicated on the splashscreen.
 
 - Once the device is booted, it adapts the sensor exposure for 2-3 seconds then run in **Display mode**. **Dipslay mode** do nothing else than showing on display what the Mitsubishi sensor sees. The green LED indicates the exposure time. It can go from approx 1 ms to 1 second depending on lighting conditions. The red LED indicates access to the SD card for recording. 
-- To shift to **Recording mode**, press the PUSH button. It will either automatically record BMP images with a deadtime inbetween ("Timelapse mode" activated), or act as a regular camera ("Timelapse mode" deactivated). Shifting from one mode to the other is made by pushing the TIMELAPSE button. 
+- To record something, press the **PUSH** button. It will either automatically record BMP images with a deadtime inbetween (**Timelapse mode** activated), or act as a regular camera (**Regular Camera mode** deactivated). Shifting from one mode to the other is made by pushing the **TIMELAPSE** button. 
 - In **Timelapse mode**, the deadtime between pictures is set by just by modifying the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) (value entered in ms, if no file, default deadtime is 2000 ms). During each recording session, images are stored in a different folder. Timelapse mode has virtually no ending, it can go as long as the SD card is not full.
 - In **Regular camera mode**, pressing the button just records one image in the **/camera** folder. If the button stays pushed, images are recorded continuously with a debouncing delay of 250 ms. It acts more or less as a burst mode.
 
@@ -36,7 +36,7 @@ To activate **HDR mode** or **Dithering mode**, simply push the corresponding pu
 
 **Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/128x160_Dashboy_Camera/config.h)** or  **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. **Config.json, if it exists, has priority on config.h.** It is not a necessary file but it increases available options.
 
-Finally, you can **lock exposure** in any mode by pressing the LOCK_EX push button. It activates the board LED when it is on.
+Finally, you can **lock exposure** in any mode by pressing the **LOCK_EX** push button. It activates the internal board LED when it is on.
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
@@ -56,6 +56,8 @@ These options are available only by modifying the #defines in the **[config.h](h
 - **USE_TFT** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
 - **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
 - **USE_SNEAK_MODE** disable LEDS in recording mode.
+
+Other #defines are reserved for debugging and dev.
 
 # Minimal parts
 
