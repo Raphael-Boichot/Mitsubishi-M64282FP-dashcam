@@ -102,7 +102,7 @@ The code and current design come as it. If you're not happy with the current har
 
 # To do
 
-- perfect emulation of the dithering strategy of the Game Boy Camera
+- A perfect emulation of the dithering strategy of the Game Boy Camera
 - A Game Boy printer emulator based on this exact same hardware with fancy display during printing
 
 # Acknowledgments
