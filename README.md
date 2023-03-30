@@ -72,7 +72,7 @@ Other #defines are reserved for debugging and dev.
 - 2 LEDs (red and green) and two resistors of 200-500 Ohms.
 - A 10 volts capacitor of approx 500-1000 microfarads.
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
-- 2 [microswitches](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
+- 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
 # PCB and connection with the sensor
 
