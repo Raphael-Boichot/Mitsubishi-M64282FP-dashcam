@@ -67,8 +67,8 @@ Other options are just redunding with the push buttons and meant to be set as de
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
 - A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html).
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap.
-- 2 LEDs (red and green) and two resistors of 200-500 Ohms.
-- A 10 volts capacitor of approx 500-1000 microfarads.
+- 2 regular 5 mm LEDs (red and green) and two through hole resistors of 250 to 1000 Ohms (low value = high brighness).
+- A 10 volts through hole capacitor of 500 to 1000 microfarads (high value = more stable 5 volts on the board).
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
@@ -93,7 +93,14 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 
-# Some technical thought for free
+# Some usefull informations for advanced users
+
+- When delay between images is more than 10 s (10000 ms) in timelapse mode, the device enters a sleeping loop every second and wake up only briefly to accomodate exposure. The happy consequence is that electrical consumption falls to almost zero. The drawback is that the interface is less responsive. You typically have to push buttons for about one second to get a response.
+- The sensor has many visual artifacts (horizontal and vertical lines, image echoes at certain exposures, etc.). None of them is due to the Pi Pico.
+- The exposure register is limited to 0x0030 despite the camera being able to go to 0x0001. This is advised in the sensor datasheet and the reason is that below this value, the image artifacts are so intense that they interfere with the auto-exposure algorithm. Technically, this creates exposure jitters and unleasant behavior.
+- The exposure strategy at the moment is simple: exposure time only is modified, all other registers being constant. This allows to simplify the code but it takes from freedom compared to a Game Boy Camera.
+
+# Some thought for free
 
 According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper. A working copy of this experiment [is proposed here](https://github.com/Raphael-Boichot/Game-Boy-camera-sniffer).
 
