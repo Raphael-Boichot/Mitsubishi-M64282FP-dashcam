@@ -38,9 +38,9 @@ To activate **HDR mode** or **Dithering mode**, simply push the corresponding pu
 
 **HDR mode** take several images from -1EV to +1EV and make an average of them before recording. This increases the dynamic of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json).
 
-**Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/128x160_Dashboy_Camera/config.h)** or  **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. **Config.json, if it exists, has priority on config.h.** It is not a necessary file but it increases available options.
+**Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. **Config.json, if it exists, has always priority on config.h.** Json is not a necessary file but it increases available options.
 
-Finally, you can **lock exposure** in any mode by pressing the **LOCK_EX** push button. It activates the internal board LED when it is on.
+Finally, you can **lock exposure time from the current best one** in any mode by pressing the **LOCK_EX** push button. It activates the internal board LED when it is on.
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
