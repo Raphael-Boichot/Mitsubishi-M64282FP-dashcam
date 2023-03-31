@@ -59,6 +59,10 @@ These options are available only by modifying the #defines in the **[config.h](h
 
 Other #defines are reserved for debugging and dev.
 
+# Some pictures made with the device
+
+![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
+
 # Parts
 
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
