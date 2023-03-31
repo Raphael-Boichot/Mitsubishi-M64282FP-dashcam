@@ -21,6 +21,10 @@ A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Cam
     
 - Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 
+OR
+
+- Just flash the last built version to your Pi Pico board.
+
 # Basic user manual
 
 First of all, the device is basically a timelapse machine. The regular camera mode is just coded as a timelapse of one image. It uses a configuration file placed at the root of SD card which has priority on the internal default parameters. The device cannot boot without a working sensor and a working SD card. Status of sensor, SD card and configuration file are indicated on the splashscreen.
