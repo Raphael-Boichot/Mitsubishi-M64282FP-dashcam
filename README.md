@@ -93,12 +93,12 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 
-# Some usefull informations for advanced users
+# Some usefull informations for Game Boy Camera nerds
 
-- When delay between images is more than 10 s (10000 ms) in timelapse mode, the device enters a sleeping loop every second and wake up only briefly to accomodate exposure. The happy consequence is that electrical consumption falls to almost zero. The drawback is that the interface is less responsive. You typically have to push buttons for about one second to get a response.
 - The sensor has intrinsically many visual artifacts (horizontal and vertical lines, image echoes at certain exposures, etc.). None of them is specifically due to the Pi Pico. They were all observed with a Game Boy Camera in the same conditions of light.
 - The exposure register is limited to 0x0030 despite the camera being able to go to 0x0001. This is advised in the sensor datasheet and the reason is that below this value, the image artifacts becomes so intense that they interfere with any auto-exposure algorithm based on pixel intensity. Technically, this creates exposure jitters and unleasant behavior.
 - The exposure strategy at the moment is simple: exposure time only is modified, all other registers being constant. This allows to simplify the code but it takes from freedom compared to a Game Boy Camera. The exposure algorithm itself is inspired from the Game Boy Camera but much more efficient.
+- Considering the whole device by itseld, when delay between images is more than 10 s (10000 ms) in timelapse mode, the device enters a sleeping loop every second and wake up only briefly to accomodate exposure. The happy consequence is that electrical consumption falls to almost zero. The drawback is that the interface is less responsive. You typically have to push buttons for about one second to get a response.
 
 # Some thought for free
 
