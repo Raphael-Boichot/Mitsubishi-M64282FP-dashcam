@@ -88,6 +88,10 @@ The device is meant to be used with NiMH batteries. I very dislike lithium batte
 
 PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images).
 
+# Connection to the main PCB
+
+![connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
+
 PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyDA](https://easyeda.com/fr).
 
 # Building instructions
@@ -100,10 +104,6 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
-
-# Link to the board with a spare JST connector and a JST extension cable
-
-![connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
 # Some technical thought for free
 
