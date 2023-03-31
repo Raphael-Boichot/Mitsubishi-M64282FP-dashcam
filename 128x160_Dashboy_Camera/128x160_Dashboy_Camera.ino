@@ -73,6 +73,8 @@ bool LOCK_exposure = 0; //reserved, for locking exposure
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
 char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
+char num_timelapses = sizeof(timelapse_list) / sizeof( double );//get the timelapse list size
+char rank_timelapse = 0;
 
 //////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +113,6 @@ void setup()
 
   init_sequence();//Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
-  sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime); //concatenate string for display
 
 #ifdef  USE_SD
   ID_file_creator("/Dashcam_storage.bin");//create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
@@ -124,6 +125,16 @@ void setup()
   pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
   if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
   if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
+
+  // initialize recording mode
+  if (timelapse_list[0] >= 0) {
+    TIMELAPSE_mode = 1;
+    TIMELAPSE_deadtime = timelapse_list[0];
+  }
+  else
+  {
+    TIMELAPSE_mode = 0;
+  }
 
   if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
     // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
@@ -169,7 +180,18 @@ void loop()
     short_fancy_delay();
   }
   if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
-    TIMELAPSE_mode = !TIMELAPSE_mode;//self explanatory
+    rank_timelapse = rank_timelapse + 1;
+    if (rank_timelapse >= 8) {
+      rank_timelapse = 0;
+    }
+    if (timelapse_list[rank_timelapse] >= 0) {
+      TIMELAPSE_mode = 1;
+      TIMELAPSE_deadtime = timelapse_list[rank_timelapse];
+    }
+    else
+    {
+      TIMELAPSE_mode = 0;
+    }
     short_fancy_delay();
   }
   ////////////////////////////////////////
@@ -808,9 +830,10 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     File file = SD.open(path);
     StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc, file);
-    TIMELAPSE_mode = doc["timelapseMode"];
     MOVIEMAKER_mode = doc["timelapserawrecordingMode"];
-    TIMELAPSE_deadtime = doc["timelapseDelay"];
+    for (int i = 0; i < num_timelapses; i++) {
+      timelapse_list [i] = doc["timelapseDelay"][i];
+    }
     PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
     BORDER_mode = doc["2dEnhancement"];
@@ -947,7 +970,14 @@ void display_other_informations() {
   img.setTextColor(TFT_GREEN);
   img.setCursor(0, 144);
   if (recording == 0) {
-    img.println(storage_deadtime);
+    if (TIMELAPSE_mode == 1) {
+      sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime); //concatenate string for display
+      img.println(storage_deadtime);
+    }
+    else
+    {
+      img.println("No delay");
+    }
   }
   if (recording == 1) {
     sprintf(remaining_deadtime, "Delay: %d ms", TIMELAPSE_deadtime - (currentTime - previousTime)); //concatenate string for display
