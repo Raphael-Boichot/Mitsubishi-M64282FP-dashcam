@@ -53,16 +53,6 @@ Additionally, you can address other features by entering them in the [config.jso
 
 Options are cumulatives, it is for example possible to record dithered HDR images at fixed exposure without display in night mode. Yes, it would be a mess.
 
-# Advanced options
-
-These options are available only by modifying the #defines in the **[config.h](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/128x160_Dashboy_Camera/config.h)** file, which requires compiling the code:
-- **USE_SERIAL** outputs 8 bits image data to the serial in ASCII. May be usefull for a third party program to get the data out of the sensor.
-- **USE_TFT** allows compiling the code without display options for sneak attacks ! It still records on SD card however.
-- **USE_SD**. Well, if you refuse to record your art because art is ephemeral. Joke part, useful to boot without SD card module attached for debugging purposes. 
-- **USE_SNEAK_MODE** disable LEDS in recording mode.
-
-Other #defines are reserved for debugging and dev.
-
 # Some pictures made with the device
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
