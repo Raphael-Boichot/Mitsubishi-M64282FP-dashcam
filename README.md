@@ -107,7 +107,7 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 
 # Kind warning
 
-The code and current design come as it. If you're not happy with the current hardware and the Arduino IDE, build your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
+The code and current design come as it. If you're not happy with the current hardware, the EasyDA design or the Arduino IDE, build your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
 # To do
 
