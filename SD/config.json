@@ -1,7 +1,6 @@
 {
-"timelapseMode":0,
 "timelapserawrecordingMode":0,
-"timelapseDelay":0,
+"timelapseDelay":[ -1, 0, 1000, 2000 , 5000, 10000, 20000, 60000],
 "prettyborderMode":1,
 "nightMode":0,
 "2dEnhancement":1,
