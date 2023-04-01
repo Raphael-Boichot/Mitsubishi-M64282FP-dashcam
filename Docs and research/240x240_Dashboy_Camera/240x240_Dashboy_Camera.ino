@@ -837,11 +837,9 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
     BORDER_mode = doc["2dEnhancement"];
-    HDR_mode = doc["hdrMode"];
     for (int i = 0; i < num_HDR_images; i++) {
       exposure_list[i] = doc["hdrExposures"][i];
     }
-    DITHER_mode = doc["ditheringMode"];
     for (int i = 0; i < 48; i++) {
       Dithering_patterns [i] = doc["ditherMatrix"][i];
     }
