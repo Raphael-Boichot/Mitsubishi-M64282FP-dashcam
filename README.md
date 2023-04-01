@@ -84,10 +84,11 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 
 # Building instructions
 
-- Solder the lower parts: diodes, resistors, level shifters, push buttons, JST connector, microswitches, capacitor, Pi Pico and DC-DC converter. **Pi Pico must be mandatorily soldered at the castellated holes, without pin headers or spacer, directly on the PCB**, levels shifters and DC-DC converters can be soldered with male pin headers.
-- Solder the display **by ensuring to have enough clearance to slide the SD card above the Pi Pico**. Best is to use female pin headers to secure the distance between display and main PCB but the default pins are long enough if you solder them just showing out of the back PCB surface.
+- Solder the Pi Pico first: **it must be mandatorily soldered on the castellated holes, without pin headers or spacer, directly on the PCB**
+- Solder the lower parts next: diodes, resistors, level shifters, push buttons, JST connector, microswitches, capacitor and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers.
+- Solder the display: **ensure to have enough clearance to slide the SD card out of the display above the Pi Pico**. Best is to use female pin headers to secure the distance between display and main PCB but the default pins are long enough if you solder them just showing out of the back PCB surface.
 - Trim the pin connectors from the back side of PCB.
-- At this step, flash the Pi Pico and verify that the device boots and the display works.
+- At this step, flash the Pi Pico and verify that the device boots and the display works. It should be stuck to an error screen with the red LED falshing, this is normal as the device needs SD card and a sensor to go further.
 - Solder the JST connectors to the [tiny adapter board](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/Sensor%20to%20PCB%20adapter%20board) (INPUT and NORMAL OUT if you use a cable similar to the default sensor one linked in **Parts**) or just bend straight the pins of a female JST connector and plug it into the JST extension cable to inverse its gender.
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
