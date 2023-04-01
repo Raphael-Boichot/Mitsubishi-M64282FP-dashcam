@@ -57,9 +57,9 @@ Other options are just redunding with the push buttons and meant to be set as de
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
-## Required parts
+## Building the standard 128x160 through-hole version (for beginners in soldering)
 
-# Required parts
+## Required parts
 
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor.
@@ -76,7 +76,7 @@ Other options are just redunding with the push buttons and meant to be set as de
 
 The device is meant to be used with NiMH batteries. I very dislike lithium batteries because they are dangerous to store, not recycled and non generic at all.
 
-# PCB and connection with the sensor
+## PCB and connection with the sensor
 
 PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images).
 
@@ -84,7 +84,7 @@ PCB for left and rigth handed users are available in the [PCB](https://github.co
 
 PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyDA](https://easyeda.com/fr).
 
-# Building instructions
+## Building instructions
 
 - Solder the Pi Pico first: **it must be mandatorily soldered on the castellated holes, without pin headers or spacer, directly on the PCB**
 - Solder the lower parts next: diodes, resistors, level shifters, push buttons, JST connector, microswitches, capacitor and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers.
@@ -95,6 +95,14 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
+
+## Building the mini 240x240 surface mount version (requires some skill in soldering)
+
+## Required parts
+To do
+
+## Building instructions
+To do
 
 # Some usefull informations for Game Boy Camera nerds
 
