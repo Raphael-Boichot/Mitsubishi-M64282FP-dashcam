@@ -57,6 +57,8 @@ Other options are just redunding with the push buttons and meant to be set as de
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
+## Required parts
+
 # Required parts
 
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
