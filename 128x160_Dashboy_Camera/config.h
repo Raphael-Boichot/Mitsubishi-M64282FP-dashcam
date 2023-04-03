@@ -94,3 +94,11 @@ int FIXED_divider = 1;//clock divider
 // reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0
 
 // P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly
+
+//registers used by the Game boy Camera
+/////////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
+//unsigned char camReg1[8] = {0b10101001, 0b00100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//low exposure time
+//unsigned char camReg2[8] = {0b10101001, 0b11100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};
+//unsigned char camReg3[8] = {0b10101011, 0b11100100, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
+//unsigned char camReg4[8] = {0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
+//unsigned char camReg5[8] = {0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//high exposure time
