@@ -38,11 +38,6 @@ TFT_eSPI    tft = TFT_eSPI();         // Create object "tft"
 TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer to "tft" object. The pointer is used by pushSprite() to push it onto the TFT
 #endif
 
-//the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
-//With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
-unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
-unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header

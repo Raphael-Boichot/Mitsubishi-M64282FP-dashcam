@@ -19,6 +19,8 @@
 
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
 unsigned char Dithering_patterns [] = { 0x2A, 0x5E, 0x9B, 0x51, 0x8B, 0xCA, 0x33, 0x69, 0xA6, 0x5A, 0x97, 0xD6, 0x44, 0x7C, 0xBA, 0x37, 0x6D, 0xAA, 0x4D, 0x87, 0xC6, 0x40, 0x78, 0xB6, 0x30, 0x65, 0xA2, 0x57, 0x93, 0xD2, 0x2D, 0x61, 0x9E, 0x54, 0x8F, 0xCE, 0x4A, 0x84, 0xC2, 0x3D, 0x74, 0xB2, 0x47, 0x80, 0xBE, 0x3A, 0x71, 0xAE };
+unsigned char Dithering_patterns_high [] = { 0x89, 0x92, 0xA2, 0x8F, 0x9E, 0xC6, 0x8A, 0x95, 0xAB, 0x91, 0xA1, 0xCF, 0x8D, 0x9A, 0xBA, 0x8B, 0x96, 0xAE, 0x8F, 0x9D, 0xC3, 0x8C, 0x99, 0xB7, 0x8A, 0x94, 0xA8, 0x90, 0xA0, 0xCC, 0x89, 0x93, 0xA5, 0x90, 0x9F, 0xC9, 0x8E, 0x9C, 0xC0, 0x8C, 0x98, 0xB4, 0x8E, 0x9B, 0xBD, 0x8B, 0x97, 0xB1 };
+unsigned char Dithering_patterns_low [] = { 0x8C, 0x98, 0xAC, 0x95, 0xA7, 0xDB, 0x8E, 0x9B, 0xB7, 0x97, 0xAA, 0xE7, 0x92, 0xA2, 0xCB, 0x8F, 0x9D, 0xBB, 0x94, 0xA5, 0xD7, 0x91, 0xA0, 0xC7, 0x8D, 0x9A, 0xB3, 0x96, 0xA9, 0xE3, 0x8C, 0x99, 0xAF, 0x95, 0xA8, 0xDF, 0x93, 0xA4, 0xD3, 0x90, 0x9F, 0xC3, 0x92, 0xA3, 0xCF, 0x8F, 0x9E, 0xBF };
 double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
 double timelapse_list[8] = { -1, 0, 1000, 2000 , 4000, 8000, 16000, 32000};//-1 = regular mode, value >=0 = time in ms
 unsigned char Dithering_palette[4] = {0x00, 0x55, 0xAA, 0xFF};//colors as they will appear in the bmp file and display after dithering
@@ -31,6 +33,7 @@ unsigned long TIMELAPSE_deadtime = 0; //to introduce a deadtime for timelapses i
 bool PRETTYBORDER_mode = 1;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
+bool GBCAMERA_mode = 0; // 0 = Boichot's strategy, 1 = Game Boy Camera strategy
 bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
 bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode
@@ -95,10 +98,27 @@ int FIXED_divider = 1;//clock divider
 
 // P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly
 
-//registers used by the Game boy Camera
-/////////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
-//unsigned char camReg1[8] = {0b10101001, 0b00100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//low exposure time
-//unsigned char camReg2[8] = {0b10101001, 0b11100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};
-//unsigned char camReg3[8] = {0b10101011, 0b11100100, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
-//unsigned char camReg4[8] = {0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
-//unsigned char camReg5[8] = {0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//high exposure time
+//Game Boy Camera strategy: uses half the voltage scale
+///////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
+unsigned char camReg1[8] = {0b10101001, 0b00100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//low exposure time - high light
+//transition@ C=0x0030
+unsigned char camReg2[8] = {0b10101001, 0b11100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};
+//transition@ C=0x0D80
+unsigned char camReg3[8] = {0b10101011, 0b11100100, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
+//transition@ C=0x3500
+unsigned char camReg4[8] = {0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011}; 
+//transition@ C=0x8500
+unsigned char camReg5[8] = {0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//high exposure time - low light
+//It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
+unsigned char GB_v_min = 116; //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts)
+unsigned char GB_v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.05 volts)
+/////////////////////////
+
+//DashBoy Camera regular strategy: uses the whole voltage scale
+//the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
+//With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
+///////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
+unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
+unsigned char v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
+unsigned char v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.04 volts)
+////////////////////////
