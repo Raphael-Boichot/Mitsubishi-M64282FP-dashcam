@@ -59,6 +59,7 @@ unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
 unsigned int max_files_per_folder = 1024;
+unsigned char v_min, v_max;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
@@ -115,19 +116,32 @@ void setup()
   Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
 #endif
 
+  if (GBCAMERA_mode == 1) { //Game Boy Camera strategy with variable gain and registers
+    v_min = GB_v_min;
+    v_max = GB_v_max;
+  }
+  else { //regular strategy with gain=8 and fixed registers
+    v_min = regular_v_min;
+    v_max = regular_v_max;
+  }
+
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
   pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
-  if (BORDER_mode == 1) camReg[1] = 0b11101000;//With 2D border enhancement
-  if (BORDER_mode == 0) camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
+  if (BORDER_mode == 1) {
+    camReg[1] = 0b11101000;//With 2D border enhancement
+  }
+  if (BORDER_mode == 0) {
+    camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
+  }
 
   // initialize recording mode
-  if (timelapse_list[0] >= 0) {
+  if (timelapse_list[0] >= 0) {//there is a time in ms in the list
     TIMELAPSE_mode = 1;
     TIMELAPSE_deadtime = timelapse_list[0];
   }
   else
-  {
+  { //there is "-1" in the list, regular mode is called
     TIMELAPSE_mode = 0;
   }
 
@@ -346,9 +360,18 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   new_regs = current_exposure * factor;
-  if (new_regs < 0x0030) {//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-    new_regs = 0x0030;//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+
+  if (GBCAMERA_mode == 1) { //regular strategy with gain=8
+    if (new_regs < 0x0010) {//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+      new_regs = 0x0010;//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    }
   }
+  else { //Game Boy Camera strategy with variable gain
+    if (new_regs < 0x0030) {//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+      new_regs = 0x0030;//minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    }
+  }
+
   if (new_regs > 0xFFFF) {//maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
       clock_divider = clock_divider + 1 ;
@@ -364,6 +387,34 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
 
   camReg[2] = int(new_regs / 256);//Janky, I know...
   camReg[3] = int(new_regs - camReg[2] * 256);//Janky, I know...
+
+  if (GBCAMERA_mode == 1) { //Game Boy Camera strategy
+    if (new_regs < 0x0030) {
+      camReg[0] = camReg1[0];
+      camReg[1] = camReg1[1];
+      camReg[7] = camReg1[7];
+    }
+    if ((new_regs >= 0x0030) & (new_regs < 0x0D80)) {
+      camReg[0] = camReg2[0];
+      camReg[1] = camReg2[1];
+      camReg[7] = camReg2[7];
+    }
+    if ((new_regs >= 0x0D80) & (new_regs < 0x3500)) {
+      camReg[0] = camReg3[0];
+      camReg[1] = camReg3[1];
+      camReg[7] = camReg3[7];
+    }
+    if ((new_regs >= 0x3500) & (new_regs < 0x8500)) {
+      camReg[0] = camReg4[0];
+      camReg[1] = camReg4[1];
+      camReg[7] = camReg4[7];
+    }
+    if ((new_regs > 0x8500)) {
+      camReg[0] = camReg5[0];
+      camReg[1] = camReg5[1];
+      camReg[7] = camReg5[7];
+    }
+  }
 }
 
 unsigned int get_exposure(unsigned char camReg[8]) {
@@ -837,6 +888,13 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     }
     for (int i = 0; i < 48; i++) {
       Dithering_patterns [i] = doc["ditherMatrix"][i];
+    }
+    GBCAMERA_mode = doc["gameboycameraMode"];
+    for (int i = 0; i < 48; i++) {
+      Dithering_patterns_low [i] = doc["lowditherMatrix"][i];
+    }
+    for (int i = 0; i < 48; i++) {
+      Dithering_patterns_high [i] = doc["highditherMatrix"][i];
     }
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
