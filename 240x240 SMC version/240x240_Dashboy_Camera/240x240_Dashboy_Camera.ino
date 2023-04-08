@@ -770,7 +770,12 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {
       //pixel = CamData[counter];//non auto_contrasted values, may range between 0 and 255
-      pixel = lookup_serial[CamData[counter]];//auto_contrasted values, may range between 0 and 255
+      if (GBCAMERA_mode == 0){
+      pixel = lookup_serial[CamData[counter]];//autocontrast is applied here, may range between 0 and 255
+      }
+      if (GBCAMERA_mode == 1){
+      pixel = CamData[counter];//raw value, in this mode the dithering does the autocontrast
+      }
       pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
         pixel_out = Dithering_palette[0];
