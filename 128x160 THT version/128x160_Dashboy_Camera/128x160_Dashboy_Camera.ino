@@ -38,6 +38,7 @@ TFT_eSPI    tft = TFT_eSPI();         // Create object "tft"
 TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer to "tft" object. The pointer is used by pushSprite() to push it onto the TFT
 #endif
 
+unsigned char Dithering_patterns[48];//storage for dithering tables
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
@@ -67,10 +68,11 @@ bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
 bool LOCK_exposure = 0; //reserved, for locking exposure
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
-char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20];
+char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof( double );//get the timelapse list size
-char rank_timelapse = 0;
+char rank_timelapse = 0;// rank in the timelapse array
+char rank_strategy = 0;// strategy # of the Game Boy Camera emulation
 
 //////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -126,7 +128,6 @@ void setup()
   }
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
-  pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
   pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
   if (BORDER_mode == 1) {
     camReg[1] = 0b11101000;//With 2D border enhancement
@@ -206,6 +207,18 @@ void loop()
   ////////////////////////////////////////
 
   if (DITHER_mode == 1) {
+    memcpy(Dithering_patterns, Dithering_patterns_regular, sizeof( Dithering_patterns_regular));
+
+    if (GBCAMERA_mode == 1) {
+      if (dithering_strategy[rank_strategy] == 1) {
+        memcpy(Dithering_patterns, Dithering_patterns_high, sizeof( Dithering_patterns_high));
+      }
+      if (dithering_strategy[rank_strategy] == 0) {
+        memcpy(Dithering_patterns, Dithering_patterns_low, sizeof( Dithering_patterns_low));
+      }
+    }
+
+    pre_allocate_Bayer_tables();// just reordering the Game Boy Camera dithering registers into 3 square matrices
     Dither_image(CamData, BayerData);
   }
 
@@ -393,26 +406,31 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
       camReg[0] = camReg1[0];
       camReg[1] = camReg1[1];
       camReg[7] = camReg1[7];
+      rank_strategy = 1;
     }
     if ((new_regs >= 0x0030) & (new_regs < 0x0D80)) {
       camReg[0] = camReg2[0];
       camReg[1] = camReg2[1];
       camReg[7] = camReg2[7];
+      rank_strategy = 2;
     }
     if ((new_regs >= 0x0D80) & (new_regs < 0x3500)) {
       camReg[0] = camReg3[0];
       camReg[1] = camReg3[1];
       camReg[7] = camReg3[7];
+      rank_strategy = 3;
     }
     if ((new_regs >= 0x3500) & (new_regs < 0x8500)) {
       camReg[0] = camReg4[0];
       camReg[1] = camReg4[1];
       camReg[7] = camReg4[7];
+      rank_strategy = 4;
     }
     if ((new_regs > 0x8500)) {
       camReg[0] = camReg5[0];
       camReg[1] = camReg5[1];
       camReg[7] = camReg5[7];
+      rank_strategy = 5;
     }
   }
 }
@@ -874,7 +892,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   if (SD.exists(path)) {
     JSON_OK = 1;
     File file = SD.open(path);
-    StaticJsonDocument<2048> doc;
+    StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, file);
     MOVIEMAKER_mode = doc["timelapserawrecordingMode"];
     for (int i = 0; i < num_timelapses; i++) {
@@ -887,7 +905,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
       exposure_list[i] = doc["hdrExposures"][i];
     }
     for (int i = 0; i < 48; i++) {
-      Dithering_patterns [i] = doc["ditherMatrix"][i];
+      Dithering_patterns_regular [i] = doc["ditherMatrix"][i];
     }
     GBCAMERA_mode = doc["gameboycameraMode"];
     for (int i = 0; i < 48; i++) {
@@ -1037,12 +1055,24 @@ void display_other_informations() {
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
-    img.println("HDR ON / USE TRIPOD!");
+    img.println("HDR ON");
   }
   if (HDR_mode == 0) {
     img.setTextColor(TFT_GREEN);
     img.println("HDR mode OFF");
   }
+
+  if (GBCAMERA_mode == 1) {
+    img.setTextColor(TFT_RED);
+    img.setCursor(120, 152);
+    if (dithering_strategy[rank_strategy] == 1) {
+      img.println("H");
+    }
+    else {
+      img.println("L");
+    }
+  }
+
   if (BORDER_mode == 1) {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
