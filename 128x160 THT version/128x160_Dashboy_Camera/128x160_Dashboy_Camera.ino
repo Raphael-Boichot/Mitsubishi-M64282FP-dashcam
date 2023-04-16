@@ -921,6 +921,8 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
       Dithering_patterns_regular [i] = doc["ditherMatrix"][i];
     }
     GBCAMERA_mode = doc["gameboycameraMode"];
+    GB_v_min = doc["lowvoltageThreshold"];
+    GB_v_max = doc["highvoltageThreshold"];
     for (int i = 0; i < 48; i++) {
       Dithering_patterns_low [i] = doc["lowditherMatrix"][i];
     }
