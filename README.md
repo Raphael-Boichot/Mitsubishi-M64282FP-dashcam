@@ -1,6 +1,6 @@
 # The DASHBOY CAMERA
 
-A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Camera. The code was developped for Raspberry Pi Pico with the Earle F. Philhower RP2040 core. TFT display is driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC. This project does not require a Game Boy Camera PCB, the Pi Pico directly drives the camera sensor and returns 8 bits images. You may also check this similar project using a [STM32](https://github.com/mupfdev/CMOS-Holga).
+A SD card based recorder for the Mitsubishi M64282FP, sensor of the Game Boy Camera. The code was developped for Raspberry Pi Pico with the Earle F. Philhower RP2040 core. TFT display is driven with the Bodmer TFT_eSPI library. The code originates from an [Arduino version](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor) that requires a PC. This project does not require a Game Boy Camera PCB, the Pi Pico directly drives the camera sensor and returns 8 bits images. You may also check this similar project using a [STM32](https://github.com/mupfdev/CMOS-Holga). Want to discuss with the author ? Join the [Game Boy Camera Club !](https://discord.gg/TDrcFKxAMU).
 
 # Picture of the device
 
