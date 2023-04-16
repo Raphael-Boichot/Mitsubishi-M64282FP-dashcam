@@ -111,8 +111,8 @@ unsigned char camReg4[8] = {0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00
 //transition@ C=0x8500
 unsigned char camReg5[8] = {0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011};//high exposure time - low light
 //It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
-unsigned char GB_v_min = 116; //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts)
-unsigned char GB_v_max = 220;//maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 220 gives better white)
+unsigned char GB_v_min = 120; //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 120 gives better black)
+unsigned char GB_v_max = 210;//maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 220 gives better white)
 /////////////////////////
 
 //DashBoy Camera regular strategy: uses the whole voltage scale
@@ -120,6 +120,6 @@ unsigned char GB_v_max = 220;//maximal voltage returned by the sensor in 8 bits 
 //With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
 ///////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
 unsigned char camReg[8] = {0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers
-unsigned char regular_v_min = 45; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts)
+unsigned char regular_v_min = 50; //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 50 gives better black)
 unsigned char regular_v_max = 236;//maximal voltage returned by the sensor in 8 bits DEC (3.05 volts)
 ////////////////////////
