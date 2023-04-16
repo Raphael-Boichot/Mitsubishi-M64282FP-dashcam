@@ -44,14 +44,15 @@ Finally, you can **lock exposure time from the current best one** in any mode by
 
 It is mandatory to format the SD card in FAT32 and it is better to use the maximum sector size possible to speed up writing and avoid stalling. The access to the SD card is indeed the bottleneck in Recording mode.
 
-Additionally, you can address other features by entering them in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json):
+# Advanced user manual
+
+Additionally, you can address other cool features by entering them in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json):
+- **Raw recording mode** available in **time lapse mode only**, records sensor data as a single file in the **/movie** folder. It needs a separate tool for extracting an animation ([provided here](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Tools/Movie_and_Gif_Maker_from_raw_data.m)). The 32 first bytes are keywords, image sizes and registers, the following are raw data for one image in reading order, easy to recover with any other tool ! This mode allows recording at a solid 4 fps for long time with good light conditions. It is disabled in **Regular camera mode** (command is just ignored).
 - **Night Mode** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the initial sensor being unable to expose mote than 1 second. Here there is no limit.
-- **Fixed exposure** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
+- **Fixed exposure mode** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
 - **2D enhancement mode** activates (default state) or removes the 2D image enhancement processed by the sensor. The raw images (without 2D enhancement) looks blurry but they are not: this is the weak native resolution of the sensor that creates this feeling.
-- **Raw recording mode** available in **time lapse mode only**, records sensor data as a single file in the **/movie** folder. It needs a separate tool for extracting an animation ([provided here](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Tools/Movie_and_Gif_Maker_from_raw_data.m)). The 32 first bytes are keywords, image sizes and registers, the following are raw data for one image in reading order, easy to recover with any other tool ! This mode allows recording at a solid 4 fps for long time with good light conditions. It is disabled in **Regular camera mode** (command is just ignored).
-
-Other options are just redunding with the push buttons and meant to be set as default parameters at boot.
+- **Game Boy Camera mode** drives the DashBoy Camera exactly as the Game Boy Camera does, using the same registers and the same dithering matrices in default constrast. Images made in this mode are pixel identical to images produces with a Game Boy Camera in the same lightning condition if dithering is activated. When set to 0, this triggers a simplier "recipe" with fixed registers and fixed dithering matrix.
 
 # Some pictures made with the device
 
@@ -78,7 +79,7 @@ The device is meant to be used with NiMH batteries. I very dislike lithium batte
 
 ## PCB and connection with the sensor
 
-PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images).
+PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images). This situation corresponds also to the INPUT<->NORMAL OUT of the breakout board if you order the extension cables given in **Required parts** section.
 
 ![connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
