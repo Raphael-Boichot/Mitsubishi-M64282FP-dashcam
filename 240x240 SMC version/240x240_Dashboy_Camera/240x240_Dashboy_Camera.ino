@@ -360,13 +360,18 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
+  double multiplier = 1;
+  if (GBCAMERA_mode == 1) {
+    multiplier = 1.1;
+  }
+
   new_regs = exp_regs;
-  if (error > 80)                     new_regs = exp_regs * 2;
-  if (error < -80)                    new_regs = exp_regs / 2;
-  if ((error <= 80) && (error >= 30))    new_regs = exp_regs * 1.3;
-  if ((error >= -80) && (error <= -30))  new_regs = exp_regs / 1.3;
-  if ((error <= 30) && (error >= 10))     new_regs = exp_regs * 1.03;
-  if ((error >= -30) && (error <= -10))   new_regs = exp_regs / 1.03;
+  if (error > 80)                     new_regs = exp_regs * (2  * multiplier);
+  if (error < -80)                    new_regs = exp_regs / (2 * multiplier);
+  if ((error <= 80) && (error >= 30))    new_regs = exp_regs * (1.3  * multiplier);
+  if ((error >= -80) && (error <= -30))  new_regs = exp_regs / (1.3  * multiplier);
+  if ((error <= 30) && (error >= 10))     new_regs = exp_regs * (1.03 * multiplier);
+  if ((error >= -30) && (error <= -10))   new_regs = exp_regs / (1.03 * multiplier);
   if ((error <= 10) && (error >= 4))   new_regs = exp_regs + 1;//this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) && (error <= -4))  new_regs = exp_regs - 1;//this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error)); //concatenate string for display;
@@ -773,11 +778,11 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {
       //pixel = CamData[counter];//non auto_contrasted values, may range between 0 and 255
-      if (GBCAMERA_mode == 0){
-      pixel = lookup_serial[CamData[counter]];//autocontrast is applied here, may range between 0 and 255
+      if (GBCAMERA_mode == 0) {
+        pixel = lookup_serial[CamData[counter]];//autocontrast is applied here, may range between 0 and 255
       }
-      if (GBCAMERA_mode == 1){
-      pixel = lookup_pico_to_GBD[CamData[counter]];//raw value, in this mode the dithering does the autocontrast
+      if (GBCAMERA_mode == 1) {
+        pixel = lookup_pico_to_GBD[CamData[counter]];//raw value, in this mode the dithering does the autocontrast
       }
       pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
@@ -1035,10 +1040,11 @@ void display_other_informations() {
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);//in ms
+  img.setCursor(8, 24);
+  img.println(error_string);
   img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
   img.println(exposure_string);
-  //img.println(error_string);
   img.setCursor(8, 126);
   img.println(multiplier_string);
   img.setTextColor(TFT_WHITE);
@@ -1080,7 +1086,7 @@ void display_other_informations() {
       img.println("L");
     }
     img.setCursor(114, 152);
-    img.println(rank_strategy,DEC);
+    img.println(rank_strategy, DEC);
   }
 
   if (BORDER_mode == 1) {
