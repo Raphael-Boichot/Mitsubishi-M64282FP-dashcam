@@ -40,6 +40,7 @@ TFT_eSprite img = TFT_eSprite(&tft);  // Create Sprite object "img" with pointer
 
 unsigned char Dithering_patterns[48];//storage for dithering tables
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
+unsigned char lookup_pico_to_GBD[256];//convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];// sensor data with autocontrast and pretty border ready to be merged with BMP header
@@ -128,6 +129,8 @@ void setup()
   }
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
+  pre_allocate_lookup_tables(lookup_pico_to_GBD, 0, 255); //pre allocate tables 0<->3.3V scale from pico to 0<->3.3V scale from MAC-GBD
+  //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts
   pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
   if (BORDER_mode == 1) {
     camReg[1] = 0b11101000;//With 2D border enhancement
@@ -688,7 +691,7 @@ void recording_loop()
   }
 
   if (DITHER_mode == 1) {
-    Dither_image(CamData, BayerData);
+    //Dither_image(CamData, BayerData);
     for (int i = 0; i < 128 * 128; i++) {
       BmpData[i] = BayerData[i];//to get data with dithering (dithering includes auto-contrast)
     }
@@ -774,7 +777,7 @@ void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 
       pixel = lookup_serial[CamData[counter]];//autocontrast is applied here, may range between 0 and 255
       }
       if (GBCAMERA_mode == 1){
-      pixel = CamData[counter];//raw value, in this mode the dithering does the autocontrast
+      pixel = lookup_pico_to_GBD[CamData[counter]];//raw value, in this mode the dithering does the autocontrast
       }
       pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
@@ -1060,7 +1063,7 @@ void display_other_informations() {
   img.setCursor(0, 152);
   if (HDR_mode == 1) {
     img.setTextColor(TFT_RED);
-    img.println("HDR ON");
+    img.println("HDR mode ON");
   }
   if (HDR_mode == 0) {
     img.setTextColor(TFT_GREEN);
@@ -1076,6 +1079,8 @@ void display_other_informations() {
     else {
       img.println("L");
     }
+    img.setCursor(114, 152);
+    img.println(rank_strategy,DEC);
   }
 
   if (BORDER_mode == 1) {
