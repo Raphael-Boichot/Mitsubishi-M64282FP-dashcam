@@ -123,11 +123,6 @@ According to [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mit
 
 The code and current design come as it. If you're not happy with the current hardware, the PCB EasyDA design or the Arduino IDE, build your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
-# To do
-
-- calculate the low and high light dithering arrays to put in the json
-- Remove the auto-contrast for the Game Boy Camera Strategy.
-
 # Acknowledgments
 
 - [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects. You can discuss with the authors here !
