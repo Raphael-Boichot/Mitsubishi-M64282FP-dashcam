@@ -114,7 +114,7 @@ To do
 - The strategy used in Game Boy Camera mode and the auto-exposure algorithm have been sourced from real data logging on a regular Game Boy Camera. Source files can be found in this [other repository](https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor/tree/main/Research%20on%20real%20Camera).
 - Close up images of the sensor and the MAC-GBD decapped can be found [here](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project). The sensor presents masked pixels which always return the maximal possible voltage for a given set of registers. I used them to calibrate the code but their signal is just dismissed in the current implementation. They occupy the lines 123 to 128 of a 128x128 image.
 - The role of each registers is quite well explained [here](https://github.com/untoxa/gb-photo). The Mitsubishi M64282FP datasheet is notorious for being crap so many informations were discovered by trial and error and educated guess.
-- The flash ADC of the MAC-GBD has a voltage full scale of 3.3 Volts. Maximum voltage reached in normal use is about 3.05 volts.
+- The flash ADC of the MAC-GBD has a voltage full scale of 0<->3.3 Volts. Maximum voltage reached in normal use is about 3.05 volts.
 
 # Some thought for free
 
