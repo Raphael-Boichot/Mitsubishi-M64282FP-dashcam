@@ -275,12 +275,12 @@ void loop()
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println("Picture taken !");
+    img.println("Recording image");
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
 
-    recording_loop();// Wait for deadtime set in config.txt
+    recording_loop();// record a single image
 
 #ifdef  USE_SD
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
