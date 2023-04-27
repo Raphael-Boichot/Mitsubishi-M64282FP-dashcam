@@ -1,4 +1,4 @@
-These files have to be copied at the root of SD card.
+#These files have to be copied at the root of SD card.
 
 ## Powershell scripts
 
