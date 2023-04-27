@@ -953,8 +953,9 @@ void dump_data_to_SD_card()
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_128x120");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
+        dataFile.write("RAWDAT");//Just a keyword
+        dataFile.write(128);
+        dataFile.write(120);
         dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BmpData, 128 * 120);
         dataFile.close();
@@ -969,8 +970,9 @@ void dump_data_to_SD_card()
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_160x144");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
+        dataFile.write("RAWDAT");//Just a keyword
+        dataFile.write(160);
+        dataFile.write(144);
         dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BigBmpData, 160 * 144);
         dataFile.close();
