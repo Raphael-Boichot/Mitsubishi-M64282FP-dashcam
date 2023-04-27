@@ -275,12 +275,12 @@ void loop()
 #ifdef  USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println("Picture taken !");
+    img.println("Recording image");
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
 
-    recording_loop();// Wait for deadtime set in config.txt
+    recording_loop();// record a single image
 
 #ifdef  USE_SD
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
@@ -953,8 +953,9 @@ void dump_data_to_SD_card()
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_128x120");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
+        dataFile.write("RAWDAT");//Just a keyword
+        dataFile.write(128);
+        dataFile.write(120);
         dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BmpData, 128 * 120);
         dataFile.close();
@@ -969,8 +970,9 @@ void dump_data_to_SD_card()
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAW_8BIT_160x144");//Just a marker
-        dataFile.write("REGISTER");//Just a marker
+        dataFile.write("RAWDAT");//Just a keyword
+        dataFile.write(160);
+        dataFile.write(144);
         dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
         dataFile.write(BigBmpData, 160 * 144);
         dataFile.close();
