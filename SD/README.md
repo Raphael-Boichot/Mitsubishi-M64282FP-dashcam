@@ -6,11 +6,11 @@ These files have to be copied at the root of SD card.
 
 - **config.json** is the general configuration file for the DashBoy Camera. Here is the signification of each variable in detail:
 
-"timelapserawrecordingMode":1,
-"timelapseDelay":[ -1, 0, 1000, 5000, 10000, 30000, 60000, -2],
-"prettyborderMode":1,
-"nightMode":0,
-"motiondetectionThreshold":0.025,
+- **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder
+- **timelapseDelay:** the list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
+- **prettyborderMode:** 1 = pretty borders, 0 = image without border;
+- **nightMode:** 1 = allows to go decrease the sensor clock to over expose image at night, 0 = constant sensor clock;
+- **motiondetectionThreshold:** value for the motion detection threshold. 0 = detect everything, 1 = detect nothing. 0.025 is a good starting value, the lower, the lore sensitive to motion;
 "2dEnhancement":1,
 "hdrExposures":[0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2],
 "ditherMatrix":[ 42, 94, 155, 81, 139, 202, 51, 105, 166, 90, 151, 214, 68, 124, 186, 55, 109, 170, 77, 135, 198, 64, 120, 182, 48, 101, 162, 87, 147, 210, 45, 97, 158, 84, 143, 206, 74, 132, 194, 61, 116, 178, 71, 128, 190, 58, 113, 174 ],
