@@ -42,6 +42,7 @@ unsigned char Dithering_patterns[48];//storage for dithering tables
 unsigned char lookup_serial[256];//autocontrast table generated in setup() from v_min and v_max
 unsigned char lookup_pico_to_GBD[256];//convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
 unsigned char CamData[128 * 128];// sensor data in 8 bits per pixel
+unsigned char CamData_previous[128 * 128];// sensor data in 8 bits per pixel from preceding loop for motion detection
 unsigned char BmpData[128 * 128];// sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];// sensor data with autocontrast and pretty border ready to be merged with BMP header
 unsigned int HDRData[128 * 128];// cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
@@ -62,14 +63,16 @@ unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
 unsigned int max_files_per_folder = 1024;
 unsigned char v_min, v_max;
+double difference = 0;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;//reserved, for bug on sensor
 bool SDcard_READY = 0;//reserved, for bug on SD
 bool JSON_ready = 0; //reserved, for bug on config.txt
 bool LOCK_exposure = 0; //reserved, for locking exposure
+bool MOTION_sensor = 0; //reserved, to trigger motion sensor mode
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
-char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2];
+char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof( double );//get the timelapse list size
 char rank_timelapse = 0;// rank in the timelapse array
@@ -145,7 +148,7 @@ void setup()
     TIMELAPSE_deadtime = timelapse_list[0];
   }
   else
-  { //there is "-1" in the list, regular mode is called
+  { //there is "-1 or -2" in the list, regular mode is called
     TIMELAPSE_mode = 0;
   }
 
@@ -166,8 +169,10 @@ void loop()
 {
   currentTime = millis();
   take_a_picture(); //data in memory for the moment, one frame
+  image_TOKEN = 0; //reset any attempt to take more than one picture without pushing a button or observe a difference
+  detect_a_motion();
+  memcpy(CamData_previous, CamData, 128 * 120);//to deal with motion detection
   new_exposure = auto_exposure(camReg, CamData, v_min, v_max); // self explanatory
-  image_TOKEN = 0;
 
   if (FIXED_EXPOSURE_mode == 1) {
     new_exposure = FIXED_delay;
@@ -194,6 +199,7 @@ void loop()
   }
   if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
     rank_timelapse = rank_timelapse + 1;
+    MOTION_sensor = 0;
     if (rank_timelapse >= 8) {
       rank_timelapse = 0;
     }
@@ -204,6 +210,11 @@ void loop()
     else
     {
       TIMELAPSE_mode = 0;
+    }
+    //there is "-2" in the list, motion sensor mode is called
+    if (timelapse_list[rank_timelapse] == -2) {
+      MOTION_sensor = 1;
+      difference = 0;
     }
     short_fancy_delay();
   }
@@ -263,10 +274,12 @@ void loop()
   }//end of recording loop for timelapse
 
   if ((TIMELAPSE_mode == 0) && (gpio_get(PUSH) == 1)) { //camera mode acts like if user requires just one picture
+
 #ifdef  USE_SD
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
     Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card, just to store it in memory and rewrite it at the end
 #endif
+
     image_TOKEN = 1;
   }
 
@@ -285,10 +298,12 @@ void loop()
 #ifdef  USE_SD
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
 #endif
+
     delay(200);//long enough for debouncing, fast enough for a decent burst mode
   }//end of recording loop for regular camera mode
 
   if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the display
+
 #ifdef  USE_TFT
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
@@ -656,6 +671,17 @@ bool camTestSensor() // dummy cycle faking to take a picture, if it's not able t
   return sensor_OK;
 }
 
+void detect_a_motion() {
+  if (MOTION_sensor == 1) {
+    difference = 0;
+    for (int i = 0; i < 128 * 120; i++) {
+      difference = difference + abs(CamData[i] - CamData_previous[i]);//calculate the image difference
+    }
+    if (difference > difference_threshold) {
+      image_TOKEN = 1;
+    }
+  }
+}
 
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop()
@@ -847,10 +873,10 @@ void ID_file_creator(const char * path) {
 #ifdef  USE_SD
   uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   if (!SD.exists(path)) {
-    File file = SD.open(path, FILE_WRITE);
+    File Datafile = SD.open(path, FILE_WRITE);
     //start from a fresh install on SD
-    file.write(buf, 8);
-    file.close();
+    Datafile.write(buf, 8);
+    Datafile.close();
   }
 #endif
 }
@@ -858,10 +884,10 @@ void ID_file_creator(const char * path) {
 unsigned long get_next_ID(const char * path) {
 #ifdef  USE_SD
   uint8_t buf[4];
-  File file = SD.open(path);
-  file.read(buf, 4);
+  File Datafile = SD.open(path);
+  Datafile.read(buf, 4);
   Next_ID = ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]));
-  file.close();
+  Datafile.close();
 #endif
   return Next_ID;
 }
@@ -870,11 +896,11 @@ unsigned long get_next_dir(const char * path)
 {
 #ifdef  USE_SD
   uint8_t buf[4];
-  File file = SD.open(path);
-  file.read(buf, 4);//dumps the 4 first bytes
-  file.read(buf, 4);
+  File Datafile = SD.open(path);
+  Datafile.read(buf, 4);//dumps the 4 first bytes
+  Datafile.read(buf, 4);
   Next_dir = ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]));
-  file.close();
+  Datafile.close();
 #endif
   return Next_dir;
 }
@@ -882,19 +908,19 @@ unsigned long get_next_dir(const char * path)
 void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_dir) {
 #ifdef  USE_SD
   uint8_t buf[4];
-  File file = SD.open(path, FILE_WRITE);
-  file.seek(0);
+  File Datafile = SD.open(path, FILE_WRITE);
+  Datafile.seek(0);
   buf[3] = Next_ID >>  0;
   buf[2] = Next_ID >>  8;
   buf[1] = Next_ID >> 16;
   buf[0] = Next_ID >> 24;
-  file.write(buf, 4);
+  Datafile.write(buf, 4);
   buf[3] = Next_dir >>  0;
   buf[2] = Next_dir >>  8;
   buf[1] = Next_dir >> 16;
   buf[0] = Next_dir >> 24;
-  file.write(buf, 4);
-  file.close();
+  Datafile.write(buf, 4);
+  Datafile.close();
 #endif
 }
 
@@ -904,15 +930,16 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
 #ifdef  USE_SD
   if (SD.exists(path)) {
     JSON_OK = 1;
-    File file = SD.open(path);
+    File Datafile = SD.open(path);
     StaticJsonDocument<4096> doc;
-    DeserializationError error = deserializeJson(doc, file);
+    DeserializationError error = deserializeJson(doc, Datafile);
     MOVIEMAKER_mode = doc["timelapserawrecordingMode"];
     for (int i = 0; i < num_timelapses; i++) {
       timelapse_list [i] = doc["timelapseDelay"][i];
     }
     PRETTYBORDER_mode = doc["prettyborderMode"];
     NIGHT_mode = doc["nightMode"];
+    motion_detection_threshold = doc["motiondetectionThreshold"];
     BORDER_mode = doc["2dEnhancement"];
     for (int i = 0; i < num_HDR_images; i++) {
       exposure_list[i] = doc["hdrExposures"][i];
@@ -932,7 +959,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
-    file.close();
+    Datafile.close();
   }
 #endif
   return JSON_OK;
@@ -941,41 +968,41 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
 void dump_data_to_SD_card()
 {
 #ifdef  USE_SD
-  File dataFile = SD.open(storage_file_name, FILE_WRITE);
+  File Datafile = SD.open(storage_file_name, FILE_WRITE);
   // if the file is writable, write to it:
-  if (dataFile) {
+  if (Datafile) {
     if (PRETTYBORDER_mode == 0)
     {
       if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
-        dataFile.write(BMP_header, 1078);//fixed header for 128*120 image
-        dataFile.write(BmpData, 128 * 120); //removing last tile line
-        dataFile.close();
+        Datafile.write(BMP_header, 1078);//fixed header for 128*120 image
+        Datafile.write(BmpData, 128 * 120); //removing last tile line
+        Datafile.close();
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAWDAT");//Just a keyword
-        dataFile.write(128);
-        dataFile.write(120);
-        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
-        dataFile.write(BmpData, 128 * 120);
-        dataFile.close();
+        Datafile.write("RAWDAT");//Just a keyword
+        Datafile.write(128);
+        Datafile.write(120);
+        Datafile.write(camReg, 8); //camera registers from the preceding image, close to the current one
+        Datafile.write(BmpData, 128 * 120);
+        Datafile.close();
       }
     }
     if (PRETTYBORDER_mode == 1)
     {
       if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
-        dataFile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
-        dataFile.write(BigBmpData, 160 * 144); //removing last tile line
-        dataFile.close();
+        Datafile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
+        Datafile.write(BigBmpData, 160 * 144); //removing last tile line
+        Datafile.close();
       }
 
       if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
-        dataFile.write("RAWDAT");//Just a keyword
-        dataFile.write(160);
-        dataFile.write(144);
-        dataFile.write(camReg, 8); //camera registers from the preceding image, close to the current one
-        dataFile.write(BigBmpData, 160 * 144);
-        dataFile.close();
+        Datafile.write("RAWDAT");//Just a keyword
+        Datafile.write(160);
+        Datafile.write(144);
+        Datafile.write(camReg, 8); //camera registers from the preceding image, close to the current one
+        Datafile.write(BigBmpData, 160 * 144);
+        Datafile.close();
       }
     }
   }
@@ -1030,7 +1057,12 @@ void display_other_informations() {
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
-    img.println("Regular Camera mode");
+    if (MOTION_sensor == 0) {
+      img.println("Regular Camera mode");
+    }
+    if (MOTION_sensor == 1) {
+      img.println("Motion sensor mode");
+    }
   }
   if (TIMELAPSE_mode == 1) {
     if (MOVIEMAKER_mode == 0) {
@@ -1044,8 +1076,8 @@ void display_other_informations() {
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);//in ms
-  img.setCursor(8, 24);
-  img.println(error_string);
+  //  img.setCursor(8, 24);
+  //  img.println(error_string);
   img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
   img.println(exposure_string);
