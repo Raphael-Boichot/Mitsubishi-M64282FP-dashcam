@@ -1,10 +1,12 @@
-# Some more explanations
-
 These files have to be copied at the root of SD card.
+
+## Powershell scripts
 
 - **convert.ps1** and **covertraw.ps1** are Powershell scripts that allows to convert bmp and raw files to png and upscale them from the /Camera and /Raw_data folders. To run them, simply right click on them and select "Run as Powershell". 
 
-- **config.json** is the general configuration file for the DashBoy Camera. Here is the signification of each variable in detail:
+## json configuration file
+
+**config.json** is the general configuration file for the DashBoy Camera. Here is the signification of each variable in detail:
 
 - **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder
 - **timelapseDelay:** the list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
