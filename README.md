@@ -129,5 +129,5 @@ The code and current design come as it. If you're not happy with the current har
 
 - [Game Boy Camera Club](https://disboard.org/fr/server/568464159050694666) on Discord for the hype and help on all new projects. You can discuss with the authors here !
 - [Rafael Zenaro](https://github.com/zenaro147) because I stole lots of code from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer).
-- [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/).
+- [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions and for the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/) and the Powershell images upscalers/converters !
 - [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) and [Laurent Saint-Marcel](https://github.com/BackupGGCode/avr-gameboy-cam) for the Arduino code I started from (initial [source](http://sophiateam.undrgnd.free.fr/microcontroller/camera/) here).
