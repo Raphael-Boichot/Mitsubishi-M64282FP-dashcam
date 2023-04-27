@@ -15,13 +15,13 @@ These files have to be copied at the root of SD card.
 - **motiondetectionThreshold:** value for the motion detection threshold. 0 = detect everything, 1 = detect nothing. 0.025 is a good starting value, the lower, the lore sensitive to motion;
 - **2dEnhancement:** 1 = 2D enhancement activated, 0 = deactivated - Valid only in single register strategy;
 - **hdrExposures:** list of 8 exposures in HDR mode, in multiplier of the last best knowbn exposure. It is recommended to go from -1EV to +1EV;
-- **ditherMatrix:** dithering matrix used in single register strategy;
+- **ditherMatrix:** dithering matrix used in single register strategy, derived from a 4x4 bayer matrix;
 - **gameboycameraMode:** 0 = single register strategy, 1 = Game Boy Camera strategy with variable registers;
 - **lowvoltageThreshold:** voltage threshold for black level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
 - **highvoltageThreshold:** voltage threshold for white level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
-- **lowditherMatrix:** dithering matrix used in Game Boy Camera strategy - low ligth or high exposure times; 
-- **highditherMatrix:** dithering matrix used in Game Boy Camera strategy - high ligth or low exposure times; 
+- **lowditherMatrix:** dithering matrix used in Game Boy Camera strategy - low ligth or high exposure times, derived from a 4x4 bayer matrix; 
+- **highditherMatrix:** dithering matrix used in Game Boy Camera strategy - high ligth or low exposure times, derived from a 4x4 bayer matrix; 
 - **fixedExposure:** 0 = auto-exposure, 1 = fixed exposure, for astrophotography for example;
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
-- **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time
+- **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
 
