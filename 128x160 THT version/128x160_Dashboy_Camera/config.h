@@ -23,11 +23,11 @@ unsigned char Dithering_patterns_high[] = { 0x89, 0x92, 0xA2, 0x8F, 0x9E, 0xC6, 
 unsigned char Dithering_patterns_low[] = { 0x8C, 0x98, 0xAC, 0x95, 0xA7, 0xDB, 0x8E, 0x9B, 0xB7, 0x97, 0xAA, 0xE7, 0x92, 0xA2, 0xCB, 0x8F, 0x9D, 0xBB, 0x94, 0xA5, 0xD7, 0x91, 0xA0, 0xC7, 0x8D, 0x9A, 0xB3, 0x96, 0xA9, 0xE3, 0x8C, 0x99, 0xAF, 0x95, 0xA8, 0xDF, 0x93, 0xA4, 0xD3, 0x90, 0x9F, 0xC3, 0x92, 0xA3, 0xCF, 0x8F, 0x9E, 0xBF };
 char dithering_strategy[] = {2, 1, 1, 1, 1, 0}; //2 for regular strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
 double exposure_list[8] = {0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2}; //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
-double timelapse_list[8] = { -1, 0, 1000, 2000 , 4000, 8000, 16000, 32000};//-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
+//double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
+double timelapse_list[8] = { -1, 0, 1000, 2000 , 4000, 8000, 16000, -2};//-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
 unsigned char Dithering_palette[4] = {0x00, 0x55, 0xAA, 0xFF};//colors as they will appear in the bmp file and display after dithering
 double motion_detection_threshold = 0.025;
-double difference_threshold = motion_detection_threshold * 128 * 120 * 255; //trigger threshold for motion sensor
-//const double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
+double difference_threshold; //trigger threshold for motion sensor
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;//0 = use s a regular camera, 1 = recorder for timelapses
@@ -36,7 +36,7 @@ unsigned long TIMELAPSE_deadtime = 0; //to introduce a deadtime for timelapses i
 bool PRETTYBORDER_mode = 1;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 bool HDR_mode = 0; //0 = regular capture, 1 = HDR mode
-bool GBCAMERA_mode = 0; // 0 = Boichot's strategy, 1 = Game Boy Camera strategy
+bool GBCAMERA_mode = 0; // 0 = single register strategy, 1 = Game Boy Camera strategy
 bool DITHER_mode = 0; //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 1; //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
 bool FIXED_EXPOSURE_mode = 0;// to activate fixed exposure delay mode

@@ -62,6 +62,7 @@ unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
 unsigned int max_files_per_folder = 1024;
+unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 double difference = 0;
 bool image_TOKEN = 0; //reserved for CAMERA mode
@@ -114,6 +115,7 @@ void setup()
 #endif
 
   init_sequence();//Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
+  difference_threshold = motion_detection_threshold * 128 * 120 * 255; //trigger threshold for motion sensor
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
 
 #ifdef  USE_SD
@@ -200,6 +202,7 @@ void loop()
   if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
     rank_timelapse = rank_timelapse + 1;
     MOTION_sensor = 0;
+    MOTION_sensor_counter = 0;
     if (rank_timelapse >= 8) {
       rank_timelapse = 0;
     }
@@ -259,8 +262,8 @@ void loop()
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println("Recording...");
-    sprintf(files_on_folder_string, "%X/%X", files_on_folder, max_files_per_folder);
     img.setCursor(84, 8);
+    sprintf(files_on_folder_string, "%X/%X", files_on_folder, max_files_per_folder);
     img.println(files_on_folder_string);
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
@@ -299,7 +302,7 @@ void loop()
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
 #endif
 
-    delay(200);//long enough for debouncing, fast enough for a decent burst mode
+    delay(100);//long enough for debouncing, fast enough for a decent burst mode
   }//end of recording loop for regular camera mode
 
   if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the display
@@ -308,6 +311,10 @@ void loop()
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
     img.fillRect(0, 8, 128, 8, TFT_BLACK);
+    if (MOTION_sensor == 1) {
+      img.setCursor(84, 8);
+      img.println(MOTION_sensor_counter, HEX);
+    }
     img.println("Display Mode");
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
@@ -679,6 +686,7 @@ void detect_a_motion() {
     }
     if (difference > difference_threshold) {
       image_TOKEN = 1;
+      MOTION_sensor_counter = MOTION_sensor_counter + 1;
     }
   }
 }
