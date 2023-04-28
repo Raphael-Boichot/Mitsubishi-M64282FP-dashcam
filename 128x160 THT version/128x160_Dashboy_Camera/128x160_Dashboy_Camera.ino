@@ -292,6 +292,10 @@ void loop()
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
     img.println("Recording image");
+    if (MOTION_sensor == 1) {
+      img.setCursor(100, 8);
+      img.println(MOTION_sensor_counter, HEX);
+    }
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
@@ -311,11 +315,11 @@ void loop()
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 8);
     img.fillRect(0, 8, 128, 8, TFT_BLACK);
+    img.println("Display Mode");
     if (MOTION_sensor == 1) {
-      img.setCursor(84, 8);
+      img.setCursor(100, 8);
       img.println(MOTION_sensor_counter, HEX);
     }
-    img.println("Display Mode");
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
