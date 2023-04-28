@@ -10,7 +10,7 @@ a(a==palette(2))=1;
 a(a==palette(3))=2;
 a(a==palette(4))=3;
 a(17:128,17:144)=0;
-fprintf(fid,'unsigned char prettyborder[] = {');
+fprintf(fid,'const unsigned char prettyborder[] = {');
 for i=1:1:hauteur
     for j=1:1:largeur
         %if not(a(i,j)==4);

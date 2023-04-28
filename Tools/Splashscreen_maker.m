@@ -4,7 +4,7 @@ fid=fopen('splash.h','w');
 [hauteur, largeur, pro]=size(a);
 counter=0;
 
-fprintf(fid,'const unsigned int splashscreen[128 * 160] = {');
+fprintf(fid,'const unsigned int splashscreen[] = {');
 for i=1:1:hauteur
    for j=1:1:largeur
        counter=counter+1;
