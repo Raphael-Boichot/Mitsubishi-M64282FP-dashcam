@@ -25,3 +25,8 @@
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
 - **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
 
+## Convert images to movie
+
+Just run:
+
+    ffmpeg -i frame%06d.bmp -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
