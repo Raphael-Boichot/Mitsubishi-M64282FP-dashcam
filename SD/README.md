@@ -29,4 +29,6 @@
 
 Just run:
 
-    ffmpeg -i frame%06d.bmp -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
+    ffmpeg -i frame%06d.png -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
+    
+Or use the Matlab Movie Maker (NOT GNU Octave compatible).
