@@ -10,6 +10,10 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Multi-systems installation guide
 
+- Just flash the last built version to your Pi Pico board.
+
+Or if you like pain:
+
 - Install the last [Arduino IDE](https://www.arduino.cc/en/software)
 - Install the [Earle F. Philhower Raspberry Pi Pico Arduino core for Arduino IDE](https://github.com/earlephilhower/arduino-pico) via the Arduino Board manager (see [installation guide](https://github.com/earlephilhower/arduino-pico#installing-via-arduino-boards-manager)).
 - Install the Benoit Blanchon [Arduino JSON library](https://github.com/bblanchon/ArduinoJson) via the Arduino library manager.
@@ -22,10 +26,6 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
     **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
     
 - Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
-
-OR
-
-- Just flash the last built version to your Pi Pico board.
 
 # Basic user manual
 
