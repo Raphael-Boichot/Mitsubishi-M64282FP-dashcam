@@ -10,7 +10,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Multi-systems installation guide
 
-- Just flash the last built version to your Pi Pico board.
+- **Just flash the last built uf2 version to your Pi Pico board.**
 
 Or if you like pain:
 
