@@ -27,7 +27,7 @@
 
 ## Convert images to movie
 
-Just install ffmpeg following this method: **[Install FFmpeg via Chocolatey](https://adamtheautomator.com/install-ffmpeg/)**.
+Just install ffmpeg from Powershell ran as administrator following this method: **[Method 2: Install FFmpeg via Chocolatey](https://adamtheautomator.com/install-ffmpeg/)**.
 Then run the following command into you image folder (png or bmp, adapt it):
     
     ffmpeg -i %07d.png -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
