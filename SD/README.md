@@ -27,8 +27,9 @@
 
 ## Convert images to movie
 
-Just install [ffmpeg](https://ffmpeg.org/download.html) and run:
-
+Just install ffmpeg following this method: **[Install FFmpeg via Chocolatey](https://adamtheautomator.com/install-ffmpeg/)**.
+Then run the following command into you image folder (png or bmp, adapt it):
+    
     ffmpeg -i %07d.png -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
     
 Or use the [Matlab Movie Maker](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/Matlab%20only/Movie_Maker_Matlab_only.m) (NOT GNU Octave compatible).
