@@ -31,7 +31,7 @@ double difference_threshold; //trigger threshold for motion sensor
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;//0 = use s a regular camera, 1 = recorder for timelapses
-bool MOVIEMAKER_mode = 0; //0 = save as BMP (slow), 1 = save as raw stream (fast)
+bool RAW_recording_mode = 0; //0 = save as BMP (slow), 1 = save as raw stream (fast)
 unsigned long TIMELAPSE_deadtime = 0; //to introduce a deadtime for timelapses in ms, is read from config.json
 bool PRETTYBORDER_mode = 1;//0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
 bool NIGHT_mode = 0; //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works

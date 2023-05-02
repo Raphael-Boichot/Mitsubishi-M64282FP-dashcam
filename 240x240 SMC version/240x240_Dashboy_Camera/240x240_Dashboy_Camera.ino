@@ -52,9 +52,10 @@ unsigned char Bayer_matDG_B[4 * 4];//Bayer matrix to apply dithering for each im
 unsigned char BayerData[128 * 128];// dithered image data
 unsigned int cycles = 7; //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned int clock_divider = 1; //time delay in processor cycles to cheat the exposure of the sensor
-unsigned int debouncing_delay = 500; //debouncing delay for pushbuttons
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
+unsigned long currentTime_MOTION = 0;
+unsigned long delay_MOTION = 5000;//time to place the camera before motion detection starts
 unsigned long currentTime_exp = 0;
 unsigned long previousTime_exp = 0;
 unsigned long Next_ID, Next_dir;//for directories and filenames
@@ -200,7 +201,7 @@ void loop()
     short_fancy_delay();
   }
   if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {// Change regular camera<->timelapse mode, but only when NOT recording
-    rank_timelapse = rank_timelapse + 1;
+    rank_timelapse++;
     MOTION_sensor = 0;
     MOTION_sensor_counter = 0;
     if (rank_timelapse >= 8) {
@@ -216,8 +217,15 @@ void loop()
     }
     //there is "-2" in the list, motion sensor mode is called
     if (timelapse_list[rank_timelapse] == -2) {
+      currentTime_MOTION = millis();
       MOTION_sensor = 1;
       difference = 0;
+      Next_dir++;
+
+#ifdef  USE_SD
+      store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
+#endif
+
     }
     short_fancy_delay();
   }
@@ -276,7 +284,7 @@ void loop()
     }
   }//end of recording loop for timelapse
 
-  if ((TIMELAPSE_mode == 0) && (gpio_get(PUSH) == 1)) { //camera mode acts like if user requires just one picture
+  if ((TIMELAPSE_mode == 0) & (gpio_get(PUSH) == 1) & (MOTION_sensor == 0)) { //camera mode acts like if user requires just one picture
 
 #ifdef  USE_SD
     Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
@@ -306,7 +314,10 @@ void loop()
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
 #endif
 
-    delay(100);//long enough for debouncing, fast enough for a decent burst mode
+    if (MOTION_sensor == 0) {
+      delay(200);//long enough for debouncing, fast enough for a decent burst mode
+    }
+
   }//end of recording loop for regular camera mode
 
   if ((recording == 0) & (image_TOKEN == 0)) { //just put informations to the display
@@ -327,39 +338,24 @@ void loop()
 
   if (TIMELAPSE_mode == 1)
   {
-    if ((gpio_get(PUSH) == 1) && (recording == 1)) { // we want to stop recording
-      if (MOVIEMAKER_mode == 0) Next_dir++; // update next directory except in moviemaker mode
+    if ((gpio_get(PUSH) == 1) & (recording == 1)) { // we want to stop recording
+      recording = 0;
+      files_on_folder = 0;
+      short_fancy_delay();
+    }
+    if ((gpio_get(PUSH) == 1) & (recording == 0)) { // we want to record: get file/directory#
+      Next_dir++; // update next directory except in any case
 
 #ifdef  USE_SD
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//store last known file/directory# to SD card
 #endif
 
-      recording = 0;
-      files_on_folder = 0;
-      short_fancy_delay();
-    }
-    if ((gpio_get(PUSH) == 1) && (recording == 0)) { // we want to record: get file/directory#
-
-      if (MOVIEMAKER_mode == 0) {
-#ifdef  USE_SD
-        Next_dir = get_next_dir("/Dashcam_storage.bin");//get the folder number on SD card
-        sprintf(storage_file_dir, "/%06d/", Next_dir);//update next directory
-        SD.mkdir(storage_file_dir);//create next directory
-#endif
-      }
-#ifdef  USE_SD
-      Next_ID = get_next_ID("/Dashcam_storage.bin");//get the file number on SD card
-#endif
-      if (MOVIEMAKER_mode == 1) {
-        Next_ID++;
-        sprintf(storage_file_name, "/Raw_data/%07d.raw", Next_ID); //update filename
-      }
       recording = 1;
       previousTime = currentTime;
       short_fancy_delay();
     }
   }
-}
+}//end of main loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -394,12 +390,12 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   new_regs = exp_regs;
   if (error > 80)                     new_regs = exp_regs * (2  * multiplier);
   if (error < -80)                    new_regs = exp_regs / (2 * multiplier);
-  if ((error <= 80) && (error >= 30))    new_regs = exp_regs * (1.3  * multiplier);
-  if ((error >= -80) && (error <= -30))  new_regs = exp_regs / (1.3  * multiplier);
-  if ((error <= 30) && (error >= 10))     new_regs = exp_regs * (1.03 * multiplier);
-  if ((error >= -30) && (error <= -10))   new_regs = exp_regs / (1.03 * multiplier);
-  if ((error <= 10) && (error >= 4))   new_regs = exp_regs + 1;//this level is critical to avoid flickering in full sun, 3-4 is nice
-  if ((error >= -10) && (error <= -4))  new_regs = exp_regs - 1;//this level is critical to avoid flickering in full sun,  3-4 is nice
+  if ((error <= 80) & (error >= 30))    new_regs = exp_regs * (1.3  * multiplier);
+  if ((error >= -80) & (error <= -30))  new_regs = exp_regs / (1.3  * multiplier);
+  if ((error <= 30) & (error >= 10))     new_regs = exp_regs * (1.03 * multiplier);
+  if ((error >= -30) & (error <= -10))   new_regs = exp_regs / (1.03 * multiplier);
+  if ((error <= 10) & (error >= 4))   new_regs = exp_regs + 1;//this level is critical to avoid flickering in full sun, 3-4 is nice
+  if ((error >= -10) & (error <= -4))  new_regs = exp_regs - 1;//this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error)); //concatenate string for display;
   return int(new_regs);
 }
@@ -688,9 +684,9 @@ void detect_a_motion() {
     for (int i = 0; i < 128 * 120; i++) {
       difference = difference + abs(CamData[i] - CamData_previous[i]);//calculate the image difference
     }
-    if (difference > difference_threshold) {
+    if ((difference > difference_threshold)&((millis() - currentTime_MOTION) > delay_MOTION)) {
       image_TOKEN = 1;
-      MOTION_sensor_counter = MOTION_sensor_counter + 1;
+      MOTION_sensor_counter++;
     }
   }
 }
@@ -698,17 +694,29 @@ void detect_a_motion() {
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop()
 {
-  if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) {
+  if ((RAW_recording_mode == 0) | (image_TOKEN == 1)) {
     Next_ID++; // update the file number, but not in movie maker mode
   }
   previousTime = currentTime;
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode == 0) {
-      sprintf(storage_file_name, "/%06d/%07d.bmp", Next_dir, Next_ID); //update filename
+    if (RAW_recording_mode == 0) {
+      sprintf(storage_file_name, "/TL/%05d/%07d.bmp", Next_dir, Next_ID); //update filename
     }
+    if (RAW_recording_mode == 1) {
+      sprintf(storage_file_name, "/TL/%05d.raw", Next_dir); //update filename
+    }
+
   }
   if (TIMELAPSE_mode == 0) {
-    sprintf(storage_file_name, "/Camera/%07d.bmp", Next_ID); //update filename
+    if (MOTION_sensor == 0) {
+      sprintf(storage_file_name, "/Camera/%07d.bmp", Next_ID); //update filename
+    }
+    if ((MOTION_sensor == 1) & (RAW_recording_mode == 0)) {
+      sprintf(storage_file_name, "/MS/%05d/%07d.bmp", Next_dir, Next_ID); //update filename
+    }
+    if ((MOTION_sensor == 1) & (RAW_recording_mode == 1)) {
+      sprintf(storage_file_name, "/MS/%05d.raw", Next_dir); //update filename
+    }
   }
 
   if (HDR_mode == 1) {//default is 8 pictures, beware of modifying the code in case of change
@@ -763,7 +771,7 @@ void recording_loop()
     if (files_on_folder == max_files_per_folder) {//because up to 1000 files per folder stalling or errors in writing can happens
       files_on_folder = 0;
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);//in case of crash...
-      if (MOVIEMAKER_mode == 0) {
+      if (RAW_recording_mode == 0) {
         Next_dir++;
       }
     }
@@ -782,7 +790,7 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char 
     if (i < v_min) {
       lookup_serial[i] = 0x00;
     }
-    if ((i >= v_min) && (i <= v_max)) {
+    if ((i >= v_min) & (i <= v_max)) {
       gamma_pixel = ((i - double(v_min)) / (double(v_max) - double(v_min))) * 255;
       lookup_serial[i] = int(gamma_pixel);
     }
@@ -945,7 +953,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     File Datafile = SD.open(path);
     StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, Datafile);
-    MOVIEMAKER_mode = doc["timelapserawrecordingMode"];
+    RAW_recording_mode = doc["timelapserawrecordingMode"];
     for (int i = 0; i < num_timelapses; i++) {
       timelapse_list [i] = doc["timelapseDelay"][i];
     }
@@ -985,13 +993,12 @@ void dump_data_to_SD_card()
   if (Datafile) {
     if (PRETTYBORDER_mode == 0)
     {
-      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+      if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) { //forbid raw recording in single shot mode
         Datafile.write(BMP_header, 1078);//fixed header for 128*120 image
         Datafile.write(BmpData, 128 * 120); //removing last tile line
         Datafile.close();
       }
-
-      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+      else {
         Datafile.write("RAWDAT");//Just a keyword
         Datafile.write(128);
         Datafile.write(120);
@@ -1000,15 +1007,15 @@ void dump_data_to_SD_card()
         Datafile.close();
       }
     }
+
     if (PRETTYBORDER_mode == 1)
     {
-      if ((MOVIEMAKER_mode == 0) | (image_TOKEN == 1)) { //forbid raw recording in single shot mode
+      if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) { //forbid raw recording in single shot mode
         Datafile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
         Datafile.write(BigBmpData, 160 * 144); //removing last tile line
         Datafile.close();
       }
-
-      if ((MOVIEMAKER_mode == 1) & (image_TOKEN == 0)) { //forbid raw recording in single shot mode
+      else {
         Datafile.write("RAWDAT");//Just a keyword
         Datafile.write(160);
         Datafile.write(144);
@@ -1073,14 +1080,19 @@ void display_other_informations() {
       img.println("Regular Camera mode");
     }
     if (MOTION_sensor == 1) {
-      img.println("Motion sensor mode");
+      if (RAW_recording_mode == 0) {
+        img.println("Motion Sensor BMP");
+      }
+      if (RAW_recording_mode == 1) {
+        img.println("Motion Sensor RAW");
+      }
     }
   }
   if (TIMELAPSE_mode == 1) {
-    if (MOVIEMAKER_mode == 0) {
+    if (RAW_recording_mode == 0) {
       img.println("Time Lapse Mode BMP");
     }
-    if (MOVIEMAKER_mode == 1) {
+    if (RAW_recording_mode == 1) {
       img.println("Time Lapse Mode RAW");
     }
   }
@@ -1163,7 +1175,7 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
     }
   }
   img.pushSprite(x_ori, y_ori);// dump image to display
-  delay(500);
+  delay(250);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 0);
   img.println("SD card:");
@@ -1254,9 +1266,9 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
       gpio_put(RED, 1);
 #endif
 
-      delay(1000);
+      delay(250);
       gpio_put(RED, 0);
-      delay(1000);
+      delay(250);
     }
   }
 #endif
