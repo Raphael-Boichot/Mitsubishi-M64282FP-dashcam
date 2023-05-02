@@ -2,7 +2,9 @@
 
 ## Powershell scripts
 
-- **convert.ps1** and **covertraw.ps1** are Powershell scripts that allows to convert bmp and raw files to png and upscale them from the /Camera and /Raw_data folders. To run them, simply right click on them and select "Run as Powershell". 
+- **Upscaler_Camera.ps1** converts 1x BMP files from /Camera folder to 8x PNG;
+- **Upscaler_MS.ps1** converts 1x BMP files from /MS (Motion Sensor) folder to 8x PNG; 
+- **Upscaler_TL.ps1** converts 1x BMP files from /TL (Time Lapse) folder to 8x PNG; 
 
 ## json configuration file
 
