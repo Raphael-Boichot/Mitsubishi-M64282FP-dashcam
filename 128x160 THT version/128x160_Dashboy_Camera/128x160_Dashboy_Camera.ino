@@ -190,7 +190,7 @@ void loop()
     LOCK_exposure = !LOCK_exposure;//self explanatory
     short_fancy_delay();
   }
-  //gpio_put(INT, LOCK_exposure);nit in use anymore
+  //gpio_put(INT, LOCK_exposure);not in use anymore
 
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
