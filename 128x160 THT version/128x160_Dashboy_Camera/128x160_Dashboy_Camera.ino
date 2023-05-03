@@ -190,7 +190,7 @@ void loop()
     LOCK_exposure = !LOCK_exposure;//self explanatory
     short_fancy_delay();
   }
-  gpio_put(INT, LOCK_exposure);
+  //gpio_put(INT, LOCK_exposure);nit in use anymore
 
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
@@ -684,7 +684,7 @@ void detect_a_motion() {
     for (int i = 0; i < 128 * 120; i++) {
       difference = difference + abs(CamData[i] - CamData_previous[i]);//calculate the image difference
     }
-    if ((difference > difference_threshold)&((millis() - currentTime_MOTION) > delay_MOTION)) {
+    if ((difference > difference_threshold) & ((millis() - currentTime_MOTION) > delay_MOTION)) {
       image_TOKEN = 1;
       MOTION_sensor_counter++;
     }
@@ -1149,7 +1149,10 @@ void display_other_informations() {
     img.println(rank_strategy, DEC);
   }
 
-  if (BORDER_mode == 1) {
+  if (LOCK_exposure == 1) {
+    img.drawRect(0, 16, 128, 120, TFT_GREEN);
+  }
+  else {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
 #endif
