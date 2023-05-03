@@ -190,7 +190,7 @@ void loop()
     LOCK_exposure = !LOCK_exposure;//self explanatory
     short_fancy_delay();
   }
-  //gpio_put(INT, LOCK_exposure);not in use anymore
+  //gpio_put(INT, LOCK_exposure);nit in use anymore
 
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
@@ -1096,13 +1096,19 @@ void display_other_informations() {
       img.println("Time Lapse Mode RAW");
     }
   }
+  if (LOCK_exposure == 1) {
+    img.drawRect(0, 16, 128, 120, TFT_GREEN);
+    sprintf(exposure_string_ms, "Exposure: LOCKED"); 
+  }
+  else {
+    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
+  }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);//in ms
   //  img.setCursor(8, 24);
   //  img.println(error_string);
-  img.setTextColor(TFT_BLUE);
   img.setCursor(64, 126);
   img.println(exposure_string);
   img.setCursor(8, 126);
@@ -1147,13 +1153,6 @@ void display_other_informations() {
     }
     img.setCursor(114, 152);
     img.println(rank_strategy, DEC);
-  }
-
-  if (LOCK_exposure == 1) {
-    img.drawRect(0, 16, 128, 120, TFT_GREEN);
-  }
-  else {
-    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
   }
 #endif
 }
