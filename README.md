@@ -12,7 +12,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Multi-systems installation guide
 
-- **Just flash the last built uf2 version to your Pi Pico board.**
+- **Just drop the compiled uf2 file to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
 
 Or if you like pain:
 
