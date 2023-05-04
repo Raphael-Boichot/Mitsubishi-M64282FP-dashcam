@@ -65,7 +65,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
-## Building the standard 128x160 through-hole version (NiMH powered)
+## Building the 128x160 standard version (NiMH powered)
 
 ## Required parts
 
