@@ -79,7 +79,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html).
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap.
 - 2 regular 5 mm LEDs (red and green) and two through hole resistors of 250 to 1000 Ohms (low value = high brighness).
-- A 10 volts through hole capacitor of 500 to 1000 microfarads (high value = more stable 5 volts on the board).
+- A 10 volts through hole capacitor of 250 to 500 microfarads (high value = more stable 5 volts on the board but bulky).
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
