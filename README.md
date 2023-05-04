@@ -95,7 +95,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 ## Building instructions
 
 - Solder the Pi Pico first: **it must be mandatorily soldered on the castellated holes, without pin headers or spacer, directly on the PCB**
-- Solder the lower parts next: diodes, resistors, level shifters, push buttons, JST connector, microswitches, capacitor and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers.
+- Solder the lower parts next: LEDs, resistors, level shifters, push buttons, JST connector, microswitches, capacitor and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers.
 - Solder the display: **ensure to have enough clearance to slide the SD card out of the display above the Pi Pico**. Best is to use female pin headers to secure the distance between display and main PCB but the default pins are long enough if you solder them just showing out of the back PCB surface.
 - Trim the pin connectors from the back side of PCB.
 - At this step, flash the Pi Pico and verify that the device boots and the display works. It should be stuck to an error screen with the red LED falshing, this is normal as the device needs SD card and a sensor to go further.
