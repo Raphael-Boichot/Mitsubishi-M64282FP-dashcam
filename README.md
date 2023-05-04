@@ -65,10 +65,11 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
-## Building the standard 128x160 through-hole version (for beginners in soldering)
+## Building the standard 128x160 through-hole version (NiMH powered)
 
 ## Required parts
 
+- PCB and optional sub PCB (see next section for details).
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
