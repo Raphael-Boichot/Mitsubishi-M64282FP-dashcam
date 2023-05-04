@@ -8,7 +8,7 @@
 
 ## json configuration file
 
-**config.json** is the general configuration file for the DashBoy Camera. It has always priority on internal default configuration.** Config.json is not a mandatory file but it pimps available options.
+**config.json** is the general configuration file for the DashBoy Camera. It has always priority on internal default configuration. Config.json is not a mandatory file but it pimps available options.
 
 User can keep the current default values without modifying anything. Advanced user are advised to look into code what is the effect of each parameter. **Value can be changed but not the length of tables. Values MUST be entered as decimal.** Here is the signification of each variable in detail:
 
