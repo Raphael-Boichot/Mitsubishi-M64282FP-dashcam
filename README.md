@@ -104,14 +104,6 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 
-## Building the mini 240x240 surface mount version (requires some skill in soldering)
-
-## Required parts
-To do
-
-## Building instructions
-To do
-
 # Some usefull informations for Game Boy Camera nerds
 
 - The sensor has intrinsically many visual artifacts (horizontal and vertical lines, image echoes at certain exposures, etc.). None of them is specifically due to the Pi Pico. They were all observed with a Game Boy Camera in the same conditions of light.
