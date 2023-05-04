@@ -8,7 +8,9 @@
 
 ## json configuration file
 
-**config.json** is the general configuration file for the DashBoy Camera. User can keep the current values without modifying anything. Advanced user are advised to look into code what is the effect of each. **Value can be changed but not the length of tables. Values MUST be entered as decimal.** Here is the signification of each variable in detail:
+**config.json** is the general configuration file for the DashBoy Camera. It has always priority on internal default configuration.** Config.json is not a mandatory file but it pimps available options.
+
+User can keep the current default values without modifying anything. Advanced user are advised to look into code what is the effect of each parameter. **Value can be changed but not the length of tables. Values MUST be entered as decimal.** Here is the signification of each variable in detail:
 
 - **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder
 - **timelapseDelay:** list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
