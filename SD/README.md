@@ -1,6 +1,6 @@
 # These files have to be copied at the root of SD card.
 
-## Powershell scripts
+## Powershell scripts made by [HerrZatacke](https://github.com/HerrZatacke)
 
 - **Upscaler_Camera.ps1** converts 1x BMP files from /Camera folder to 8x PNG;
 - **Upscaler_MS.ps1** converts 1x BMP files from /MS (Motion Sensor) folder to 8x PNG; 
@@ -27,7 +27,7 @@
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
 - **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
 
-## Convert images to movie
+## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
 
 Just install ffmpeg from Powershell ran as administrator following this method: **[Method 2: Install FFmpeg via Chocolatey](https://adamtheautomator.com/install-ffmpeg/)**.
 Then run the following command into you image folder (png or bmp, adapt it):
