@@ -137,7 +137,9 @@ void setup()
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_lookup_tables(lookup_pico_to_GBD, 0, 255); //pre allocate tables 0<->3.3V scale from pico to 0<->3.3V scale from MAC-GBD
   //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts
-  pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
+  if (PRETTYBORDER_mode > 0) {
+    pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
+  }
   if (BORDER_mode == 1) {
     camReg[1] = 0b11101000;//With 2D border enhancement
   }
@@ -754,7 +756,7 @@ void recording_loop()
     }
   }
 
-  if (PRETTYBORDER_mode == 1) {
+  if (PRETTYBORDER_mode > 0) {
     make_image_with_pretty_borders();
   }
 
@@ -867,11 +869,26 @@ void pre_allocate_image_with_pretty_borders()
   int counter = 0;
   for (int y = 0; y < 144; y++) {
     for (int x = 0; x < 160; x++) {
-      BigBmpData[counter] = Dithering_palette[prettyborder[counter]];//ensures that the palette matches with the dithering palette in any case
+      if (PRETTYBORDER_mode == 1) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_1[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 2) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_2[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 3) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_3[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 4) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_4[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 5) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_5[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
       counter = counter + 1;
     }
   }
 }
+
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
@@ -1008,7 +1025,7 @@ void dump_data_to_SD_card()
       }
     }
 
-    if (PRETTYBORDER_mode == 1)
+    if (PRETTYBORDER_mode > 0)
     {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) { //forbid raw recording in single shot mode
         Datafile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
@@ -1098,7 +1115,7 @@ void display_other_informations() {
   }
   if (LOCK_exposure == 1) {
     img.drawRect(0, 16, 128, 120, TFT_GREEN);
-    sprintf(exposure_string_ms, "Exposure: LOCKED"); 
+    sprintf(exposure_string_ms, "Exposure: LOCKED");
   }
   else {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
