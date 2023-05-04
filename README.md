@@ -14,7 +14,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 - **Just drop the compiled uf2 file to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
 
-Or if you like pain:
+Or if you [like pain](https://www.youtube.com/watch?v=IaUbdIDowJQ):
 
 - Install the last [Arduino IDE](https://www.arduino.cc/en/software)
 - Install the [Earle F. Philhower Raspberry Pi Pico Arduino core for Arduino IDE](https://github.com/earlephilhower/arduino-pico) via the Arduino Board manager (see [installation guide](https://github.com/earlephilhower/arduino-pico#installing-via-arduino-boards-manager)).
