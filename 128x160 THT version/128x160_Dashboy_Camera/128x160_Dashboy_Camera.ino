@@ -1003,37 +1003,6 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   return JSON_OK;
 }
 
-bool JSON_get_border(const char * path) {//I've copy paste the library examples
-  // Open file for reading
-  bool JSON_OK = 0;
-#ifdef  USE_SD
-  if (SD.exists(path)) {
-    JSON_OK = 1;
-    File Datafile = SD.open(path);
-    StaticJsonDocument<256> doc;
-    DeserializationError error = deserializeJson(doc, Datafile);
-    PRETTYBORDER_mode = doc["prettyborderMode"];
-    Datafile.close();
-    SD.remove(path);
-  }
-#endif
-  return JSON_OK;
-}
-
-bool JSON_put_border(const char * path) {//I've copy paste the library examples
-  // Open file for WRITING
-  bool JSON_OK = 0;
-#ifdef  USE_SD
-  JSON_OK = 1;
-  File Datafile = SD.open(path, FILE_WRITE);
-  StaticJsonDocument<4096> doc;
-  doc["prettyborderMode"] = PRETTYBORDER_mode;
-  serializeJson(doc, Datafile);
-  Datafile.close();
-#endif
-  return JSON_OK;
-}
-
 void dump_data_to_SD_card()
 {
 #ifdef  USE_SD
