@@ -137,7 +137,9 @@ void setup()
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max); //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_lookup_tables(lookup_pico_to_GBD, 0, 255); //pre allocate tables 0<->3.3V scale from pico to 0<->3.3V scale from MAC-GBD
   //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts
-  pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
+  if (PRETTYBORDER_mode > 0) {
+    pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
+  }
   if (BORDER_mode == 1) {
     camReg[1] = 0b11101000;//With 2D border enhancement
   }
@@ -754,7 +756,7 @@ void recording_loop()
     }
   }
 
-  if (PRETTYBORDER_mode == 1) {
+  if (PRETTYBORDER_mode > 0) {
     make_image_with_pretty_borders();
   }
 
@@ -867,11 +869,26 @@ void pre_allocate_image_with_pretty_borders()
   int counter = 0;
   for (int y = 0; y < 144; y++) {
     for (int x = 0; x < 160; x++) {
-      BigBmpData[counter] = Dithering_palette[prettyborder[counter]];//ensures that the palette matches with the dithering palette in any case
+      if (PRETTYBORDER_mode == 1) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_1[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 2) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_2[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 3) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_3[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 4) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_4[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
+      if (PRETTYBORDER_mode == 5) {
+        BigBmpData[counter] = Dithering_palette[prettyborder_5[counter]];//ensures that the palette matches with the dithering palette in any case
+      }
       counter = counter + 1;
     }
   }
 }
+
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
@@ -958,6 +975,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
       timelapse_list [i] = doc["timelapseDelay"][i];
     }
     PRETTYBORDER_mode = doc["prettyborderMode"];
+    //HDR_mode = doc["HDRMode"];
     NIGHT_mode = doc["nightMode"];
     motion_detection_threshold = doc["motiondetectionThreshold"];
     BORDER_mode = doc["2dEnhancement"];
@@ -1008,7 +1026,7 @@ void dump_data_to_SD_card()
       }
     }
 
-    if (PRETTYBORDER_mode == 1)
+    if (PRETTYBORDER_mode > 0)
     {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) { //forbid raw recording in single shot mode
         Datafile.write(BMP_header_prettyborder, 1078);//fixed header for 160*144 image
@@ -1098,7 +1116,7 @@ void display_other_informations() {
   }
   if (LOCK_exposure == 1) {
     img.drawRect(0, 16, 128, 120, TFT_GREEN);
-    sprintf(exposure_string_ms, "Exposure: LOCKED"); 
+    sprintf(exposure_string_ms, "Exposure: LOCKED");
   }
   else {
     img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
@@ -1159,6 +1177,8 @@ void display_other_informations() {
 
 //the void sequence is made in order to have a dramatic effect
 void init_sequence() {//not 100% sure why, but screen must be initialized before the SD...
+
+
 #ifdef  USE_TFT
   tft.init();
   tft.setRotation(2);
@@ -1235,6 +1255,9 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #endif
 
   JSON_ready = Get_JSON_config("/config.json"); //get configuration data if a file exists
+  if (PRETTYBORDER_mode > max_border) {
+    PRETTYBORDER_mode = 0;
+  }
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {
@@ -1245,19 +1268,43 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   else {
     img.setTextColor(TFT_ORANGE);
     img.setCursor(50, 16);
-    img.println("NOT FOUND");
+    img.println("ERROR");
   }
+
+  img.setTextColor(TFT_CYAN);
+  img.setCursor(0, 24);
+  if (PRETTYBORDER_mode == 0) {
+    img.println("No border mode");
+  }
+  if (PRETTYBORDER_mode == 1) {
+    img.println("Border: Custom");
+  }
+  if (PRETTYBORDER_mode == 2) {
+    img.println("Border: Int. GBC");
+  }
+  if (PRETTYBORDER_mode == 3) {
+    img.println("Border: Jpn. GBC");
+  }
+  if (PRETTYBORDER_mode == 4) {
+    img.println("Border: Diag. GBC");
+  }
+  if (PRETTYBORDER_mode == 5) {
+    img.println("Border: Wave. GBC");
+  }
+
+
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
-    img.setCursor(0, 24);
+    img.setCursor(0, 32);
     img.println("CHECK CONNECTIONS");
   }
   else {
     img.setTextColor(TFT_GREEN);
-    img.setCursor(0, 24);
+    img.setCursor(0, 32);
     img.println("NOW BOOTING...");
   }
   img.pushSprite(x_ori, y_ori);// dump image to display
+  delay(250);
 #endif
 
 #ifdef  USE_SD
