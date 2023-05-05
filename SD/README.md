@@ -14,7 +14,7 @@ User can keep the current default values without modifying anything. Advanced us
 
 - **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder
 - **timelapseDelay:** list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
-- **prettyborderMode:** 1 = pretty borders, 0 = image without border;
+- **prettyborderMode:** 1 = pretty borders, 0 = image without border. Try values > 1 and get surprise;
 - **nightMode:** 1 = allows to go decrease the sensor clock to over expose image at night, 0 = constant sensor clock;
 - **motiondetectionThreshold:** value for the motion detection threshold. 0 = detect everything, 1 = detect nothing. 0.025 is a good starting value, the lower, the lore sensitive to motion;
 - **2dEnhancement:** 1 = 2D enhancement activated, 0 = deactivated - Valid only in single register strategy;
