@@ -975,6 +975,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
       timelapse_list [i] = doc["timelapseDelay"][i];
     }
     PRETTYBORDER_mode = doc["prettyborderMode"];
+    //HDR_mode = doc["HDRMode"];
     NIGHT_mode = doc["nightMode"];
     motion_detection_threshold = doc["motiondetectionThreshold"];
     BORDER_mode = doc["2dEnhancement"];
@@ -998,6 +999,37 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     FIXED_divider = doc["fixedDivider"];
     Datafile.close();
   }
+#endif
+  return JSON_OK;
+}
+
+bool JSON_get_border(const char * path) {//I've copy paste the library examples
+  // Open file for reading
+  bool JSON_OK = 0;
+#ifdef  USE_SD
+  if (SD.exists(path)) {
+    JSON_OK = 1;
+    File Datafile = SD.open(path);
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, Datafile);
+    PRETTYBORDER_mode = doc["prettyborderMode"];
+    Datafile.close();
+    SD.remove(path);
+  }
+#endif
+  return JSON_OK;
+}
+
+bool JSON_put_border(const char * path) {//I've copy paste the library examples
+  // Open file for WRITING
+  bool JSON_OK = 0;
+#ifdef  USE_SD
+  JSON_OK = 1;
+  File Datafile = SD.open(path, FILE_WRITE);
+  StaticJsonDocument<4096> doc;
+  doc["prettyborderMode"] = PRETTYBORDER_mode;
+  serializeJson(doc, Datafile);
+  Datafile.close();
 #endif
   return JSON_OK;
 }
@@ -1176,6 +1208,8 @@ void display_other_informations() {
 
 //the void sequence is made in order to have a dramatic effect
 void init_sequence() {//not 100% sure why, but screen must be initialized before the SD...
+
+
 #ifdef  USE_TFT
   tft.init();
   tft.setRotation(2);
@@ -1252,6 +1286,9 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 #endif
 
   JSON_ready = Get_JSON_config("/config.json"); //get configuration data if a file exists
+  if (PRETTYBORDER_mode > max_border) {
+    PRETTYBORDER_mode = 0;
+  }
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {
@@ -1262,19 +1299,43 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   else {
     img.setTextColor(TFT_ORANGE);
     img.setCursor(50, 16);
-    img.println("NOT FOUND");
+    img.println("ERROR");
   }
+
+  img.setTextColor(TFT_CYAN);
+  img.setCursor(0, 24);
+  if (PRETTYBORDER_mode == 0) {
+    img.println("No border mode");
+  }
+  if (PRETTYBORDER_mode == 1) {
+    img.println("Border: Custom");
+  }
+  if (PRETTYBORDER_mode == 2) {
+    img.println("Border: Int. GBC");
+  }
+  if (PRETTYBORDER_mode == 3) {
+    img.println("Border: Jpn. GBC");
+  }
+  if (PRETTYBORDER_mode == 4) {
+    img.println("Border: Diag. GBC");
+  }
+  if (PRETTYBORDER_mode == 5) {
+    img.println("Border: Wave. GBC");
+  }
+
+
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
-    img.setCursor(0, 24);
+    img.setCursor(0, 32);
     img.println("CHECK CONNECTIONS");
   }
   else {
     img.setTextColor(TFT_GREEN);
-    img.setCursor(0, 24);
+    img.setCursor(0, 32);
     img.println("NOW BOOTING...");
   }
   img.pushSprite(x_ori, y_ori);// dump image to display
+  delay(250);
 #endif
 
 #ifdef  USE_SD
