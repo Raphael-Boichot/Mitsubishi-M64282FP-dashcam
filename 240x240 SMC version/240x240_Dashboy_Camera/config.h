@@ -1,7 +1,7 @@
 #define USE_TFT //to allow using the TFT screen
 #define USE_SD //to allow recording on SD
-#define ST7735 //for use with the TFT 128x160
-//#define ST7789 //for use with the TFT 240x240
+//#define ST7735 //for use with the TFT 128x160
+#define ST7789 //for use with the TFT 240x240
 //#define USE_OVERCLOCKING //self explanatory
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs
