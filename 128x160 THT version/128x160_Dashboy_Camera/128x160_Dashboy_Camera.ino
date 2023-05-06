@@ -157,6 +157,10 @@ void setup()
     TIMELAPSE_mode = 0;
   }
 
+
+  PRETTYBORDER_mode++;//here the border is incremented, if device is booted during preset exposure, border will change
+  Put_JSON_config("/config.json"); //Put data in json
+
   if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
     // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
     for (int i = 1; i < 10; i++) {
@@ -165,6 +169,10 @@ void setup()
       push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
     }
   }
+
+  PRETTYBORDER_mode--;
+  Put_JSON_config("/config.json"); //Put data in json
+
 }
 
 
@@ -1003,6 +1011,19 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   return JSON_OK;
 }
 
+void Put_JSON_config(const char * path) {//I've copy paste the library examples
+  // Open file for reading
+  DynamicJsonDocument doc(4096);
+  File Datafile = SD.open(path);
+  deserializeJson(doc, Datafile);
+  Datafile.close();
+
+  doc["prettyborderMode"] = PRETTYBORDER_mode;//Update some data
+  Datafile = SD.open(path, "w");
+  serializeJson(doc, Datafile);//overwrite file
+  Datafile.close();
+}
+
 void dump_data_to_SD_card()
 {
 #ifdef  USE_SD
@@ -1304,7 +1325,6 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
     img.println("NOW BOOTING...");
   }
   img.pushSprite(x_ori, y_ori);// dump image to display
-  delay(250);
 #endif
 
 #ifdef  USE_SD
