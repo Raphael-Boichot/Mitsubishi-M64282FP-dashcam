@@ -158,23 +158,20 @@ void setup()
   }
 
 
-  PRETTYBORDER_mode++;//here the border is incremented, if device is booted during preset exposure, border will change
+  PRETTYBORDER_mode++;//here the border is incremented, if device is booted during preset exposure (next loop), border will change
   Put_JSON_config("/config.json"); //Put data in json
 
-  if (FIXED_EXPOSURE_mode == 0) { //skip if fixed exposure
-    // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
-    for (int i = 1; i < 10; i++) {
-      take_a_picture();
-      new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
-      push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
-    }
+  // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
+  for (int i = 1; i < 15; i++) {
+    take_a_picture();
+    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);// self explanatory
+    push_exposure(camReg, new_exposure, 1); //update exposure registers C2-C3
   }
 
   PRETTYBORDER_mode--;
-  Put_JSON_config("/config.json"); //Put data in json
+  Put_JSON_config("/config.json"); //Put data in json, if device is rebooted before, increment the border #
 
 }
-
 
 //////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -200,8 +197,6 @@ void loop()
     LOCK_exposure = !LOCK_exposure;//self explanatory
     short_fancy_delay();
   }
-  //gpio_put(INT, LOCK_exposure);nit in use anymore
-
   if (gpio_get(HDR) == 1) {
     HDR_mode = !HDR_mode;//self explanatory
     short_fancy_delay();
@@ -344,6 +339,7 @@ void loop()
     display_other_informations();
     img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
+
   }
 
   if (TIMELAPSE_mode == 1)
@@ -877,26 +873,30 @@ void pre_allocate_image_with_pretty_borders()
   int counter = 0;
   for (int y = 0; y < 144; y++) {
     for (int x = 0; x < 160; x++) {
-      if (PRETTYBORDER_mode == 1) {
-        BigBmpData[counter] = Dithering_palette[prettyborder_1[counter]];//ensures that the palette matches with the dithering palette in any case
-      }
-      if (PRETTYBORDER_mode == 2) {
-        BigBmpData[counter] = Dithering_palette[prettyborder_2[counter]];//ensures that the palette matches with the dithering palette in any case
-      }
-      if (PRETTYBORDER_mode == 3) {
-        BigBmpData[counter] = Dithering_palette[prettyborder_3[counter]];//ensures that the palette matches with the dithering palette in any case
-      }
-      if (PRETTYBORDER_mode == 4) {
-        BigBmpData[counter] = Dithering_palette[prettyborder_4[counter]];//ensures that the palette matches with the dithering palette in any case
-      }
-      if (PRETTYBORDER_mode == 5) {
-        BigBmpData[counter] = Dithering_palette[prettyborder_5[counter]];//ensures that the palette matches with the dithering palette in any case
+      switch (PRETTYBORDER_mode)
+      {
+        case 1:
+          BigBmpData[counter] = Dithering_palette[prettyborder_1[counter]];//ensures that the palette matches with the dithering palette in any case
+          break;
+        case 2:
+          BigBmpData[counter] = Dithering_palette[prettyborder_2[counter]];//ensures that the palette matches with the dithering palette in any case
+          break;
+        case 3:
+          BigBmpData[counter] = Dithering_palette[prettyborder_3[counter]];//ensures that the palette matches with the dithering palette in any case
+          break;
+        case 4:
+          BigBmpData[counter] = Dithering_palette[prettyborder_4[counter]];//ensures that the palette matches with the dithering palette in any case
+          break;
+        case 5:
+          BigBmpData[counter] = Dithering_palette[prettyborder_5[counter]];//ensures that the palette matches with the dithering palette in any case
+          break;
+        default:
+          BigBmpData[counter] = 0;
       }
       counter = counter + 1;
     }
   }
 }
-
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
   char pixel;
@@ -972,6 +972,7 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   // Open file for reading
   bool JSON_OK = 0;
+  
 #ifdef  USE_SD
   if (SD.exists(path)) {
     JSON_OK = 1;
@@ -1008,11 +1009,14 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     Datafile.close();
   }
 #endif
+
   return JSON_OK;
 }
 
 void Put_JSON_config(const char * path) {//I've copy paste the library examples
   // Open file for reading
+  
+#ifdef  USE_SD
   DynamicJsonDocument doc(4096);
   File Datafile = SD.open(path);
   deserializeJson(doc, Datafile);
@@ -1022,10 +1026,13 @@ void Put_JSON_config(const char * path) {//I've copy paste the library examples
   Datafile = SD.open(path, "w");
   serializeJson(doc, Datafile);//overwrite file
   Datafile.close();
+#endif
+
 }
 
 void dump_data_to_SD_card()
 {
+  
 #ifdef  USE_SD
   File Datafile = SD.open(storage_file_name, FILE_WRITE);
   // if the file is writable, write to it:
@@ -1065,6 +1072,7 @@ void dump_data_to_SD_card()
     }
   }
 #endif
+
   delay(25);//allows current draw to stabilize before taking another shot
 }
 
@@ -1081,8 +1089,8 @@ void short_fancy_delay() {
 }
 
 void display_other_informations() {
+  
 #ifdef  USE_TFT
-
   current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
   if (current_exposure > 0x0FFF) {
     sprintf(exposure_string, "REG: %X", current_exposure); //concatenate string for display
@@ -1194,11 +1202,11 @@ void display_other_informations() {
     img.println(rank_strategy, DEC);
   }
 #endif
+
 }
 
 //the void sequence is made in order to have a dramatic effect
 void init_sequence() {//not 100% sure why, but screen must be initialized before the SD...
-
 
 #ifdef  USE_TFT
   tft.init();
@@ -1275,10 +1283,12 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
   img.pushSprite(x_ori, y_ori);// dump image to display
 #endif
 
+#ifdef  USE_SD
   JSON_ready = Get_JSON_config("/config.json"); //get configuration data if a file exists
   if (PRETTYBORDER_mode > max_border) {
     PRETTYBORDER_mode = 0;
   }
+#endif
 
 #ifdef  USE_TFT
   if (JSON_ready == 1) {
@@ -1294,25 +1304,32 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 24);
-  if (PRETTYBORDER_mode == 0) {
-    img.println("No border mode");
-  }
-  if (PRETTYBORDER_mode == 1) {
-    img.println("Border: Custom");
-  }
-  if (PRETTYBORDER_mode == 2) {
-    img.println("Border: Int. GBC");
-  }
-  if (PRETTYBORDER_mode == 3) {
-    img.println("Border: Jpn. GBC");
-  }
-  if (PRETTYBORDER_mode == 4) {
-    img.println("Border: Diag. GBC");
-  }
-  if (PRETTYBORDER_mode == 5) {
-    img.println("Border: Wave. GBC");
-  }
 
+  switch (PRETTYBORDER_mode)
+  {
+    case 0:
+      img.println("No border mode");
+      break;
+    case 1:
+      img.println("Border: Custom");
+      break;
+    case 2:
+      img.println("Border: Int. GBCam");
+      break;
+    case 3:
+      img.println("Border: Jpn. GBCam");
+      break;
+    case 4:
+      img.println("Border: Diag. GBCam");
+      break;
+    case 5:
+      img.println("Border: Wave. GBCam");
+      break;
+    default: {
+        img.setTextColor(TFT_RED);
+        img.println("BORDER ERROR");
+      }
+  }
 
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {
     img.setTextColor(TFT_RED);
@@ -1341,4 +1358,5 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
     }
   }
 #endif
+
 }
