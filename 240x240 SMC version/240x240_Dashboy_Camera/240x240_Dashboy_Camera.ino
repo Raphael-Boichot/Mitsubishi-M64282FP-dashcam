@@ -871,31 +871,47 @@ void pre_allocate_image_with_pretty_borders()
 {
   memset(BigBmpData, 0, sizeof(BigBmpData));//clean the BigBmpData data array
   int counter = 0;
-  for (int y = 0; y < 144; y++) {
-    for (int x = 0; x < 160; x++) {
-      switch (PRETTYBORDER_mode)
-      {
-        case 1:
-          BigBmpData[counter] = Dithering_palette[prettyborder_1[counter]];//ensures that the palette matches with the dithering palette in any case
-          break;
-        case 2:
-          BigBmpData[counter] = Dithering_palette[prettyborder_2[counter]];//ensures that the palette matches with the dithering palette in any case
-          break;
-        case 3:
-          BigBmpData[counter] = Dithering_palette[prettyborder_3[counter]];//ensures that the palette matches with the dithering palette in any case
-          break;
-        case 4:
-          BigBmpData[counter] = Dithering_palette[prettyborder_4[counter]];//ensures that the palette matches with the dithering palette in any case
-          break;
-        case 5:
-          BigBmpData[counter] = Dithering_palette[prettyborder_5[counter]];//ensures that the palette matches with the dithering palette in any case
-          break;
-        default:
-          BigBmpData[counter] = 0;
-      }
+  int index = 0;
+  char pixel = 0;
+  char number_pixel = 0;
+  while (counter < 160 * 144) {//yes, this is a cheap RLE decoder
+    switch (PRETTYBORDER_mode)
+    {
+      case 1:
+        number_pixel = prettyborder_1[index];
+        pixel = Dithering_palette[prettyborder_1[index + 1]];
+        break;
+      case 2:
+        number_pixel = prettyborder_2[index];
+        pixel = Dithering_palette[prettyborder_2[index + 1]];
+        break;
+      case 3:
+        number_pixel = prettyborder_3[index];
+        pixel = Dithering_palette[prettyborder_3[index + 1]];
+        break;
+      case 4:
+        number_pixel = prettyborder_4[index];
+        pixel = Dithering_palette[prettyborder_4[index + 1]];
+        break;
+      case 5:
+        number_pixel = prettyborder_5[index];
+        pixel = Dithering_palette[prettyborder_5[index + 1]];
+        break;
+      case 6:
+        number_pixel = prettyborder_6[index];
+        pixel = Dithering_palette[prettyborder_6[index + 1]];
+        break;
+      default:
+        BigBmpData[counter] = 0;
+    }
+
+    for (int i = 0; i < number_pixel; i++) {
+      BigBmpData[counter] = pixel;
       counter = counter + 1;
     }
+    index = index + 2;
   }
+
 }
 
 void dump_data_to_serial(unsigned char CamData[128 * 128]) {
@@ -972,7 +988,7 @@ void store_next_ID(const char * path, unsigned long Next_ID, unsigned long Next_
 bool Get_JSON_config(const char * path) {//I've copy paste the library examples
   // Open file for reading
   bool JSON_OK = 0;
-  
+
 #ifdef  USE_SD
   if (SD.exists(path)) {
     JSON_OK = 1;
@@ -1015,7 +1031,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
 
 void Put_JSON_config(const char * path) {//I've copy paste the library examples
   // Open file for reading
-  
+
 #ifdef  USE_SD
   DynamicJsonDocument doc(4096);
   File Datafile = SD.open(path);
@@ -1032,7 +1048,7 @@ void Put_JSON_config(const char * path) {//I've copy paste the library examples
 
 void dump_data_to_SD_card()
 {
-  
+
 #ifdef  USE_SD
   File Datafile = SD.open(storage_file_name, FILE_WRITE);
   // if the file is writable, write to it:
@@ -1089,7 +1105,7 @@ void short_fancy_delay() {
 }
 
 void display_other_informations() {
-  
+
 #ifdef  USE_TFT
   current_exposure = get_exposure(camReg);//get the current exposure register for TFT display
   if (current_exposure > 0x0FFF) {
@@ -1324,6 +1340,9 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
       break;
     case 5:
       img.println("Border: Wave. GBCam");
+      break;
+    case 6:
+      img.println("Border: TV. GBCam");
       break;
     default: {
         img.setTextColor(TFT_RED);
