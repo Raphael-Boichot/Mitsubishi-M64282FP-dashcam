@@ -65,7 +65,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
-## Building the 128x160 standard version (NiMH powered)
+# Building the 128x160 standard version
 
 ## Required parts
 
@@ -83,7 +83,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
-The device is meant to be used with NiMH batteries. I very dislike lithium batteries because they are unstable, not recycled and non generic at all in terms of size in case of reuse.
+The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not recycled and non generic at all in terms of size in case of reuse.
 
 ## PCB and connection with the sensor
 
