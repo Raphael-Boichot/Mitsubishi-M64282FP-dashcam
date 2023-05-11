@@ -65,6 +65,8 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
 
+Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.aliexpress.com/item/1005001617519795.html) with [CS mount mod](https://www.thingiverse.com/thing:5024326), [CCTV fisheye with M12/CS adapters](https://fr.aliexpress.com/item/1005005496283838.html) and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm), sensor glued into a Zenit 12XP shell.
+
 # Building the 128x160 standard version
 
 ## Required parts
