@@ -65,6 +65,7 @@ unsigned int files_on_folder = 0;
 unsigned int max_files_per_folder = 1024;
 unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
+unsigned char Balthasar, Casper, Melchior;//variables for Majikku shisutemu
 double difference = 0;
 bool image_TOKEN = 0; //reserved for CAMERA mode
 bool recording = 0;//0 = idle mode, 1 = recording mode
@@ -78,7 +79,7 @@ char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_s
 char num_HDR_images = sizeof(exposure_list) / sizeof( double );//get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof( double );//get the timelapse list size
 char rank_timelapse = 0;// rank in the timelapse array
-char rank_strategy = 0;// strategy # of the Game Boy Camera emulation
+char register_strategy = 0;// strategy # of the Game Boy Camera emulation
 
 //////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,10 +241,10 @@ void loop()
     memcpy(Dithering_patterns, Dithering_patterns_regular, sizeof( Dithering_patterns_regular));
 
     if (GBCAMERA_mode == 1) {
-      if (dithering_strategy[rank_strategy] == 1) {
+      if (dithering_strategy[register_strategy] == 1) {
         memcpy(Dithering_patterns, Dithering_patterns_high, sizeof( Dithering_patterns_high));
       }
-      if (dithering_strategy[rank_strategy] == 0) {
+      if (dithering_strategy[register_strategy] == 0) {
         memcpy(Dithering_patterns, Dithering_patterns_low, sizeof( Dithering_patterns_low));
       }
     }
@@ -377,6 +378,7 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   unsigned int setpoint = (v_max + v_min) >> 1;
   unsigned int accumulator = 0;
   unsigned char pixel;
+  unsigned char least_change = 1;
   unsigned char max_line = 120; //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
   exp_regs = camReg[2] * 256 + camReg[3];// I know, it's a shame to use a double here but we have plenty of ram
   for (int i = 0; i < 128 * max_line; i++) {
@@ -400,14 +402,20 @@ int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], uns
   if ((error >= -80) & (error <= -30))  new_regs = exp_regs / (1.3  * multiplier);
   if ((error <= 30) & (error >= 10))     new_regs = exp_regs * (1.03 * multiplier);
   if ((error >= -30) & (error <= -10))   new_regs = exp_regs / (1.03 * multiplier);
-  if ((error <= 10) & (error >= 4))   new_regs = exp_regs + 1;//this level is critical to avoid flickering in full sun, 3-4 is nice
-  if ((error >= -10) & (error <= -4))  new_regs = exp_regs - 1;//this level is critical to avoid flickering in full sun,  3-4 is nice
+
+  if (exp_regs > 0x1111) {
+    least_change = 0x0F;//least change must increase if exposure is high
+  }
+
+  if ((error <= 10) & (error >= 4))   new_regs = exp_regs + least_change;//this level is critical to avoid flickering in full sun, 3-4 is nice
+  if ((error >= -10) & (error <= -4))  new_regs = exp_regs - least_change;//this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error)); //concatenate string for display;
   return int(new_regs);
 }
 
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
+  unsigned char old_strategy;
   new_regs = current_exposure * factor;
 
   if (GBCAMERA_mode == 1) { //regular strategy with gain=8
@@ -438,35 +446,60 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
   camReg[3] = int(new_regs - camReg[2] * 256);//Janky, I know...
 
   if (GBCAMERA_mode == 1) { //Game Boy Camera strategy
+    old_strategy = register_strategy;
     if (new_regs < 0x0030) {
-      camReg[0] = camReg1[0];
-      camReg[1] = camReg1[1];
-      camReg[7] = camReg1[7];
-      rank_strategy = 1;
+      register_strategy = 1;
     }
     if ((new_regs >= 0x0030) & (new_regs < 0x0D80)) {
-      camReg[0] = camReg2[0];
-      camReg[1] = camReg2[1];
-      camReg[7] = camReg2[7];
-      rank_strategy = 2;
+      register_strategy = 2;
     }
     if ((new_regs >= 0x0D80) & (new_regs < 0x3500)) {
-      camReg[0] = camReg3[0];
-      camReg[1] = camReg3[1];
-      camReg[7] = camReg3[7];
-      rank_strategy = 3;
+      register_strategy = 3;
     }
     if ((new_regs >= 0x3500) & (new_regs < 0x8500)) {
-      camReg[0] = camReg4[0];
-      camReg[1] = camReg4[1];
-      camReg[7] = camReg4[7];
-      rank_strategy = 4;
+      register_strategy = 4;
     }
     if ((new_regs > 0x8500)) {
-      camReg[0] = camReg5[0];
-      camReg[1] = camReg5[1];
-      camReg[7] = camReg5[7];
-      rank_strategy = 5;
+      register_strategy = 5;
+    }
+
+    Melchior = Casper;//Majikku shisutemu will vote soon to avoid exposure jittering
+    Casper = Balthasar;
+    Balthasar = register_strategy;
+    if ((Melchior == Balthasar) & !(Casper == Balthasar)) //Majikku shisutemu disagrees, command rejected !
+  {
+    register_strategy = old_strategy;//keep the previous registers
+  }
+
+  switch (register_strategy)
+  {
+    case 1:
+      camReg[0] = camReg1[0];
+        camReg[1] = camReg1[1];
+        camReg[7] = camReg1[7];
+        break;
+      case 2:
+        camReg[0] = camReg2[0];
+        camReg[1] = camReg2[1];
+        camReg[7] = camReg2[7];
+        break;
+      case 3:
+        camReg[0] = camReg3[0];
+        camReg[1] = camReg3[1];
+        camReg[7] = camReg3[7];
+        break;
+      case 4:
+        camReg[0] = camReg4[0];
+        camReg[1] = camReg4[1];
+        camReg[7] = camReg4[7];
+        break;
+      case 5:
+        camReg[0] = camReg5[0];
+        camReg[1] = camReg5[1];
+        camReg[7] = camReg5[7];
+        break;
+      default:
+        {};//do nothing
     }
   }
 }
@@ -1208,14 +1241,14 @@ void display_other_informations() {
   if (GBCAMERA_mode == 1) {
     img.setTextColor(TFT_RED);
     img.setCursor(120, 152);
-    if (dithering_strategy[rank_strategy] == 1) {
+    if (dithering_strategy[register_strategy] == 1) {
       img.println("H");
     }
     else {
       img.println("L");
     }
     img.setCursor(114, 152);
-    img.println(rank_strategy, DEC);
+    img.println(register_strategy, DEC);
   }
 #endif
 
