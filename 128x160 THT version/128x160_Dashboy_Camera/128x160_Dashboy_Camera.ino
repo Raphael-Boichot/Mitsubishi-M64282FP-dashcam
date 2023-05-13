@@ -141,12 +141,6 @@ void setup()
   if (PRETTYBORDER_mode > 0) {
     pre_allocate_image_with_pretty_borders();//pre allocate bmp data for image with borders
   }
-  if (BORDER_mode == 1) {
-    camReg[1] = 0b11101000;//With 2D border enhancement
-  }
-  if (BORDER_mode == 0) {
-    camReg[1] = 0b00001000;//Without 2D border enhancement (very soft image, better for nightmode)
-  }
 
   // initialize recording mode
   if (timelapse_list[0] >= 0) {//there is a time in ms in the list
@@ -285,9 +279,9 @@ void loop()
     if ((currentTime - previousTime) > TIMELAPSE_deadtime) {
       recording_loop();// Wait for deadtime set in config.txt
     }
-    if (TIMELAPSE_deadtime > 10000) {
-      sleep_ms(1000); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
-    }
+    //if (TIMELAPSE_deadtime > 10000) {
+    sleep_ms(TIMELAPSE_deadtime / 20); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    //}
   }//end of recording loop for timelapse
 
   if ((TIMELAPSE_mode == 0) & (gpio_get(PUSH) == 1) & (MOTION_sensor == 0)) { //camera mode acts like if user requires just one picture
@@ -467,14 +461,14 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     Casper = Balthasar;
     Balthasar = register_strategy;
     if ((Melchior == Balthasar) & !(Casper == Balthasar)) //Majikku shisutemu disagrees, command rejected !
-  {
-    register_strategy = old_strategy;//keep the previous registers
-  }
+    {
+      register_strategy = old_strategy;//keep the previous registers
+    }
 
-  switch (register_strategy)
-  {
-    case 1:
-      camReg[0] = camReg1[0];
+    switch (register_strategy)
+    {
+      case 1:
+        camReg[0] = camReg1[0];
         camReg[1] = camReg1[1];
         camReg[7] = camReg1[7];
         break;
@@ -500,6 +494,12 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
         break;
       default:
         {};//do nothing
+    }
+
+    if ((BORDER_mode == 1) && (DITHER_mode == 0)) { //enforce 2D border enhancement only in non dither mode
+      bitSet(camReg[1], 7);
+      bitSet(camReg[1], 6);
+      bitSet(camReg[1], 5);
     }
   }
 }
@@ -1036,7 +1036,6 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     //HDR_mode = doc["HDRMode"];
     NIGHT_mode = doc["nightMode"];
     motion_detection_threshold = doc["motiondetectionThreshold"];
-    BORDER_mode = doc["2dEnhancement"];
     for (int i = 0; i < num_HDR_images; i++) {
       exposure_list[i] = doc["hdrExposures"][i];
     }
@@ -1046,6 +1045,7 @@ bool Get_JSON_config(const char * path) {//I've copy paste the library examples
     GBCAMERA_mode = doc["gameboycameraMode"];
     GB_v_min = doc["lowvoltageThreshold"];
     GB_v_max = doc["highvoltageThreshold"];
+    BORDER_mode = doc["enforce2DEnhancement"];
     for (int i = 0; i < 48; i++) {
       Dithering_patterns_low [i] = doc["lowditherMatrix"][i];
     }
