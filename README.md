@@ -6,7 +6,7 @@ The code was developped for Raspberry Pi Pico with the Earle F. Philhower RP2040
 
 Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game Boy Camera Club !](https://discord.gg/TDrcFKxAMU)
 
-# Picture of the device
+# Picture of the device (PCB V1)
 
 ![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
