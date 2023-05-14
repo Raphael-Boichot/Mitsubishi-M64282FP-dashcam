@@ -280,7 +280,7 @@ void loop()
       recording_loop();// Wait for deadtime set in config.txt
     }
     //if (TIMELAPSE_deadtime > 10000) {
-    sleep_ms(TIMELAPSE_deadtime / 20); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    sleep_ms(min(TIMELAPSE_deadtime / 10,1000)); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
     //}
   }//end of recording loop for timelapse
 
@@ -497,9 +497,7 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     }
 
     if ((BORDER_mode == 1) && (DITHER_mode == 0)) { //enforce 2D border enhancement only in non dither mode
-      bitSet(camReg[1], 7);
-      bitSet(camReg[1], 6);
-      bitSet(camReg[1], 5);
+      camReg[1]=camReg[1]|0b11100000;
     }
   }
 }
