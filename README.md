@@ -67,11 +67,11 @@ Additionally, you can address other cool features by entering them in the [confi
 
 Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.aliexpress.com/item/1005001617519795.html) with [CS mount mod](https://www.thingiverse.com/thing:5024326), [CCTV fisheye with M12/CS adapters](https://fr.aliexpress.com/item/1005005496283838.html) and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm), sensor glued into a Zenit 12XP shell.
 
-# Building the 128x160 standard version
+# Building the 128x160 standard version (NiMH powered)
 
 ## Required parts
 
-- PCB and optional sub PCB ordered at [JLCPCB](https://jlcpcb.com/) (see next section for details).
+- [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor, which is cool.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
@@ -79,17 +79,17 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 - Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html).
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
 - A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html).
-- A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap.
+- A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap and do not hold battery correctly.
 - 2 regular 5 mm LEDs (red and green) and two through hole resistors of 250 to 1000 Ohms (low value = high brighness).
 - A [10 or 16 volts through hole capacitor of 1000 microfarads](https://fr.aliexpress.com/item/1005003189675117.html).
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
-The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not recycled and non generic at all in terms of size in case of reuse.
+The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not recycled and non generic at all in terms of size in case of reuse. The device does not allow to recharge the batteries as NiMH requires very specific charging strategy.
 
 ## PCB and connection with the sensor
 
-PCB for left and rigth handed users are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images). This situation corresponds also to the INPUT<->NORMAL OUT of the breakout board if you order the extension cables given in **Required parts** section.
+PCB are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images). This situation corresponds also to the INPUT<->NORMAL OUT of the breakout board if you order the extension cables given in **Required parts** section.
 
 ![connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
@@ -98,14 +98,15 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 ## Building instructions
 
 - Solder the Pi Pico first: **it must be mandatorily soldered on the castellated holes, without pin headers or spacer, directly on the PCB**
-- Solder the lower parts next: LEDs, resistors, level shifters, push buttons, JST connector, microswitches, capacitor and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers.
-- Solder the display: **ensure to have enough clearance to slide the SD card out of the display above the Pi Pico**. Best is to use female pin headers to secure the distance between display and main PCB but the default pins are long enough if you solder them just showing out of the back PCB surface.
-- Trim the pin connectors from the back side of PCB.
+- Solder the lower parts next: LEDs (RED and GREEN), resistors (RRED and RGREEN), level shifters, push buttons, JST connector, microswitches (MAIN and DISPLAY), capacitor (CAP1) and DC-DC converter. Levels shifters and DC-DC converters can be soldered with male pin headers, there is enough clearance for them.
+- Solder the display: **ensure to have enough clearance to slide the SD card out of the display above the Pi Pico**. Best is either to use female pin headers to secure the distance between display and main PCB or to solder the display with pins just showing out of the back PCB surface (pins are long enough).
+- Trim the remaining pin connectors as short as possible from the back side of PCB.
 - At this step, flash the Pi Pico and verify that the device boots and the display works. It should be stuck to an error screen with the red LED flashing, this is normal as the device needs SD card and a sensor to go further.
 - Solder the JST connectors to the [tiny adapter board](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board/Tiny%20adapter%20board.png) (INPUT and NORMAL OUT if you use a cable similar to the default sensor one linked in **Parts**) or just bend straight the pins of a female JST connector and plug it into the JST extension cable to inverse its gender.
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
-- Glue the Battery holder behing the pushbuttons (it will act as a grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
+- Glue the Battery holder behind the pushbuttons (it will act as a hand grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
+- If you want to use the time lapse or HDR features, use a tripod and hold the Dashboy with any [universal phone holder](https://fr.aliexpress.com/item/1005004208664097.html) by the battery holder.
 
 # Some random informations for Game Boy Camera nerds
 
