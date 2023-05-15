@@ -78,7 +78,7 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 - Some [9 pins JST ZH1.5MM connector](https://fr.aliexpress.com/item/32920487056.html).
 - Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html).
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
-- A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html).
+- A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html). It is based on a ME2108 DC/DC converter chip.
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap and do not hold battery correctly.
 - 2 regular 5 mm LEDs (red and green) and two through hole resistors of 250 to 1000 Ohms (low value = high brighness).
 - A [16 volts through hole capacitor of 1000 microfarads](https://fr.aliexpress.com/item/1005003189675117.html).
