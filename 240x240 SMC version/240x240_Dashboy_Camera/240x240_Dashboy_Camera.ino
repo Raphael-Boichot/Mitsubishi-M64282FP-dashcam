@@ -280,7 +280,7 @@ void loop()
       recording_loop();// Wait for deadtime set in config.txt
     }
     //if (TIMELAPSE_deadtime > 10000) {
-    sleep_ms(min(TIMELAPSE_deadtime / 10,1000)); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    sleep_ms(min(TIMELAPSE_deadtime / 10, 1000)); //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
     //}
   }//end of recording loop for timelapse
 
@@ -497,7 +497,7 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     }
 
     if ((BORDER_mode == 1) && (DITHER_mode == 0)) { //enforce 2D border enhancement only in non dither mode
-      camReg[1]=camReg[1]|0b11100000;
+      camReg[1] = camReg[1] | 0b11100000;
     }
   }
 }
@@ -1396,6 +1396,14 @@ void init_sequence() {//not 100% sure why, but screen must be initialized before
 
 #ifdef  USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {//get stuck here if any problem to avoid further board damage
+
+    for (int16_t x = 1; x < 128 ; x++) {
+      for (int16_t y = 0; y < 112; y++) {
+        img.drawPixel(x, y + 44 , lookup_TFT_RGB565[crashscreen[x + y * 128]]);
+      }
+    }
+    img.pushSprite(x_ori, y_ori);// dump image to display
+
     while (1) {
 
 #ifndef  USE_SNEAK_MODE
