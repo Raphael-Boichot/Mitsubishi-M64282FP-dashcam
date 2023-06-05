@@ -322,7 +322,7 @@ void loop() {
     if (MOTION_sensor == 0) {
       delay(200);  //long enough for debouncing, fast enough for a decent burst mode
     } else {
-      delay(50);//avoid image artifacts due to 5 volts instability after recording
+      delay(25);  //avoid image artifacts due to 5 volts instability after recording, not supposed to happens but...
     }
 
 
