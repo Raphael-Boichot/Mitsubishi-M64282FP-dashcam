@@ -12,7 +12,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Multi-systems installation guide
 
-- **Just drop the compiled uf2 file to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
+- **Just drop the [compiled uf2 file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Build) to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
 
 Or if you [like pain](https://www.youtube.com/watch?v=IaUbdIDowJQ):
 
