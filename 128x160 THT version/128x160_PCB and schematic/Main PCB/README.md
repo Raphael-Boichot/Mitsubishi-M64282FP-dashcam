@@ -1,1 +1,0 @@
-The main board has two connectors. The bottom connector is to be used with the sensor mounted in the camera head and shell (using an extension cable and the sub PCB adapter), the upper connector is to be used in case you want to use the sensor board alone or mounted to the PCB (requires to design an adapter part).
