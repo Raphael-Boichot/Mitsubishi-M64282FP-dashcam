@@ -623,9 +623,8 @@ void camReadPicture(unsigned char CamData[128 * 128])  // Take a picture, read i
       camReset();
       break;  // we want to do something, skip next steps
     }
-    camDelay();
     gpio_put(CLOCK, 0);
-    camDelay();
+    camSpecialDelay();
   }
   currentTime_exp = millis() - previousTime_exp;  //to dislay the real exposure time, not the registers
   gpio_put(LED, 0);
