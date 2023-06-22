@@ -623,9 +623,8 @@ void camReadPicture(unsigned char CamData[128 * 128])  // Take a picture, read i
       camReset();
       break;  // we want to do something, skip next steps
     }
-    camDelay();
     gpio_put(CLOCK, 0);
-    camDelay();
+    camSpecialDelay();
   }
   currentTime_exp = millis() - previousTime_exp;  //to dislay the real exposure time, not the registers
   gpio_put(LED, 0);
@@ -1073,7 +1072,8 @@ void dump_data_to_SD_card() {
   if (Datafile) {
     if (PRETTYBORDER_mode == 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header, 1078);                                             //fixed header for 128*120 image
+        Datafile.write(BMP_header, 54);                                               //fixed header for 128*120 image
+        Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BmpData, 128 * 120);                                           //removing last tile line
         Datafile.close();
       } else {
@@ -1088,7 +1088,8 @@ void dump_data_to_SD_card() {
 
     if (PRETTYBORDER_mode > 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header_prettyborder, 1078);                                //fixed header for 160*144 image
+        Datafile.write(BMP_header_prettyborder, 54);                                  //fixed header for 160*144 image
+        Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BigBmpData, 160 * 144);                                        //removing last tile line
         Datafile.close();
       } else {
