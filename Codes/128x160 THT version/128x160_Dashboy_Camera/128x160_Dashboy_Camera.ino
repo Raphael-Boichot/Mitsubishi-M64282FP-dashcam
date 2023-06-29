@@ -1074,7 +1074,7 @@ void dump_data_to_SD_card() {
   if (Datafile) {
     if (PRETTYBORDER_mode == 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header_generic, 54);                                               //fixed header for 128*120 image
+        Datafile.write(BMP_header_generic, 54);                                       //fixed header for 128*120 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BmpData, 128 * 120);                                           //removing last tile line
         Datafile.close();
@@ -1090,7 +1090,7 @@ void dump_data_to_SD_card() {
 
     if (PRETTYBORDER_mode > 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header_generic, 54);                                  //fixed header for 160*144 image
+        Datafile.write(BMP_header_generic, 54);                                       //fixed header for 160*144 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BigBmpData, 160 * 144);                                        //removing last tile line
         Datafile.close();
@@ -1110,15 +1110,16 @@ void dump_data_to_SD_card() {
 }
 
 void Pre_allocate_bmp_header(unsigned int bitmap_width, unsigned int bitmap_height) {
+  //https://web.maths.unsw.edu.au/~lafaye/CCM/video/format-bmp.htm
   //https://en.wikipedia.org/wiki/BMP_file_format
-  unsigned int header_size = 54;                                                      //standard header
+  unsigned int header_size = 54;                                                      //standard header total size
   unsigned int palette_size = 1024;                                                   //indexed RGB palette here R,G,B,0 * 256 colors
   unsigned int color_planes = 1;                                                      // must be 1
   unsigned int bits_per_pixel = 8;                                                    // Typical values are 1, 4, 8, 16, 24 and 32. Here 8 bits grayscale image
   unsigned long pixel_data_size = bitmap_width * bitmap_height * bits_per_pixel / 8;  // must be a multiple of 4, this is the size of the raw bitmap data
   unsigned long total_file_size = pixel_data_size + header_size + palette_size;       //The size of the BMP file in bytes
   unsigned long starting_pixel_data_offset = palette_size + header_size;              //offset at which pixel data are stored
-  unsigned long header_intermediate_size = 40;                                        //not sure what this is...
+  unsigned long header_intermediate_size = 40;                                        //Size of header in bytes after offset 0x0A, so header_intermediate_size + 0x0A = header_size
   unsigned long bitmap_width_pixels = bitmap_width;
   unsigned long bitmap_height_pixels = -bitmap_height;  //must be inverted to have the image NOT upside down, weird particularity of this format...
   unsigned long color_number_in_palette = 256;
