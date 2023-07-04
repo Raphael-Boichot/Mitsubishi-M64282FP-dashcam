@@ -20,7 +20,6 @@
 #include "ArduinoJson.h"
 #include "pico/stdlib.h"
 #include "hardware/adc.h"  //the GPIO commands are here
-#include "big_data.h"
 #include "config.h"
 #include "splash.h"
 #include "prettyborder.h"
@@ -66,6 +65,13 @@ unsigned int max_files_per_folder = 1024;
 unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
+unsigned char max_line = 120;               //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
+unsigned char x_box = 8*8;                   //x range for autoexposure (centered, like GB camera)
+unsigned char y_box = 7*8;                   //y range for autoexposure (centered, like GB camera)
+unsigned char x_min = (128 - x_box) / 2;
+unsigned char y_min = (max_line - y_box) / 2;
+unsigned char x_max = x_min + x_box;
+unsigned char y_max = y_min + y_box;
 double difference = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
@@ -153,6 +159,9 @@ void setup() {
   //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts
   if (PRETTYBORDER_mode > 0) {
     pre_allocate_image_with_pretty_borders();  //pre allocate bmp data for image with borders
+    Pre_allocate_bmp_header(160, 144);
+  } else {
+    Pre_allocate_bmp_header(128, 120);
   }
 
   // initialize recording mode
@@ -259,8 +268,8 @@ void loop() {
 
 #ifdef USE_TFT
   img.fillSprite(TFT_BLACK);  // prepare the image in ram
-  for (int16_t x = 1; x < 128; x++) {
-    for (int16_t y = 0; y < 120; y++) {
+  for (unsigned char x = 1; x < 128; x++) {
+    for (unsigned char y = 0; y < 120; y++) {
       if (DITHER_mode == 1) {
         img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
       } else {
@@ -375,41 +384,47 @@ void take_a_picture() {
 
 int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
   double exp_regs, new_regs, error, mean_value;
-  unsigned int setpoint = (v_max + v_min) >> 1;
+  unsigned int setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
-  unsigned char pixel;
   unsigned char least_change = 1;
-  unsigned char max_line = 120;            //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
-  for (int i = 0; i < 128 * max_line; i++) {
-    pixel = CamData[i];
-    accumulator = accumulator + pixel;  // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
+  unsigned int counter = 0;
+  int i = 0;
+
+  for (unsigned char y = 1; y <= max_line; y++) {
+    for (unsigned char x = 1; x <= 128; x++) {
+      if (((y >= y_min) && (y <= y_max)) && ((x >= x_min) && (x <= x_max))) {  // we check only a centered box and not the whole image
+        accumulator = accumulator + CamData[i];                                // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
+        counter++;                                                             //I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
+      }
+      i++;
+    }
   }
-  mean_value = accumulator / (128 * max_line);
+  mean_value = accumulator / (counter);
+
   error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   double multiplier = 1;
   if (GBCAMERA_mode == 1) {
-    multiplier = 1.1;
+    multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
   }
-
+  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
-  if (error > 80) new_regs = exp_regs * (2 * multiplier);
+  if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
   if (error < -80) new_regs = exp_regs / (2 * multiplier);
-  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);
+  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
   if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);
-  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);
+  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //fine tuning
   if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
 
-  if (exp_regs > 0x1111) {
+  if (exp_regs > 0x1000) {
     least_change = 0x0F;  //least change must increase if exposure is high
   }
 
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
-  sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display;
+  sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
   return int(new_regs);
 }
 
@@ -1072,7 +1087,7 @@ void dump_data_to_SD_card() {
   if (Datafile) {
     if (PRETTYBORDER_mode == 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header, 54);                                               //fixed header for 128*120 image
+        Datafile.write(BMP_header_generic, 54);                                       //fixed header for 128*120 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BmpData, 128 * 120);                                           //removing last tile line
         Datafile.close();
@@ -1088,7 +1103,7 @@ void dump_data_to_SD_card() {
 
     if (PRETTYBORDER_mode > 0) {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
-        Datafile.write(BMP_header_prettyborder, 54);                                  //fixed header for 160*144 image
+        Datafile.write(BMP_header_generic, 54);                                       //fixed header for 160*144 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
         Datafile.write(BigBmpData, 160 * 144);                                        //removing last tile line
         Datafile.close();
@@ -1105,6 +1120,85 @@ void dump_data_to_SD_card() {
 #endif
 
   delay(25);  //allows current draw to stabilize before taking another shot
+}
+
+void Pre_allocate_bmp_header(unsigned int bitmap_width, unsigned int bitmap_height) {
+  //https://web.maths.unsw.edu.au/~lafaye/CCM/video/format-bmp.htm
+  //https://en.wikipedia.org/wiki/BMP_file_format
+  unsigned int header_size = 54;                                                      //standard header total size
+  unsigned int palette_size = 1024;                                                   //indexed RGB palette here R,G,B,0 * 256 colors
+  unsigned int color_planes = 1;                                                      // must be 1
+  unsigned int bits_per_pixel = 8;                                                    // Typical values are 1, 4, 8, 16, 24 and 32. Here 8 bits grayscale image
+  unsigned long pixel_data_size = bitmap_width * bitmap_height * bits_per_pixel / 8;  // must be a multiple of 4, this is the size of the raw bitmap data
+  unsigned long total_file_size = pixel_data_size + header_size + palette_size;       //The size of the BMP file in bytes
+  unsigned long starting_pixel_data_offset = palette_size + header_size;              //offset at which pixel data are stored
+  unsigned long header_intermediate_size = 40;                                        //Size of header in bytes after offset 0x0A, so header_intermediate_size + 0x0A = header_size
+  unsigned long bitmap_width_pixels = bitmap_width;
+  unsigned long bitmap_height_pixels = -bitmap_height;  //must be inverted to have the image NOT upside down, weird particularity of this format...
+  unsigned long color_number_in_palette = 256;
+  //The header field used to identify the BMP and DIB file is 0x42 0x4D in hexadecimal, same as BM in ASCII.
+  BMP_header_generic[0] = 0x42;  //"B" in ASCII, BMP signature
+  BMP_header_generic[1] = 0x4D;  //"M" in ASCII, BMP signatureBMP signature
+
+  //The size of the BMP file in bytes
+  BMP_header_generic[2] = total_file_size >> 0;
+  BMP_header_generic[3] = total_file_size >> 8;
+  BMP_header_generic[4] = total_file_size >> 16;
+  BMP_header_generic[5] = total_file_size >> 24;
+
+  //next bytes reserved, not used
+
+  //The offset, i.e. starting address, of the byte where the bitmap image data (pixel array) can be found.
+  BMP_header_generic[10] = starting_pixel_data_offset >> 0;
+  BMP_header_generic[11] = starting_pixel_data_offset >> 8;
+  BMP_header_generic[12] = starting_pixel_data_offset >> 16;
+  BMP_header_generic[13] = starting_pixel_data_offset >> 24;
+
+  //the size of this header, in bytes (40)
+  BMP_header_generic[14] = header_intermediate_size >> 0;
+  BMP_header_generic[15] = header_intermediate_size >> 8;
+  BMP_header_generic[16] = header_intermediate_size >> 16;
+  BMP_header_generic[17] = header_intermediate_size >> 24;
+
+  //the bitmap width in pixels (signed integer)
+  BMP_header_generic[18] = bitmap_width_pixels >> 0;
+  BMP_header_generic[19] = bitmap_width_pixels >> 8;
+  BMP_header_generic[20] = bitmap_width_pixels >> 16;
+  BMP_header_generic[21] = bitmap_width_pixels >> 24;
+
+  //the bitmap height in pixels (signed integer)
+  BMP_header_generic[22] = bitmap_height_pixels >> 0;
+  BMP_header_generic[23] = bitmap_height_pixels >> 8;
+  BMP_header_generic[24] = bitmap_height_pixels >> 16;
+  BMP_header_generic[25] = bitmap_height_pixels >> 24;
+
+  //the number of color planes (must be 1)
+  BMP_header_generic[26] = color_planes >> 0;
+  BMP_header_generic[27] = color_planes >> 8;
+
+  //the number of bits per pixel, which is the color depth of the image. Typical values are 1, 4, 8, 16, 24 and 32
+  BMP_header_generic[28] = bits_per_pixel >> 0;
+  BMP_header_generic[29] = bits_per_pixel >> 8;
+
+  //next bytes, the compression method being used, not used
+
+  //the image size. This is the size of the raw bitmap data; a dummy 0 can be given for BI_RGB bitmaps.
+  BMP_header_generic[34] = pixel_data_size >> 0;
+  BMP_header_generic[35] = pixel_data_size >> 8;
+  BMP_header_generic[36] = pixel_data_size >> 16;
+  BMP_header_generic[37] = pixel_data_size >> 24;
+
+  //next bytes, horizontal resolution of the image. (pixel per metre, signed integer), not used
+
+  //next bytes, vertical resolution of the image. (pixel per metre, signed integer), not used
+
+  //the number of colors in the color palette, or 0 to default to 2^n
+  BMP_header_generic[46] = color_number_in_palette >> 0;
+  BMP_header_generic[47] = color_number_in_palette >> 8;
+  BMP_header_generic[48] = color_number_in_palette >> 16;
+  BMP_header_generic[49] = color_number_in_palette >> 24;
+
+  //next bytes, the number of important colors used, or 0 when every color is important; generally ignored, not used
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -1175,10 +1269,12 @@ void display_other_informations() {
     }
   }
   if (LOCK_exposure == 1) {
-    img.drawRect(0, 16, 128, 120, TFT_GREEN);
+    img.drawRect(0, 16, 128, max_line, TFT_GREEN);
+    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_GREEN);
     sprintf(exposure_string_ms, "Exposure: LOCKED");
   } else {
-    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
+    img.drawRect(0, 16, 128, max_line, TFT_MAGENTA);
+    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_MAGENTA);
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
@@ -1246,8 +1342,8 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #endif
 
   img.setTextSize(1);  // characters are 8x8 pixels in size 1, practical !
-  for (int16_t x = 1; x < 128; x++) {
-    for (int16_t y = 0; y < 160; y++) {
+  for (unsigned char x = 1; x < 128; x++) {
+    for (unsigned char y = 0; y < 160; y++) {
       img.drawPixel(x, y, lookup_TFT_RGB565[splashscreen[x + y * 128]]);
     }
   }
@@ -1371,8 +1467,8 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #ifdef USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {  //get stuck here if any problem to avoid further board damage
 
-    for (int16_t x = 1; x < 128; x++) {
-      for (int16_t y = 0; y < 112; y++) {
+    for (unsigned char x = 1; x < 128; x++) {
+      for (unsigned char y = 0; y < 112; y++) {
         img.drawPixel(x, y + 44, lookup_TFT_RGB565[crashscreen[x + y * 128]]);
       }
     }
