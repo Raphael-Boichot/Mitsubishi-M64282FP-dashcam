@@ -65,6 +65,13 @@ unsigned int max_files_per_folder = 1024;
 unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
+unsigned char max_line = 120;               //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
+unsigned char x_box = 8*8;                   //x range for autoexposure (centered, like GB camera)
+unsigned char y_box = 7*8;                   //y range for autoexposure (centered, like GB camera)
+unsigned char x_min = (128 - x_box) / 2;
+unsigned char y_min = (max_line - y_box) / 2;
+unsigned char x_max = x_min + x_box;
+unsigned char y_max = y_min + y_box;
 double difference = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
@@ -261,8 +268,8 @@ void loop() {
 
 #ifdef USE_TFT
   img.fillSprite(TFT_BLACK);  // prepare the image in ram
-  for (int16_t x = 1; x < 128; x++) {
-    for (int16_t y = 0; y < 120; y++) {
+  for (unsigned char x = 1; x < 128; x++) {
+    for (unsigned char y = 0; y < 120; y++) {
       if (DITHER_mode == 1) {
         img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
       } else {
@@ -377,41 +384,53 @@ void take_a_picture() {
 
 int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
   double exp_regs, new_regs, error, mean_value;
-  unsigned int setpoint = (v_max + v_min) >> 1;
+  unsigned int setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
-  unsigned char pixel;
   unsigned char least_change = 1;
-  unsigned char max_line = 120;            //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
-  for (int i = 0; i < 128 * max_line; i++) {
-    pixel = CamData[i];
-    accumulator = accumulator + pixel;  // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
+  unsigned int counter = 0;
+  int i = 0;
+
+  for (unsigned char y = 1; y <= max_line; y++) {
+    for (unsigned char x = 1; x <= 128; x++) {
+      if (((y >= y_min) && (y <= y_max)) && ((x >= x_min) && (x <= x_max))) {  // we check only a centered box and not the whole image
+        accumulator = accumulator + CamData[i];                                // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
+        counter++;                                                             //I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
+      }
+      i++;
+    }
   }
-  mean_value = accumulator / (128 * max_line);
+  mean_value = accumulator / (counter);
+
+  // for (int i = 0; i < 128 * max_line; i++) {
+  //   accumulator = accumulator + CamData[i];  // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
+  // }
+  // mean_value = accumulator / (128 * max_line);
+
+
   error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   double multiplier = 1;
   if (GBCAMERA_mode == 1) {
-    multiplier = 1.1;
+    multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
   }
-
+  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
-  if (error > 80) new_regs = exp_regs * (2 * multiplier);
+  if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
   if (error < -80) new_regs = exp_regs / (2 * multiplier);
-  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);
+  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
   if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);
-  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);
+  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //fine tuning
   if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
 
-  if (exp_regs > 0x1111) {
+  if (exp_regs > 0x1000) {
     least_change = 0x0F;  //least change must increase if exposure is high
   }
 
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
-  sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display;
+  sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
   return int(new_regs);
 }
 
@@ -1256,10 +1275,12 @@ void display_other_informations() {
     }
   }
   if (LOCK_exposure == 1) {
-    img.drawRect(0, 16, 128, 120, TFT_GREEN);
+    img.drawRect(0, 16, 128, max_line, TFT_GREEN);
+    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_GREEN);
     sprintf(exposure_string_ms, "Exposure: LOCKED");
   } else {
-    img.drawRect(0, 16, 128, 120, TFT_MAGENTA);
+    img.drawRect(0, 16, 128, max_line, TFT_MAGENTA);
+    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_MAGENTA);
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
@@ -1327,8 +1348,8 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #endif
 
   img.setTextSize(1);  // characters are 8x8 pixels in size 1, practical !
-  for (int16_t x = 1; x < 128; x++) {
-    for (int16_t y = 0; y < 160; y++) {
+  for (unsigned char x = 1; x < 128; x++) {
+    for (unsigned char y = 0; y < 160; y++) {
       img.drawPixel(x, y, lookup_TFT_RGB565[splashscreen[x + y * 128]]);
     }
   }
@@ -1452,8 +1473,8 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #ifdef USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {  //get stuck here if any problem to avoid further board damage
 
-    for (int16_t x = 1; x < 128; x++) {
-      for (int16_t y = 0; y < 112; y++) {
+    for (unsigned char x = 1; x < 128; x++) {
+      for (unsigned char y = 0; y < 112; y++) {
         img.drawPixel(x, y + 44, lookup_TFT_RGB565[crashscreen[x + y * 128]]);
       }
     }
