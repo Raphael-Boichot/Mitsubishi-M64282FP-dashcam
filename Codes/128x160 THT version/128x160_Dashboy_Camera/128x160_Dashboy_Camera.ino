@@ -66,8 +66,8 @@ unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
 unsigned char max_line = 120;               //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-unsigned char x_box = 8*8;                   //x range for autoexposure (centered, like GB camera)
-unsigned char y_box = 7*8;                   //y range for autoexposure (centered, like GB camera)
+unsigned char x_box = 8 * 8;                //x range for autoexposure (centered, like GB camera)
+unsigned char y_box = 7 * 8;                //y range for autoexposure (centered, like GB camera)
 unsigned char x_min = (128 - x_box) / 2;
 unsigned char y_min = (max_line - y_box) / 2;
 unsigned char x_max = x_min + x_box;
@@ -123,9 +123,10 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //analog stuff
-  adc_gpio_init(VOUT);
-  adc_select_input(0);  //there are several ADC channels to choose from
-  adc_init();           //mandatory, without it stuck the camera
+
+  adc_init();  //mandatory, without it stuck the camera, it must be called first
+  //adc_gpio_init(VOUT); // I have no idea why, but this command has no effect, you have to use the command below
+  adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
 
 #ifdef USE_OVERCLOCKING
   cycles = 15;                      //about twice as fast as the regular 133 MHz
@@ -1276,11 +1277,11 @@ void display_other_informations() {
   }
   if (LOCK_exposure == 1) {
     img.drawRect(0, 16, 128, max_line, TFT_GREEN);
-    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_GREEN);
+    img.drawRect(x_min, y_min + 16, x_box, y_box, TFT_GREEN);
     sprintf(exposure_string_ms, "Exposure: LOCKED");
   } else {
     img.drawRect(0, 16, 128, max_line, TFT_MAGENTA);
-    img.drawRect(x_min, y_min+16, x_box, y_box, TFT_MAGENTA);
+    img.drawRect(x_min, y_min + 16, x_box, y_box, TFT_MAGENTA);
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);
