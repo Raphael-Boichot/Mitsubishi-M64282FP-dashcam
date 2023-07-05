@@ -75,8 +75,18 @@ bool SDcard_READY = 0;   //reserved, for bug on SD
 bool JSON_ready = 0;     //reserved, for bug on config.txt
 bool LOCK_exposure = 0;  //reserved, for locking exposure
 bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
-char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
+char storage_file_name[20];
+char storage_file_dir[20];
+char storage_deadtime[20];
+char exposure_string[20];
+char multiplier_string[20];
+char error_string[20];
+char remaining_deadtime[20];
+char exposure_string_ms[20];
+char files_on_folder_string[20];
+char register_string[2];
+char difference_string[8];
+
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
 char rank_timelapse = 0;                                        // rank in the timelapse array
@@ -129,7 +139,7 @@ void setup() {
 #endif
 
 #ifdef DEBUG_MODE  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
-  Serial.begin(2000000);
+  Serial.begin(115200);
 #endif
 
   init_sequence();                                                      //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
