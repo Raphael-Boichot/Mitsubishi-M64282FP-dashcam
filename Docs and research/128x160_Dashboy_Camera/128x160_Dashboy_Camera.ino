@@ -46,7 +46,7 @@ unsigned char CamData[128 * 128];           // sensor data in 8 bits per pixel
 unsigned char CamData_previous[128 * 128];  // sensor data in 8 bits per pixel from preceding loop for motion detection
 unsigned char BmpData[128 * 128];           // sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        // sensor data with autocontrast and pretty border ready to be merged with BMP header
-unsigned unsigned short int HDRData[128 * 128];      // cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 8 images in total
+unsigned short int HDRData[128 * 128];      // cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 8 images in total
 unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
 unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
 unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
