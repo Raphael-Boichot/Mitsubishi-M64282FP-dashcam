@@ -66,8 +66,6 @@ unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
 unsigned char max_line = 120;               //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-unsigned char x_box = 8 * 8;                //x range for autoexposure (centered, like GB camera)
-unsigned char y_box = 7 * 8;                //y range for autoexposure (centered, like GB camera)
 unsigned char x_min = (128 - x_box) / 2;
 unsigned char y_min = (max_line - y_box) / 2;
 unsigned char x_max = x_min + x_box;
@@ -918,7 +916,7 @@ void pre_allocate_image_with_pretty_borders() {
   int index = 0;
   char pixel = 0;
   char number_pixel = 0;
-  while (counter < 160 * 144) {  //yes, this is a cheap RLE decoder
+  while (counter < 160 * 144) {  //el cheapo RLE decoder
     switch (PRETTYBORDER_mode) {
       case 1:
         number_pixel = prettyborder_1[index];
@@ -956,11 +954,11 @@ void pre_allocate_image_with_pretty_borders() {
   }
 }
 
-void dump_data_to_serial(unsigned char CamData[128 * 128]) {
+void dump_data_to_serial(unsigned char CamData[128 * 128]) {  //output data directly to the serial monitor
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];  //to get data with autocontrast
-    //pixel = CamData[i]; //to get data without autocontrast
+    //pixel = CamData[i]; //to get raw data from sensor without autocontrast
     if (pixel <= 0x0F) {
       Serial.print('0');
     }
@@ -1063,6 +1061,8 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
+    x_box = doc["exposurexWindow"];
+    y_box = doc["exposureyWindow"];
     Datafile.close();
   }
 #endif

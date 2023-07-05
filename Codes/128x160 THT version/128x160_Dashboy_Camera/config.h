@@ -42,6 +42,8 @@ bool BORDER_mode = 0;                  //1 = border enhancement ON, 0 = border e
 bool FIXED_EXPOSURE_mode = 0;          // to activate fixed exposure delay mode
 int FIXED_delay = 2048;                //here the result is a fixed exposure perfect for full moon photography
 int FIXED_divider = 1;                 //clock divider
+unsigned char x_box = 8 * 8;           //x range for autoexposure (centered, like GB camera, 8 tiles)
+unsigned char y_box = 7 * 8;           //y range for autoexposure (centered, like GB camera, 7 tiles)
 
 #define NOP __asm__ __volatile__("nop\n\t")  //// minimal possible delay
 #define BITS_PER_PIXEL 16                    // How many bits per pixel in Sprite, here RGB565 format
