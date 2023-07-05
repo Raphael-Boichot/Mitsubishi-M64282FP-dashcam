@@ -1322,7 +1322,12 @@ void display_other_informations() {
       sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime);  //concatenate string for display
       img.println(storage_deadtime);
     } else {
-      img.println("No delay");
+      if (MOTION_sensor == 0) {
+        img.println("No delay");
+      }
+      if (MOTION_sensor == 1) {
+        img.println("TIMELAPSE to exit");
+      }
     }
   }
   if (recording == 1) {
