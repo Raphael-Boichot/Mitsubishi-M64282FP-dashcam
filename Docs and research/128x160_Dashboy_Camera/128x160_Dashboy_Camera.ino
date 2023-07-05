@@ -72,7 +72,7 @@ unsigned char x_min = (128 - x_box) / 2;
 unsigned char y_min = (max_line - y_box) / 2;
 unsigned char x_max = x_min + x_box;
 unsigned char y_max = y_min + y_box;
-double difference = 0;
+float difference = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;   //reserved, for bug on sensor
@@ -82,8 +82,8 @@ bool LOCK_exposure = 0;  //reserved, for locking exposure
 bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
 char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
-char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
-char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
+char num_HDR_images = sizeof(exposure_list) / sizeof(float);   //get the HDR or multi-exposure list size
+char num_timelapses = sizeof(timelapse_list) / sizeof(float);  //get the timelapse list size
 char rank_timelapse = 0;                                        // rank in the timelapse array
 char register_strategy = 0;                                     // strategy # of the Game Boy Camera emulation
 
@@ -384,7 +384,7 @@ void take_a_picture() {
 }
 
 int auto_exposure() {
-  double exp_regs, new_regs, error, mean_value;
+  float exp_regs, new_regs, error, mean_value;
   unsigned int setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
   unsigned char least_change = 1;
@@ -412,11 +412,11 @@ int auto_exposure() {
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
-  double multiplier = 1;
+  float multiplier = 1;
   if (GBCAMERA_mode == 1) {
     multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
   }
-  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
+  exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a float here but we have plenty of ram
   new_regs = exp_regs;
   if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
   if (error < -80) new_regs = exp_regs / (2 * multiplier);
@@ -435,8 +435,8 @@ int auto_exposure() {
   return int(new_regs);
 }
 
-void push_exposure(double factor) {
-  double new_regs;
+void push_exposure(float factor) {
+  float new_regs;
   unsigned char old_strategy;
   new_regs = current_exposure * factor;
 
@@ -529,7 +529,7 @@ void push_exposure(double factor) {
 }
 
 unsigned int get_exposure() {
-  double exp_regs;
+  float exp_regs;
   exp_regs = camReg[2] * 256 + camReg[3];  //
   return exp_regs;
 }
@@ -838,13 +838,13 @@ void recording_loop() {
 
 
 void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char v_min, unsigned char v_max) {
-  double gamma_pixel;
+  float gamma_pixel;
   for (int i = 0; i < 256; i++) {  //building the autocontrat table lookup_serial
     if (i < v_min) {
       lookup_serial[i] = 0x00;
     }
     if ((i >= v_min) & (i <= v_max)) {
-      gamma_pixel = ((i - double(v_min)) / (double(v_max) - double(v_min))) * 255;
+      gamma_pixel = ((i - float(v_min)) / (float(v_max) - float(v_min))) * 255;
       lookup_serial[i] = int(gamma_pixel);
     }
     if (i > v_max) {
