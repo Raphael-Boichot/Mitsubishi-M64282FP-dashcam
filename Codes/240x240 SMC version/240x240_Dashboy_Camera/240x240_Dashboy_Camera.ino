@@ -1,7 +1,9 @@
 //Version 2.0
 //By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
-//this is an autonomous recorder for the Mitsubishi M64282FP artificial retina of the Game Boy Camera
-//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05
+//I've minimized if not banished the use of local variables, pointers and structures to have a constant clear view of what happens and memory state.
+//The code is written to go fast, so the use of numerous lookup tables and precalculated arrays always present into ram.
+
+//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
 //version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
@@ -44,7 +46,7 @@ unsigned char CamData[128 * 128];           // sensor data in 8 bits per pixel
 unsigned char CamData_previous[128 * 128];  // sensor data in 8 bits per pixel from preceding loop for motion detection
 unsigned char BmpData[128 * 128];           // sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        // sensor data with autocontrast and pretty border ready to be merged with BMP header
-unsigned int HDRData[128 * 128];            // cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
+unsigned short int HDRData[128 * 128];      // cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
 unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
 unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
@@ -65,13 +67,6 @@ unsigned int max_files_per_folder = 1024;
 unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
-unsigned char max_line = 120;               //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-unsigned char x_box = 8 * 8;                //x range for autoexposure (centered, like GB camera)
-unsigned char y_box = 7 * 8;                //y range for autoexposure (centered, like GB camera)
-unsigned char x_min = (128 - x_box) / 2;
-unsigned char y_min = (max_line - y_box) / 2;
-unsigned char x_max = x_min + x_box;
-unsigned char y_max = y_min + y_box;
 double difference = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
@@ -139,6 +134,11 @@ void setup() {
 
   init_sequence();                                                      //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   difference_threshold = motion_detection_threshold * 128 * 120 * 255;  //trigger threshold for motion sensor
+  x_min = (128 - x_box) / 2;                                            //recalculate the autoexposure area limits with json config values
+  y_min = (max_line - y_box) / 2;
+  x_max = x_min + x_box;
+  y_max = y_min + y_box;
+
   //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
 
 #ifdef USE_SD
@@ -180,8 +180,8 @@ void setup() {
   // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
   for (int i = 1; i < 15; i++) {
     take_a_picture();
-    new_exposure = auto_exposure(camReg, CamData, v_min, v_max);  // self explanatory
-    push_exposure(camReg, new_exposure, 1);                       //update exposure registers C2-C3
+    new_exposure = auto_exposure();          // self explanatory
+    push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
   }
 
   PRETTYBORDER_mode--;
@@ -195,8 +195,8 @@ void loop() {
   take_a_picture();  //data in memory for the moment, one frame
   image_TOKEN = 0;   //reset any attempt to take more than one picture without pushing a button or observe a difference
   detect_a_motion();
-  memcpy(CamData_previous, CamData, 128 * 120);                 //to deal with motion detection
-  new_exposure = auto_exposure(camReg, CamData, v_min, v_max);  // self explanatory
+  memcpy(CamData_previous, CamData, 128 * 120);  //to deal with motion detection
+  new_exposure = auto_exposure();                // self explanatory
 
   if (FIXED_EXPOSURE_mode == 1) {
     new_exposure = FIXED_delay;
@@ -260,11 +260,11 @@ void loop() {
     }
 
     pre_allocate_Bayer_tables();  // just reordering the Game Boy Camera dithering registers into 3 square matrices
-    Dither_image(CamData, BayerData);
+    Dither_image();
   }
 
 #ifdef USE_SERIAL
-  dump_data_to_serial(CamData);  //dump raw data to serial in ASCII for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
+  dump_data_to_serial();  //dump raw data to serial in ASCII for debugging - you can use the Matlab code ArduiCam_Matlab.m into the repo to probe the serial and plot images
 #endif
 
 #ifdef USE_TFT
@@ -272,9 +272,9 @@ void loop() {
   for (unsigned char x = 1; x < 128; x++) {
     for (unsigned char y = 0; y < 120; y++) {
       if (DITHER_mode == 1) {
-        img.drawPixel(x, y + 16, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
+        img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
       } else {
-        img.drawPixel(x, y + 16, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);  //lookup_serial is autocontrast
+        img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);  //lookup_serial is autocontrast
       }
     }
   }
@@ -377,13 +377,13 @@ void loop() {
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 
 void take_a_picture() {
-  camReset();               // resets the sensor
-  camSetRegisters();        // Send 8 registers to the sensor
-  camReadPicture(CamData);  // get pixels, dump them in CamData
-  camReset();               // probably not usefull but who knows...
+  camReset();         // resets the sensor
+  camSetRegisters();  // Send 8 registers to the sensor
+  camReadPicture();   // get pixels, dump them in CamData
+  camReset();         // probably not usefull but who knows...
 }
 
-int auto_exposure(unsigned char camReg[8], unsigned char CamData[128 * 128], unsigned char v_min, unsigned char v_max) {
+int auto_exposure() {
   double exp_regs, new_regs, error, mean_value;
   unsigned int setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
@@ -567,7 +567,7 @@ void camReset()  // Sends a RESET pulse to sensor
   camDelay();
 }
 
-void camSetRegisters(void)  // Sets the sensor 8 registers
+void camSetRegisters()  // Sets the sensor 8 registers
 {
   for (int reg = 0; reg < 8; ++reg) {
     camSetReg(reg, camReg[reg]);
@@ -611,7 +611,7 @@ void camSetReg(unsigned char regaddr, unsigned char regval)  // Sets one of the 
   }
 }
 
-void camReadPicture(unsigned char CamData[128 * 128])  // Take a picture, read it and send it through the serial port.
+void camReadPicture()  // Take a picture, read it and send it through the serial port.
 {
   unsigned int pixel;  // Buffer for pixel read in
   int x, y;
@@ -799,7 +799,7 @@ void recording_loop() {
   }
 
   if (DITHER_mode == 1) {
-    //Dither_image(CamData, BayerData);
+    //Dither_image();
     for (int i = 0; i < 128 * 128; i++) {
       BmpData[i] = BayerData[i];  //to get data with dithering (dithering includes auto-contrast)
     }
@@ -869,7 +869,7 @@ void pre_allocate_Bayer_tables() {
   }
 }
 
-void Dither_image(unsigned char CamData[128 * 128], unsigned char BayerData[128 * 128]) {  //dithering algorithm
+void Dither_image() {  //dithering algorithm
   char pixel, pixel_out;
   int counter = 0;
   pixel_out = 0;
@@ -918,7 +918,7 @@ void pre_allocate_image_with_pretty_borders() {
   int index = 0;
   char pixel = 0;
   char number_pixel = 0;
-  while (counter < 160 * 144) {  //yes, this is a cheap RLE decoder
+  while (counter < 160 * 144) {  //el cheapo RLE decoder
     switch (PRETTYBORDER_mode) {
       case 1:
         number_pixel = prettyborder_1[index];
@@ -956,11 +956,11 @@ void pre_allocate_image_with_pretty_borders() {
   }
 }
 
-void dump_data_to_serial(unsigned char CamData[128 * 128]) {
+void dump_data_to_serial() {  //output data directly to the serial monitor
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];  //to get data with autocontrast
-    //pixel = CamData[i]; //to get data without autocontrast
+    //pixel = CamData[i]; //to get raw data from sensor without autocontrast
     if (pixel <= 0x0F) {
       Serial.print('0');
     }
@@ -1063,6 +1063,8 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
+    x_box = doc["exposurexWindow"];
+    y_box = doc["exposureyWindow"];
     Datafile.close();
   }
 #endif
@@ -1276,12 +1278,27 @@ void display_other_informations() {
     }
   }
   if (LOCK_exposure == 1) {
-    img.drawRect(0, 16, 128, max_line, TFT_GREEN);
-    img.drawRect(x_min, y_min + 16, x_box, y_box, TFT_GREEN);
+    img.drawRect(0, display_offset, 128, max_line, TFT_GREEN);
+    img.drawLine(x_min, y_min + display_offset, x_min + line_length, y_min + display_offset, TFT_GREEN);
+    img.drawLine(x_min, y_min + display_offset, x_min, y_min + display_offset + line_length, TFT_GREEN);
+    img.drawLine(x_max, y_min + display_offset, x_max - line_length, y_min + display_offset, TFT_GREEN);
+    img.drawLine(x_max, y_min + display_offset, x_max, y_min + display_offset + line_length, TFT_GREEN);
+    img.drawLine(x_min, y_max + display_offset, x_min + line_length, y_max + display_offset, TFT_GREEN);
+    img.drawLine(x_min, y_max + display_offset, x_min, y_max + display_offset - line_length, TFT_GREEN);
+    img.drawLine(x_max, y_max + display_offset, x_max - line_length, y_max + display_offset, TFT_GREEN);
+    img.drawLine(x_max, y_max + display_offset, x_max, y_max + display_offset - line_length, TFT_GREEN);
+
     sprintf(exposure_string_ms, "Exposure: LOCKED");
   } else {
-    img.drawRect(0, 16, 128, max_line, TFT_MAGENTA);
-    img.drawRect(x_min, y_min + 16, x_box, y_box, TFT_MAGENTA);
+    img.drawRect(0, display_offset, 128, max_line, TFT_MAGENTA);
+    img.drawLine(x_min, y_min + display_offset, x_min + line_length, y_min + display_offset, TFT_MAGENTA);
+    img.drawLine(x_min, y_min + display_offset, x_min, y_min + display_offset + line_length, TFT_MAGENTA);
+    img.drawLine(x_max, y_min + display_offset, x_max - line_length, y_min + display_offset, TFT_MAGENTA);
+    img.drawLine(x_max, y_min + display_offset, x_max, y_min + display_offset + line_length, TFT_MAGENTA);
+    img.drawLine(x_min, y_max + display_offset, x_min + line_length, y_max + display_offset, TFT_MAGENTA);
+    img.drawLine(x_min, y_max + display_offset, x_min, y_max + display_offset - line_length, TFT_MAGENTA);
+    img.drawLine(x_max, y_max + display_offset, x_max - line_length, y_max + display_offset, TFT_MAGENTA);
+    img.drawLine(x_max, y_max + display_offset, x_max, y_max + display_offset - line_length, TFT_MAGENTA);
   }
   img.setTextColor(TFT_BLUE);
   img.setCursor(8, 18);

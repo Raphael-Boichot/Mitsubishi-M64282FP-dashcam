@@ -30,18 +30,27 @@ double motion_detection_threshold = 0.025;
 double difference_threshold;  //trigger threshold for motion sensor
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
-bool TIMELAPSE_mode = 0;               //0 = use s a regular camera, 1 = recorder for timelapses
-bool RAW_recording_mode = 0;           //0 = save as BMP (slow), 1 = save as raw stream (fast)
-unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
-unsigned char PRETTYBORDER_mode = 1;   //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
-bool NIGHT_mode = 0;                   //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
-bool HDR_mode = 0;                     //0 = regular capture, 1 = HDR mode
-bool GBCAMERA_mode = 0;                // 0 = single register strategy, 1 = Game Boy Camera strategy
-bool DITHER_mode = 0;                  //0 = Dithering ON, 0 = dithering OFF
-bool BORDER_mode = 0;                  //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
-bool FIXED_EXPOSURE_mode = 0;          // to activate fixed exposure delay mode
-int FIXED_delay = 2048;                //here the result is a fixed exposure perfect for full moon photography
-int FIXED_divider = 1;                 //clock divider
+bool TIMELAPSE_mode = 0;                       //0 = use s a regular camera, 1 = recorder for timelapses
+bool RAW_recording_mode = 0;                   //0 = save as BMP (slow), 1 = save as raw stream (fast)
+unsigned long TIMELAPSE_deadtime = 0;          //to introduce a deadtime for timelapses in ms, is read from config.json
+unsigned char PRETTYBORDER_mode = 1;           //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
+bool NIGHT_mode = 0;                           //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+bool HDR_mode = 0;                             //0 = regular capture, 1 = HDR mode
+bool GBCAMERA_mode = 0;                        // 0 = single register strategy, 1 = Game Boy Camera strategy
+bool DITHER_mode = 0;                          //0 = Dithering ON, 0 = dithering OFF
+bool BORDER_mode = 0;                          //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
+bool FIXED_EXPOSURE_mode = 0;                  // to activate fixed exposure delay mode
+int FIXED_delay = 2048;                        //here the result is a fixed exposure perfect for full moon photography
+int FIXED_divider = 1;                         //clock divider
+unsigned char x_box = 8 * 8;                   //x range for autoexposure (centered, like GB camera, 8 tiles)
+unsigned char y_box = 7 * 8;                   //y range for autoexposure (centered, like GB camera, 7 tiles)
+unsigned char max_line = 120;                  //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
+unsigned char x_min = (128 - x_box) / 2;       //calculate the autoexposure area limits
+unsigned char y_min = (max_line - y_box) / 2;  //calculate the autoexposure area limits
+unsigned char x_max = x_min + x_box;           //calculate the autoexposure area limits
+unsigned char y_max = y_min + y_box;           //calculate the autoexposure area limits
+unsigned char display_offset = 16;             //offset for image on the 128*160 display
+unsigned char line_length = 4;                 //exposure area cross size
 
 #define NOP __asm__ __volatile__("nop\n\t")  //// minimal possible delay
 #define BITS_PER_PIXEL 16                    // How many bits per pixel in Sprite, here RGB565 format
@@ -113,7 +122,7 @@ unsigned char camReg4[8] = { 0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b0
 //transition@ C=0x8500
 unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //high exposure time - low light
 //It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
-unsigned char GB_v_min = 125;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 125 gives better black)
+unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 gives better black)
 unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 210 gives better white)
 /////////////////////////
 
