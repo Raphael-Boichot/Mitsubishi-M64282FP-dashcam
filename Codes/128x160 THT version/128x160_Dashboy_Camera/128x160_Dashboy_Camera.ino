@@ -128,7 +128,6 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //analog stuff
-
   adc_init();  //mandatory, without it stuck the camera, it must be called first
   //adc_gpio_init(VOUT); // I have no idea why, but this command has no effect, you have to use the command below
   adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
@@ -405,22 +404,15 @@ int auto_exposure() {
     for (unsigned char x = 1; x <= 128; x++) {
       if (((y >= y_min) && (y <= y_max)) && ((x >= x_min) && (x <= x_max))) {  // we check only a centered box and not the whole image
         accumulator = accumulator + CamData[i];                                // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
-        counter++;                                                             //I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
+        counter++;                                                             // I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
       }
       i++;
     }
   }
   mean_value = accumulator / (counter);
-
-  // for (int i = 0; i < 128 * max_line; i++) {
-  //   accumulator = accumulator + CamData[i];  // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
-  // }
-  // mean_value = accumulator / (128 * max_line);
-
-
   error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
-  // Here we can use 32 bits variables for ease of programming.
+  // Here we use variables with floating points for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   double multiplier = 1;
   if (GBCAMERA_mode == 1) {
@@ -428,12 +420,12 @@ int auto_exposure() {
   }
   exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
-  if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
-  if (error < -80) new_regs = exp_regs / (2 * multiplier);
-  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
-  if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);
-  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //fine tuning
-  if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
+  if (error > 80) new_regs = exp_regs * (2 * multiplier);                          //raw tuning
+  if (error < -80) new_regs = exp_regs / (2 * multiplier);                         //raw tuning
+  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);     //intermediate tuning
+  if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);   //intermediate tuning
+  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);    //fine tuning
+  if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);  //fine tuning
 
   if (exp_regs > 0x1000) {
     least_change = 0x0F;  //least change must increase if exposure is high
@@ -448,7 +440,7 @@ int auto_exposure() {
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   unsigned char old_strategy;
-  new_regs = current_exposure * factor;
+  new_regs = current_exposure * factor;  //usefull for HDR mode only, either factor is always = 1
 
   if (GBCAMERA_mode == 1) {   //regular strategy with gain=8
     if (new_regs < 0x0010) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
