@@ -133,7 +133,7 @@ unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bit
 unsigned char camReg[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011 };  //registers
 //unsigned char camReg[8] = {0b10011111, 0b00001000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers without border enhancement
 unsigned char regular_v_min = 55;   //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 55 gives better black)
-unsigned char regular_v_max = 236;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts)
+unsigned char regular_v_max = 185;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 235 but 185 gives pure white)
 ////////////////////////
 
 //https://www.calculator.net/hex-calculator.html is your friend
