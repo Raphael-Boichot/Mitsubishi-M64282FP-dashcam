@@ -75,8 +75,18 @@ bool SDcard_READY = 0;   //reserved, for bug on SD
 bool JSON_ready = 0;     //reserved, for bug on config.txt
 bool LOCK_exposure = 0;  //reserved, for locking exposure
 bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20];
-char multiplier_string[20], error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
+char storage_file_name[20];
+char storage_file_dir[20];
+char storage_deadtime[20];
+char exposure_string[20];
+char multiplier_string[20];
+char error_string[20];
+char remaining_deadtime[20];
+char exposure_string_ms[20];
+char files_on_folder_string[20];
+char register_string[2];
+char difference_string[8];
+
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
 char rank_timelapse = 0;                                        // rank in the timelapse array
@@ -118,7 +128,6 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //analog stuff
-
   adc_init();  //mandatory, without it stuck the camera, it must be called first
   //adc_gpio_init(VOUT); // I have no idea why, but this command has no effect, you have to use the command below
   adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
@@ -129,7 +138,7 @@ void setup() {
 #endif
 
 #ifdef DEBUG_MODE  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
-  Serial.begin(2000000);
+  Serial.begin(115200);
 #endif
 
   init_sequence();                                                      //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
@@ -395,20 +404,13 @@ int auto_exposure() {
     for (unsigned char x = 1; x <= 128; x++) {
       if (((y >= y_min) && (y <= y_max)) && ((x >= x_min) && (x <= x_max))) {  // we check only a centered box and not the whole image
         accumulator = accumulator + CamData[i];                                // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
-        counter++;                                                             //I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
+        counter++;                                                             // I use a counter in order to be sure I do not forget a line of pixels in the conditions (lazy)
       }
       i++;
     }
   }
   mean_value = accumulator / (counter);
-
-  // for (int i = 0; i < 128 * max_line; i++) {
-  //   accumulator = accumulator + CamData[i];  // accumulate the mean gray level, but only from line 0 to 120 as bottom of image have artifacts
-  // }
-  // mean_value = accumulator / (128 * max_line);
-
-
-  error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
+    error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
@@ -438,7 +440,7 @@ int auto_exposure() {
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
   unsigned char old_strategy;
-  new_regs = current_exposure * factor;
+  new_regs = current_exposure * factor;  //usefull for HDR mode only, either factor is always = 1
 
   if (GBCAMERA_mode == 1) {   //regular strategy with gain=8
     if (new_regs < 0x0010) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
@@ -1320,7 +1322,12 @@ void display_other_informations() {
       sprintf(storage_deadtime, "Delay: %d ms", TIMELAPSE_deadtime);  //concatenate string for display
       img.println(storage_deadtime);
     } else {
-      img.println("No delay");
+      if (MOTION_sensor == 0) {
+        img.println("No delay");
+      }
+      if (MOTION_sensor == 1) {
+        img.println("TIMELAPSE to exit");
+      }
     }
   }
   if (recording == 1) {
