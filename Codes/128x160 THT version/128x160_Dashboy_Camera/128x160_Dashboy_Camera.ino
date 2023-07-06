@@ -410,22 +410,22 @@ int auto_exposure() {
     }
   }
   mean_value = accumulator / (counter);
-  error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
+    error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
-  // Here we use variables with floating points for ease of programming.
+  // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
   double multiplier = 1;
   if (GBCAMERA_mode == 1) {
-    multiplier = 1.05;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
+    multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
   }
   exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
-  if (error > 80) new_regs = exp_regs * (2 * multiplier);                          //raw tuning
-  if (error < -80) new_regs = exp_regs / (2 * multiplier);                         //raw tuning
-  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);     //intermediate tuning
-  if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);   //intermediate tuning
-  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);    //fine tuning
-  if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);  //fine tuning
+  if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
+  if (error < -80) new_regs = exp_regs / (2 * multiplier);
+  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
+  if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);
+  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //fine tuning
+  if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
 
   if (exp_regs > 0x1000) {
     least_change = 0x0F;  //least change must increase if exposure is high
