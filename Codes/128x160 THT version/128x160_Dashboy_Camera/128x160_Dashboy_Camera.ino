@@ -416,7 +416,7 @@ int auto_exposure() {
   // the bigger the error is, the bigger the correction on exposure is.
   double multiplier = 1;
   if (GBCAMERA_mode == 1) {
-    multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
+    multiplier = 1.05;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
   }
   exp_regs = camReg[2] * 256 + camReg[3];  // I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
