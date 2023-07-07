@@ -72,7 +72,7 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 
 ## Required parts
 
-- [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/128x160%20THT%20version/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
+- [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Codes/128x160%20THT%20version/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor, which is cool.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
