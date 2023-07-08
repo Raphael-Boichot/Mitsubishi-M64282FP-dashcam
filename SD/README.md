@@ -28,6 +28,8 @@ User can keep the current default values without modifying anything. Advanced us
 - **fixedExposure:** 0 = auto-exposure, 1 = fixed exposure, for astrophotography for example;
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
 - **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
+- **exposurexWindow:** exposure box width in pixels, centered (max is 128, whole image);
+- **exposureyWindow:** exposure box heigth in pixels, centered (max is 120, whole image);
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
 
