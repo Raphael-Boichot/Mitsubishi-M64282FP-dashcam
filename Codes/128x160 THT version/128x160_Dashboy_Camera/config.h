@@ -124,7 +124,7 @@ unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b0
 //It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
 unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 gives better black)
 unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 210 gives better white)
-char pixel_shift = 10;         // correction for dithering algorithm
+char pixel_shift = 8;          // correction for dithering algorithm, more than minus 8 gives bland images
 /////////////////////////
 
 //DashBoy Camera regular strategy: uses the whole voltage scale
