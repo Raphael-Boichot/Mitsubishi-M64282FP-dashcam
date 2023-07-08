@@ -86,7 +86,7 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
-The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not recycled and non generic at all in terms of size in case of reuse. The device does not allow to recharge the batteries as NiMH requires very specific charging strategy.
+The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not well recycled and non generic at all in terms of size in case of reuse. **The device does not allow to recharge the batteries** as NiMH requires very specific charging strategy.
 
 ## PCB and connection with the sensor
 
