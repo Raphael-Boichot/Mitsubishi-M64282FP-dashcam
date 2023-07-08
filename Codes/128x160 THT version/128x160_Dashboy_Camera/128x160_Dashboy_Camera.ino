@@ -133,7 +133,7 @@ void setup() {
   adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
 
 #ifdef USE_OVERCLOCKING
-  cycles = 15;                      //about twice as fast as the regular 133 MHz
+  cycles = 16;                      //about twice as fast as the regular 133 MHz
   set_sys_clock_khz(250000, true);  //about twice as fast as the regular 133 MHz
 #endif
 
@@ -394,7 +394,7 @@ void take_a_picture() {
 
 int auto_exposure() {
   double exp_regs, new_regs, error, mean_value;
-  unsigned int setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
+  unsigned char setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
   unsigned char least_change = 1;
   unsigned int counter = 0;
@@ -410,7 +410,7 @@ int auto_exposure() {
     }
   }
   mean_value = accumulator / (counter);
-    error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
+  error = setpoint - mean_value;  // so in case of deviation, registers 2 and 3 are corrected
   // this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   // Here we can use 32 bits variables for ease of programming.
   // the bigger the error is, the bigger the correction on exposure is.
@@ -882,7 +882,7 @@ void Dither_image() {  //dithering algorithm
         pixel = lookup_serial[CamData[counter]];  //autocontrast is applied here, may range between 0 and 255
       }
       if (GBCAMERA_mode == 1) {
-        pixel = lookup_pico_to_GBD[CamData[counter]];  //raw value, in this mode the dithering does the autocontrast
+        pixel = lookup_pico_to_GBD[CamData[counter]]-pixel_shift;  //raw value, in this mode the dithering does the autocontrast
       }
       pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
@@ -1326,7 +1326,13 @@ void display_other_informations() {
         img.println("No delay");
       }
       if (MOTION_sensor == 1) {
-        img.println("TIMELAPSE to exit");
+        if ((millis() - currentTime_MOTION) > delay_MOTION){
+            img.println("TIMELAPSE to exit");
+          }
+        else {
+          img.setTextColor(TFT_RED);
+          img.println("Sensor pre-delay");
+        }
       }
     }
   }
