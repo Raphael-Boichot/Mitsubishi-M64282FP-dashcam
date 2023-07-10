@@ -437,8 +437,7 @@ double auto_exposure() {
 
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
-  sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
-  if (new_regs < 0) {                                                      // just over precautious but who knows
+  if (new_regs < 0) {                                                      //maybe over precautious but who knows...
     new_regs = 0;
   }
   exposure_error = error;  //just to pass the variable tp push_exposure
@@ -1269,6 +1268,12 @@ void display_other_informations() {
     sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp);  //concatenate string for display;
   }
 
+  if (exposure_error >= 0) {
+    sprintf(error_string, "Error: +%d", int(exposure_error));
+  } else {
+    sprintf(error_string, "Error: %d", int(exposure_error));
+  }
+
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
@@ -1363,7 +1368,11 @@ void display_other_informations() {
   }
 
   if (GBCAMERA_mode == 1) {
-    img.setTextColor(TFT_RED);
+    if (overshooting == 1) {
+      img.setTextColor(TFT_RED);
+    } else {
+      img.setTextColor(TFT_ORANGE);
+    }
     img.setCursor(120, 152);
     if (dithering_strategy[register_strategy] == 1) {
       img.println("H");
@@ -1372,11 +1381,6 @@ void display_other_informations() {
     }
     img.setCursor(114, 152);
     img.println(register_strategy, DEC);
-    if (overshooting == 1) {
-      img.setTextColor(TFT_ORANGE);
-      img.setCursor(108, 152);
-      img.println("o");
-    }
   }
 #endif
 }
