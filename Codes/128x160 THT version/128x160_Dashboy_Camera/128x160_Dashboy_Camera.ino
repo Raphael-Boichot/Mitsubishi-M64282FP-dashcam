@@ -392,7 +392,7 @@ void take_a_picture() {
   camReset();         // probably not usefull but who knows...
 }
 
-int auto_exposure() {
+double auto_exposure() {
   double exp_regs, new_regs, error, mean_value;
   unsigned char setpoint = (v_max + v_min) >> 1;  // set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
@@ -422,41 +422,47 @@ int auto_exposure() {
   new_regs = exp_regs;
   if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
   if (error < -80) new_regs = exp_regs / (2 * multiplier);
-  if ((error <= 80) & (error >= 30)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
-  if ((error >= -80) & (error <= -30)) new_regs = exp_regs / (1.3 * multiplier);
-  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //fine tuning
+  if ((error <= 80) & (error >= 50)) new_regs = exp_regs * (1.3 * multiplier);  // yes floating point, I know...
+  if ((error >= -80) & (error <= -50)) new_regs = exp_regs / (1.3 * multiplier);
+  if ((error <= 50) & (error >= 30)) new_regs = exp_regs * (1.1 * multiplier);  //fine tuning
+  if ((error >= -50) & (error <= -30)) new_regs = exp_regs / (1.1 * multiplier);
+  if ((error <= 30) & (error >= 10)) new_regs = exp_regs * (1.03 * multiplier);  //very fine tuning
   if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
 
-  if (exp_regs > 0x1000) {
+  if (exp_regs > 0x00FF) {
     least_change = 0x0F;  //least change must increase if exposure is high
+  }
+  if (exp_regs > 0x0FFF) {
+    least_change = 0xFF;  //least change must increase if exposure is high
   }
 
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
-  return int(new_regs);
+  return new_regs;
 }
 
 void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
   double new_regs;
+  unsigned short int storage_regs;
   unsigned char old_strategy;
   new_regs = current_exposure * factor;  //usefull for HDR mode only, either factor is always = 1
-
-  if (GBCAMERA_mode == 1) {   //regular strategy with gain=8
-    if (new_regs < 0x0010) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-      new_regs = 0x0010;      //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+  storage_regs = int(new_regs);          //enforce register type
+  if (GBCAMERA_mode == 1) {              //regular strategy with gain=8
+    if (storage_regs < 0x0010) {         //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+      storage_regs = 0x0010;             //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
     }
-  } else {                    //Game Boy Camera strategy with variable gain
-    if (new_regs < 0x0030) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-      new_regs = 0x0030;      //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+  } else {                        //Game Boy Camera strategy with variable gain
+    if (storage_regs < 0x0030) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+      storage_regs = 0x0030;      //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
     }
   }
 
-  if (new_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
+  if (storage_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
       clock_divider = clock_divider + 1;
     }
-    new_regs = 0xFFFF;
+    storage_regs = 0xFFFF;
   }
 
   if (NIGHT_mode == 1) {
@@ -465,24 +471,24 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     }
   }
 
-  camReg[2] = int(new_regs / 256);              //Janky, I know...
-  camReg[3] = int(new_regs - camReg[2] * 256);  //Janky, I know...
+  camReg[2] = int(storage_regs / 256);              //Janky, I know...
+  camReg[3] = int(storage_regs - camReg[2] * 256);  //Janky, I know...
 
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy
     old_strategy = register_strategy;
-    if (new_regs < 0x0030) {
+    if (storage_regs < 0x0030) {
       register_strategy = 1;
     }
-    if ((new_regs >= 0x0030) & (new_regs < 0x0D80)) {
+    if ((storage_regs >= 0x0030) & (storage_regs < 0x0D80)) {
       register_strategy = 2;
     }
-    if ((new_regs >= 0x0D80) & (new_regs < 0x3500)) {
+    if ((storage_regs >= 0x0D80) & (storage_regs < 0x3500)) {
       register_strategy = 3;
     }
-    if ((new_regs >= 0x3500) & (new_regs < 0x8500)) {
+    if ((storage_regs >= 0x3500) & (storage_regs < 0x8500)) {
       register_strategy = 4;
     }
-    if ((new_regs > 0x8500)) {
+    if ((storage_regs > 0x8500)) {
       register_strategy = 5;
     }
 
@@ -498,26 +504,41 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
       case 1:
         camReg[0] = camReg1[0];
         camReg[1] = camReg1[1];
+        camReg[4] = camReg1[4];
+        camReg[5] = camReg1[5];
+        camReg[6] = camReg1[6];
         camReg[7] = camReg1[7];
         break;
       case 2:
         camReg[0] = camReg2[0];
         camReg[1] = camReg2[1];
+        camReg[4] = camReg2[4];
+        camReg[5] = camReg2[5];
+        camReg[6] = camReg2[6];
         camReg[7] = camReg2[7];
         break;
       case 3:
         camReg[0] = camReg3[0];
         camReg[1] = camReg3[1];
+        camReg[4] = camReg3[4];
+        camReg[5] = camReg3[5];
+        camReg[6] = camReg3[6];
         camReg[7] = camReg3[7];
         break;
       case 4:
         camReg[0] = camReg4[0];
         camReg[1] = camReg4[1];
+        camReg[4] = camReg4[4];
+        camReg[5] = camReg4[5];
+        camReg[6] = camReg4[6];
         camReg[7] = camReg4[7];
         break;
       case 5:
         camReg[0] = camReg5[0];
         camReg[1] = camReg5[1];
+        camReg[4] = camReg5[4];
+        camReg[5] = camReg5[5];
+        camReg[6] = camReg5[6];
         camReg[7] = camReg5[7];
         break;
       default:
@@ -882,7 +903,7 @@ void Dither_image() {  //dithering algorithm
         pixel = lookup_serial[CamData[counter]];  //autocontrast is applied here, may range between 0 and 255
       }
       if (GBCAMERA_mode == 1) {
-        pixel = lookup_pico_to_GBD[CamData[counter]]-pixel_shift;  //raw value, in this mode the dithering does the autocontrast
+        pixel = lookup_pico_to_GBD[CamData[counter]] - pixel_shift;  //raw value, in this mode the dithering does the autocontrast
       }
       pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
@@ -1306,8 +1327,8 @@ void display_other_informations() {
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);  //in ms
-  //  img.setCursor(8, 24);
-  //  img.println(error_string);
+  img.setCursor(8, 24);
+  img.println(error_string);
   img.setCursor(64, 126);
   img.println(exposure_string);
   img.setCursor(8, 126);
@@ -1326,10 +1347,9 @@ void display_other_informations() {
         img.println("No delay");
       }
       if (MOTION_sensor == 1) {
-        if ((millis() - currentTime_MOTION) > delay_MOTION){
-            img.println("TIMELAPSE to exit");
-          }
-        else {
+        if ((millis() - currentTime_MOTION) > delay_MOTION) {
+          img.println("TIMELAPSE to exit");
+        } else {
           img.setTextColor(TFT_RED);
           img.println("Sensor pre-delay");
         }
