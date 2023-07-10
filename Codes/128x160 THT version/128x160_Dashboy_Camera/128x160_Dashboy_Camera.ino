@@ -442,7 +442,7 @@ double auto_exposure() {
   return new_regs;
 }
 
-void push_exposure(unsigned char camReg[8], unsigned int current_exposure, double factor) {
+void push_exposure(unsigned char camReg[8], double current_exposure, double factor) {
   double new_regs;
   unsigned short int storage_regs;
   unsigned char old_strategy;
@@ -471,8 +471,8 @@ void push_exposure(unsigned char camReg[8], unsigned int current_exposure, doubl
     }
   }
 
-  camReg[2] = int(storage_regs / 256);              //Janky, I know...
-  camReg[3] = int(storage_regs - camReg[2] * 256);  //Janky, I know...
+  camReg[2] = storage_regs >> 8;
+  camReg[3] = storage_regs;  //Janky, I know...
 
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy
     old_strategy = register_strategy;
