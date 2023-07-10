@@ -439,6 +439,9 @@ double auto_exposure() {
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
+  if (new_regs < 0) {
+    new_regs = 0;
+  }
   return new_regs;
 }
 
@@ -446,6 +449,7 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   double new_regs;
   unsigned short int storage_regs;
   unsigned char old_strategy;
+  unsigned char temp_camReg[8];
   new_regs = current_exposure * factor;  //usefull for HDR mode only, either factor is always = 1
   storage_regs = int(new_regs);          //enforce register type
   if (GBCAMERA_mode == 1) {              //regular strategy with gain=8
@@ -458,7 +462,7 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
     }
   }
 
-  if (storage_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
+  if (new_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
       clock_divider = clock_divider + 1;
     }
@@ -470,9 +474,6 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
       clock_divider = 1;  //Normal situation is to be always 1, so that clock is about 1MHz
     }
   }
-
-  camReg[2] = storage_regs >> 8;
-  camReg[3] = storage_regs;  //Janky, I know...
 
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy
     old_strategy = register_strategy;
@@ -502,48 +503,32 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
 
     switch (register_strategy) {
       case 1:
-        camReg[0] = camReg1[0];
-        camReg[1] = camReg1[1];
-        camReg[4] = camReg1[4];
-        camReg[5] = camReg1[5];
-        camReg[6] = camReg1[6];
-        camReg[7] = camReg1[7];
+        memcpy(temp_camReg, camReg1, 8);
         break;
       case 2:
-        camReg[0] = camReg2[0];
-        camReg[1] = camReg2[1];
-        camReg[4] = camReg2[4];
-        camReg[5] = camReg2[5];
-        camReg[6] = camReg2[6];
-        camReg[7] = camReg2[7];
+        memcpy(temp_camReg, camReg2, 8);
         break;
       case 3:
-        camReg[0] = camReg3[0];
-        camReg[1] = camReg3[1];
-        camReg[4] = camReg3[4];
-        camReg[5] = camReg3[5];
-        camReg[6] = camReg3[6];
-        camReg[7] = camReg3[7];
+        memcpy(temp_camReg, camReg3, 8);
         break;
       case 4:
-        camReg[0] = camReg4[0];
-        camReg[1] = camReg4[1];
-        camReg[4] = camReg4[4];
-        camReg[5] = camReg4[5];
-        camReg[6] = camReg4[6];
-        camReg[7] = camReg4[7];
+        memcpy(temp_camReg, camReg4, 8);
         break;
       case 5:
-        camReg[0] = camReg5[0];
-        camReg[1] = camReg5[1];
-        camReg[4] = camReg5[4];
-        camReg[5] = camReg5[5];
-        camReg[6] = camReg5[6];
-        camReg[7] = camReg5[7];
+        memcpy(temp_camReg, camReg5, 8);
         break;
       default:
         {};  //do nothing
     }
+
+    camReg[0] = temp_camReg[0];
+    camReg[1] = temp_camReg[1];
+    camReg[2] = storage_regs >> 8;
+    camReg[3] = storage_regs;  //Janky, I know...
+    camReg[4] = temp_camReg[4];
+    camReg[5] = temp_camReg[5];
+    camReg[6] = temp_camReg[6];
+    camReg[7] = temp_camReg[7];
 
     if ((BORDER_mode == 1) && (DITHER_mode == 0)) {  //enforce 2D border enhancement only in non dither mode
       camReg[1] = camReg[1] | 0b11100000;
