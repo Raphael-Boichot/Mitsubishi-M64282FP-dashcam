@@ -470,7 +470,7 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   }
 
   if (NIGHT_mode == 1) {
-    if (current_exposure < 0x1000) {
+    if (storage_regs < 0x1000) {
       clock_divider = 1;  //Normal situation is to be always 1, so that clock is about 1MHz
     }
   }
@@ -520,19 +520,24 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
       default:
         {};  //do nothing
     }
+  } else {
+    memcpy(temp_camReg, camReg, 8);// regular single strategy mode
+  }
 
-    camReg[0] = temp_camReg[0];
-    camReg[1] = temp_camReg[1];
-    camReg[2] = storage_regs >> 8;
-    camReg[3] = storage_regs;  //Janky, I know...
-    camReg[4] = temp_camReg[4];
-    camReg[5] = temp_camReg[5];
-    camReg[6] = temp_camReg[6];
-    camReg[7] = temp_camReg[7];
+  camReg[0] = temp_camReg[0];
+  camReg[1] = temp_camReg[1];
+  camReg[2] = storage_regs >> 8;
+  camReg[3] = storage_regs;  //forcing a char into an int suppresses MSBs up to 8
+  camReg[4] = temp_camReg[4];
+  camReg[5] = temp_camReg[5];
+  camReg[6] = temp_camReg[6];
+  camReg[7] = temp_camReg[7];
 
-    if ((BORDER_mode == 1) && (DITHER_mode == 0)) {  //enforce 2D border enhancement only in non dither mode
-      camReg[1] = camReg[1] | 0b11100000;
-    }
+  if ((BORDER_mode == 1) && (DITHER_mode == 0)) {  //enforce 2D border enhancement only in non dither mode
+    camReg[1] = camReg[1] | 0b11100000;
+  }
+  if ((SMOOTH_mode == 1) && (DITHER_mode == 0)) {  //enforce 2D border enhancement only in non dither mode
+    camReg[1] = camReg[1] & 0b00011111;
   }
 }
 
@@ -1062,6 +1067,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     GB_v_min = doc["lowvoltageThreshold"];
     GB_v_max = doc["highvoltageThreshold"];
     BORDER_mode = doc["enforce2DEnhancement"];
+    SMOOTH_mode = doc["cancel2DEnhancement"];
     for (int i = 0; i < 48; i++) {
       Dithering_patterns_low[i] = doc["lowditherMatrix"][i];
     }
