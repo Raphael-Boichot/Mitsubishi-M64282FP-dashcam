@@ -27,7 +27,11 @@ double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of e
 double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colors as they will appear in the bmp file and display after dithering
 double motion_detection_threshold = 0.025;
-double difference_threshold;  //trigger threshold for motion sensor
+double difference_threshold;               //trigger threshold for motion sensor
+unsigned char jittering_threshold = 13;    //error threshold to keep/change registers in Game Boy Camera Mode
+unsigned int cycles = 7;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
+unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;                       //0 = use s a regular camera, 1 = recorder for timelapses
@@ -38,8 +42,9 @@ bool NIGHT_mode = 0;                           //0 = exp registers cap to 0xFFFF
 bool HDR_mode = 0;                             //0 = regular capture, 1 = HDR mode
 bool GBCAMERA_mode = 0;                        // 0 = single register strategy, 1 = Game Boy Camera strategy
 bool DITHER_mode = 0;                          //0 = Dithering ON, 0 = dithering OFF
-bool BORDER_mode = 0;                          //1 = border enhancement ON, 0 = border enhancement OFF. On by default because image is very blurry without
-bool FIXED_EXPOSURE_mode = 0;                  // to activate fixed exposure delay mode
+bool BORDER_mode = 0;                          //1 = enforce border enhancement whatever GBCAMERA_mode value
+bool SMOOTH_mode = 0;                          //1 = cancel border enhancement whatever GBCAMERA_mode value
+bool FIXED_EXPOSURE_mode = 0;                  //to activate fixed exposure delay mode
 int FIXED_delay = 2048;                        //here the result is a fixed exposure perfect for full moon photography
 int FIXED_divider = 1;                         //clock divider
 unsigned char x_box = 8 * 8;                   //x range for autoexposure (centered, like GB camera, 8 tiles)
@@ -52,8 +57,8 @@ unsigned char y_max = y_min + y_box;           //calculate the autoexposure area
 unsigned char display_offset = 16;             //offset for image on the 128*160 display
 unsigned char line_length = 4;                 //exposure area cross size
 
-#define NOP __asm__ __volatile__("nop\n\t")  //// minimal possible delay
-#define BITS_PER_PIXEL 16                    // How many bits per pixel in Sprite, here RGB565 format
+#define NOP __asm__ __volatile__("nop\n\t")  //minimal possible delay
+#define BITS_PER_PIXEL 16                    //How many bits per pixel in Sprite, here RGB565 format
 
 // the order of pins has no importance except that VOUT must be on some ADC
 #define VOUT 26  //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
@@ -88,8 +93,8 @@ unsigned char line_length = 4;                 //exposure area cross size
 //TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
 // pins are configured into the Bodmer TFT e_SPI library, DO NOT CHANGE HERE, see read.me for details
 // Display LED       to pi pico pin 3V3
-// Display TFT_MISO  to pi pico pin GPIO99  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO0
-// Display TOUCH_CS  to pi pico pin GPIO99  // RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO1
+// Display TFT_MISO  to pi pico pin GPIO99  //RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO0
+// Display TOUCH_CS  to pi pico pin GPIO99  //RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO1
 // Display SCK       to pi pico pin GPIO2
 // Display SDA       to pi pico pin GPIO3
 // Display CS        to pi pico pin GPIO4 (can use another pin if desired)
@@ -124,16 +129,16 @@ unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b0
 //It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
 unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 gives better black)
 unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 210 gives better white)
-char pixel_shift = 8;          // correction for dithering algorithm, more than minus 8 gives bland images
+char pixel_shift = 8;          //correction for dithering algorithm, more than minus 8 gives bland images
 /////////////////////////
 
 //DashBoy Camera regular strategy: uses the whole voltage scale
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
 //With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
 //////////////////////////{0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
-unsigned char camReg[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011 };  //registers
+unsigned char camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011 };  //registers
 //unsigned char camReg[8] = {0b10011111, 0b00001000, 0b00000001, 0b00000000, 0b00000001, 0b000000000, 0b00000001, 0b00000011}; //registers without border enhancement
-unsigned char regular_v_min = 55;   //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 55 gives better black)
+unsigned char regular_v_min = 75;   //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
 unsigned char regular_v_max = 180;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 235 but 180 gives pure white)
 ////////////////////////
 
