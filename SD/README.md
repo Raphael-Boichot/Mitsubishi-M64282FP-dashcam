@@ -17,7 +17,8 @@ User can keep the current default values without modifying anything. Advanced us
 - **prettyborderMode:** >1 = pretty borders, 0 = image without border. Quick reboot during "NOW BOOTING... message rolls over borders;
 - **nightMode:** 1 = allows to go decrease the sensor clock to over expose image at night, 0 = constant sensor clock;
 - **motiondetectionThreshold:** value for the motion detection threshold. 0 = detect everything, 1 = detect nothing. 0.025 is a good starting value, the lower, the lore sensitive to motion;
-- **enforce2DEnhancement:** 1 = 2D enhancement always activated, 0 = set by registers - Valid only in Game Boy Camera strategy, dithering off;
+- **enforce2DEnhancement:** 1 = 2D enhancement always activated, 0 = set by registers - Valid only with dithering off;
+- **cancel2DEnhancement:** 1 = 2D enhancement always deactivated, 0 = set by registers - Valid only with dithering off;
 - **hdrExposures:** list of 8 exposures in HDR mode, in multiplier of the last best knowbn exposure. It is recommended to go from -1EV to +1EV;
 - **ditherMatrix:** dithering matrix used in single register strategy, derived from a 4x4 bayer matrix;
 - **gameboycameraMode:** 0 = single register strategy, 1 = Game Boy Camera strategy with variable registers;
