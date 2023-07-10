@@ -52,23 +52,20 @@ unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering fo
 unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
 unsigned char BayerData[128 * 128];         //dithered image data
 unsigned char camReg[8];                    //empty register array
-unsigned int cycles = 7;                    //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long currentTime_MOTION = 0;
-unsigned long delay_MOTION = 5000;  //time to place the camera before motion detection starts
 unsigned long currentTime_exp = 0;
 unsigned long previousTime_exp = 0;
 unsigned long Next_ID, Next_dir;  //for directories and filenames
 unsigned long file_number;
 unsigned int current_exposure, new_exposure;
 unsigned int files_on_folder = 0;
-unsigned int max_files_per_folder = 1024;
 unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
-unsigned char Balthasar, Casper, Melchior;  //variables for Majikku shisutemu
 double difference = 0;
+double exposure_error = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;   //reserved, for bug on sensor
@@ -76,6 +73,7 @@ bool SDcard_READY = 0;   //reserved, for bug on SD
 bool JSON_ready = 0;     //reserved, for bug on config.txt
 bool LOCK_exposure = 0;  //reserved, for locking exposure
 bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
+bool overshooting = 0;   //reserved, for anti-jittering system
 char storage_file_name[20];
 char storage_file_dir[20];
 char storage_deadtime[20];
@@ -440,9 +438,10 @@ double auto_exposure() {
   if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
   if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
   sprintf(error_string, "Error: %d", int(error));                          //concatenate string for display, if necessary;
-  if (new_regs < 0) {
+  if (new_regs < 0) {                                                      // just over precautious but who knows
     new_regs = 0;
   }
+  exposure_error = error;  //just to pass the variable tp push_exposure
   return new_regs;
 }
 
@@ -494,11 +493,12 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
       register_strategy = 5;
     }
 
-    Melchior = Casper;  //Majikku shisutemu will vote soon to avoid exposure jittering
-    Casper = Balthasar;
-    Balthasar = register_strategy;
-    if ((Melchior == Balthasar) & !(Casper == Balthasar))  //Majikku shisutemu disagrees, command rejected !
+    overshooting = 0;
+    if (abs(exposure_error) < jittering_threshold)  //Avoid jittering
     {
+      if (!(old_strategy == register_strategy)) {
+        overshooting = 1;
+      }
       register_strategy = old_strategy;  //keep the previous registers
     }
 
@@ -1372,6 +1372,11 @@ void display_other_informations() {
     }
     img.setCursor(114, 152);
     img.println(register_strategy, DEC);
+    if (overshooting == 1) {
+      img.setTextColor(TFT_ORANGE);
+      img.setCursor(108, 152);
+      img.println("o");
+    }
   }
 #endif
 }

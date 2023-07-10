@@ -27,7 +27,11 @@ double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of e
 double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colors as they will appear in the bmp file and display after dithering
 double motion_detection_threshold = 0.025;
-double difference_threshold;  //trigger threshold for motion sensor
+double difference_threshold;               //trigger threshold for motion sensor
+unsigned char jittering_threshold = 13;    //error threshold to keep/change registers in Game Boy Camera Mode
+unsigned int cycles = 7;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
+unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;                       //0 = use s a regular camera, 1 = recorder for timelapses
