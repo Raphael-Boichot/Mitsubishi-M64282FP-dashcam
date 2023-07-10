@@ -493,7 +493,7 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
     }
 
     overshooting = 0;
-    if (abs(exposure_error) < jittering_threshold)  //Avoid jittering
+    if ((abs(exposure_error) < jittering_threshold) & (exposure_error > 0))  //Avoid register jittering
     {
       if (!(old_strategy == register_strategy)) {
         overshooting = 1;
@@ -1518,7 +1518,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
   } else {
     img.setTextColor(TFT_GREEN);
     img.setCursor(0, 32);
-    img.println("NOW BOOTING...");
+    img.println("Preset exposure...");
   }
   img.pushSprite(x_ori, y_ori);  //dump image to display
 #endif
