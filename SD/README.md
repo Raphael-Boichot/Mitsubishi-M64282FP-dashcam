@@ -25,12 +25,15 @@ User can keep the current default values without modifying anything. Advanced us
 - **lowvoltageThreshold:** voltage threshold for black level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
 - **highvoltageThreshold:** voltage threshold for white level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
 - **lowditherMatrix:** dithering matrix used in Game Boy Camera strategy - low ligth or high exposure times, derived from a 4x4 bayer matrix; 
-- **highditherMatrix:** dithering matrix used in Game Boy Camera strategy - high ligth or low exposure times, derived from a 4x4 bayer matrix; 
+- **highditherMatrix:** dithering matrix used in Game Boy Camera strategy - high ligth or low exposure times, derived from a 4x4 bayer matrix;
 - **fixedExposure:** 0 = auto-exposure, 1 = fixed exposure, for astrophotography for example;
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
 - **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
+- **lookupTableRGB565:** Colorscale for display, may increase comfort and contrast, go to [this fancy site](https://herrzatacke.github.io/gradient-values/) to generate your own (just copy paste table of values to the json);
 - **exposurexWindow:** exposure box width in pixels, centered (max is 128, whole image);
 - **exposureyWindow:** exposure box heigth in pixels, centered (max is 120, whole image);
+- **focusPeaking:** 0 = normal mode, 1 = [focus peaking](https://en.wikipedia.org/wiki/Focus_peaking) activated;
+- **focuspeakingThreshold:** threshold for focus peaking. The lower the value, the more pixels indicates good focusing (values 0..255).
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
 
