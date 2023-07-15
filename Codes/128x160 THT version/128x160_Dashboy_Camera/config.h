@@ -45,7 +45,7 @@ bool GBCAMERA_mode = 0;                        // 0 = single register strategy, 
 bool DITHER_mode = 0;                          //0 = Dithering ON, 0 = dithering OFF
 bool BORDER_mode = 0;                          //1 = enforce border enhancement whatever GBCAMERA_mode value
 bool SMOOTH_mode = 0;                          //1 = cancel border enhancement whatever GBCAMERA_mode value
-bool FOCUS_mode = 1;                           //1 = Focus peaking mode overlayed on image
+bool FOCUS_mode = 0;                           //1 = Focus peaking mode overlayed on image
 unsigned char FOCUS_threshold = 100;           //0..255, self explanatory
 bool FIXED_EXPOSURE_mode = 0;                  //to activate fixed exposure delay mode
 int FIXED_delay = 2048;                        //here the result is a fixed exposure perfect for full moon photography

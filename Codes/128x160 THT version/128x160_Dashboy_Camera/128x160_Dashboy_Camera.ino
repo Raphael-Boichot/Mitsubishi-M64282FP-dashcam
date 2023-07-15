@@ -298,9 +298,9 @@ void loop() {
         img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);  //lookup_serial is autocontrast
       }
       if (FOCUS_mode == 1) {
-          if (EdgeData[x + y * 128] > FOCUS_threshold) {
-            img.drawPixel(x, y + display_offset, 0xF800);  //lookup_serial is autocontrast
-          }
+        if (EdgeData[x + y * 128] > FOCUS_threshold) {
+          img.drawPixel(x, y + display_offset, 0xF800);  //lookup_serial is autocontrast
+        }
         //img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[EdgeData[x + y * 128]]]);  //lookup_serial is autocontrast
       }
     }
@@ -1096,11 +1096,13 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
-    x_box = doc["exposurexWindow"];
-    y_box = doc["exposureyWindow"];
     for (int i = 0; i < 256; i++) {
       lookup_TFT_RGB565[i] = doc["lookupTableRGB565"][i];
     }
+    x_box = doc["exposurexWindow"];
+    y_box = doc["exposureyWindow"];
+    FOCUS_mode = doc["focusPeaking"];
+    FOCUS_threshold = doc["focuspeakingThreshold"];
     Datafile.close();
   }
 #endif
