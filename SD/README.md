@@ -20,7 +20,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **enforce2DEnhancement:** 1 = 2D enhancement always activated, 0 = set by registers - Valid only with dithering off;
 - **cancel2DEnhancement:** 1 = 2D enhancement always deactivated, 0 = set by registers - Valid only with dithering off;
 - **hdrExposures:** list of 8 exposures in HDR mode, in multiplier of the last best knowbn exposure. It is recommended to go from -1EV to +1EV;
-- **ditherMatrix:** dithering matrix used in single register strategy, derived from a 4x4 bayer matrix;
+- **ditherMatrix:** dithering matrix used in single register strategy, derived from a 4x4 bayer matrix. Create your own by going to [this fancy site](https://herrzatacke.github.io/dither-pattern-gen/);
 - **gameboycameraMode:** 0 = single register strategy, 1 = Game Boy Camera strategy with variable registers;
 - **lowvoltageThreshold:** voltage threshold for black level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
 - **highvoltageThreshold:** voltage threshold for white level in non dithered Game Boy Camera strategy (0=0.0 Volts, 255 = 3.3 volts);
@@ -29,7 +29,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **fixedExposure:** 0 = auto-exposure, 1 = fixed exposure, for astrophotography for example;
 - **fixedDelay:** max is 65535 (about 1 second), min is 48 (about 0.768 ms);
 - **fixedDivider:** clock divider, the more, the longer the exposure. For example 2 double the exposure time;
-- **lookupTableRGB565:** Colorscale for display, may increase comfort and contrast, go to [this fancy site](https://herrzatacke.github.io/gradient-values/) to generate your own (just copy paste table of values to the json);
+- **lookupTableRGB565:** Colorscale for display, may increase comfort and contrast, go to [this other fancy site](https://herrzatacke.github.io/gradient-values/) to generate your own (just copy paste table of values to the json);
 - **exposurexWindow:** exposure box width in pixels, centered (max is 128, whole image);
 - **exposureyWindow:** exposure box heigth in pixels, centered (max is 120, whole image);
 - **focusPeaking:** 0 = normal mode, 1 = [focus peaking](https://en.wikipedia.org/wiki/Focus_peaking) activated;
