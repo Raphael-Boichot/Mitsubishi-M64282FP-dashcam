@@ -20,5 +20,5 @@
 "exposurexWindow":64,
 "exposureyWindow":56,
 "focusPeaking":0,
-"focuspeakingThreshold":128
+"focuspeakingThreshold":48
 }
