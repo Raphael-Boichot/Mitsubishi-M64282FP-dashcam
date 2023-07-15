@@ -44,6 +44,7 @@ unsigned char lookup_serial[256];           //autocontrast table generated in se
 unsigned char lookup_pico_to_GBD[256];      //convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
 unsigned char CamData[128 * 128];           //sensor data in 8 bits per pixel
 unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel from preceding loop for motion detection
+unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
 unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
 unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
@@ -52,6 +53,7 @@ unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering fo
 unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
 unsigned char BayerData[128 * 128];         //dithered image data
 unsigned char camReg[8];                    //empty register array
+unsigned char camReg_storage[8];            //empty register array
 unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -200,6 +202,17 @@ void setup() {
 
 void loop() {
   currentTime = millis();
+
+  if (FOCUS_mode == 1) {
+    memcpy(camReg_storage, camReg, 8);     //store the current registers
+    memcpy(camReg, edge_extract, 8);       //inject the edge extraction registers
+    camReg[2] = camReg_storage[2];         //get C2
+    camReg[3] = camReg_storage[3];         //get C3
+    take_a_picture();                      //data in memory for the moment, one frame
+    memcpy(EdgeData, CamData, 128 * 120);  //restore the current registers
+    memcpy(camReg, camReg_storage, 8);     //restore the current registers
+  }
+
   take_a_picture();  //data in memory for the moment, one frame
   image_TOKEN = 0;   //reset any attempt to take more than one picture without pushing a button or observe a difference
   detect_a_motion();
@@ -283,6 +296,12 @@ void loop() {
         img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
       } else {
         img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);  //lookup_serial is autocontrast
+      }
+      if (FOCUS_mode == 1) {
+        if (EdgeData[x + y * 128] > FOCUS_threshold) {
+          img.drawPixel(x, y + display_offset, 0xF800);  //lookup_serial is autocontrast
+        }
+        //img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[EdgeData[x + y * 128]]]);  //lookup_serial is autocontrast
       }
     }
   }
@@ -1047,7 +1066,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
   if (SD.exists(path)) {
     JSON_OK = 1;
     File Datafile = SD.open(path);
-    StaticJsonDocument<4096> doc;
+    StaticJsonDocument<8192> doc;
     DeserializationError error = deserializeJson(doc, Datafile);
     RAW_recording_mode = doc["timelapserawrecordingMode"];
     for (int i = 0; i < num_timelapses; i++) {
@@ -1077,8 +1096,13 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FIXED_EXPOSURE_mode = doc["fixedExposure"];
     FIXED_delay = doc["fixedDelay"];
     FIXED_divider = doc["fixedDivider"];
+    for (int i = 0; i < 256; i++) {
+      lookup_TFT_RGB565[i] = doc["lookupTableRGB565"][i];
+    }
     x_box = doc["exposurexWindow"];
     y_box = doc["exposureyWindow"];
+    FOCUS_mode = doc["focusPeaking"];
+    FOCUS_threshold = doc["focuspeakingThreshold"];
     Datafile.close();
   }
 #endif
@@ -1087,10 +1111,10 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
 }
 
 void Put_JSON_config(const char* path) {  //I've copy paste the library examples
-  // Open file for reading
+                                          // Open file for reading
 
 #ifdef USE_SD
-  DynamicJsonDocument doc(4096);
+  DynamicJsonDocument doc(8192);
   File Datafile = SD.open(path);
   deserializeJson(doc, Datafile);
   Datafile.close();
