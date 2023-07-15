@@ -61,6 +61,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
 - **2D enhancement mode** enforces the 2D image enhancement processed by the sensor in Game Boy Camera mode & non dithering mode only.
 - **Game Boy Camera mode** drives the DashBoy Camera exactly as the Game Boy Camera does, using the same registers and the same dithering matrices in default constrast. Images made in this mode are pixel identical to images produces with a Game Boy Camera in the same lightning condition if dithering is activated. When set to 0, this triggers a simplier "recipe" with fixed registers and fixed dithering matrix.
+- **Focus peaking** allows embossing the area with the best exposure as focusing with such low definition can sometimes be tricky.
 
 # Some pictures made with the device
 
