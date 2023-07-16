@@ -774,7 +774,7 @@ void detect_a_motion() {
 
 void edge_extraction() {
   if (FOCUS_mode == 1) {
-    memset(EdgeData, 0, sizeof(EdgeData));  //clean the HDR data array
+    memset(EdgeData, 0, sizeof(EdgeData));  //clean the edge data array
     int offset = 0;
     for (int y = 0; y < 128; y++) {
       for (int x = 0; x < 128; x++) {
