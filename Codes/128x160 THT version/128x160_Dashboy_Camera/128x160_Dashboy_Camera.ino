@@ -55,6 +55,7 @@ unsigned char BayerData[128 * 128];         //dithered image data
 unsigned char camReg[8];                    //empty register array
 unsigned char camReg_storage[8];            //empty register array
 unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
+unsigned short int pixel_TFT_RGB565;
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long currentTime_MOTION = 0;
@@ -280,19 +281,20 @@ void loop() {
 
 #ifdef USE_TFT
   img.fillSprite(TFT_BLACK);  //prepare the image in ram
-  for (unsigned char x = 1; x < 128; x++) {
+  for (unsigned char x = 0; x < 128; x++) {
     for (unsigned char y = 0; y < 120; y++) {
       if (DITHER_mode == 1) {
-        img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[BayerData[x + y * 128]]);  //BayerData includes auto-contrast
+        pixel_TFT_RGB565 = lookup_TFT_RGB565[BayerData[x + y * 128]];  //BayerData includes auto-contrast
       } else {
-        img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]]);  //lookup_serial is autocontrast
+        pixel_TFT_RGB565 = lookup_TFT_RGB565[lookup_serial[CamData[x + y * 128]]];  //lookup_serial is autocontrast
       }
       if (FOCUS_mode == 1) {
         if (EdgeData[x + y * 128] > FOCUS_threshold) {
-          img.drawPixel(x, y + display_offset, 0xF800);  //lookup_serial is autocontrast
+          pixel_TFT_RGB565 = (pixel_TFT_RGB565 | 0b1111100000000000);  //overlay with RED
         }
         //img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[EdgeData[x + y * 128]]);  //lookup_serial is autocontrast
       }
+      img.drawPixel(x, y + display_offset, pixel_TFT_RGB565);  //BayerData includes auto-contrast
     }
   }
 #endif
@@ -774,7 +776,7 @@ void detect_a_motion() {
 
 void edge_extraction() {
   if (FOCUS_mode == 1) {
-    memset(EdgeData, 0, sizeof(EdgeData));  //clean the edge data array
+    memset(EdgeData, 0, sizeof(EdgeData));  //clean the HDR data array
     int offset = 0;
     for (int y = 0; y < 128; y++) {
       for (int x = 0; x < 128; x++) {
@@ -1429,7 +1431,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #endif
 
   img.setTextSize(1);  // characters are 8x8 pixels in size 1, practical !
-  for (unsigned char x = 1; x < 128; x++) {
+  for (unsigned char x = 0; x < 128; x++) {
     for (unsigned char y = 0; y < 160; y++) {
       img.drawPixel(x, y, lookup_TFT_RGB565[splashscreen[x + y * 128]]);
     }
@@ -1555,7 +1557,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #ifdef USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {  //get stuck here if any problem to avoid further board damage
 
-    for (unsigned char x = 1; x < 128; x++) {
+    for (unsigned char x = 0; x < 128; x++) {
       for (unsigned char y = 0; y < 112; y++) {
         img.drawPixel(x, y + 44, lookup_TFT_RGB565[crashscreen[x + y * 128]]);
       }
