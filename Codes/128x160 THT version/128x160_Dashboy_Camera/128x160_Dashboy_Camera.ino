@@ -202,20 +202,10 @@ void setup() {
 
 void loop() {
   currentTime = millis();
-
-  if (FOCUS_mode == 1) {
-    memcpy(camReg_storage, camReg, 8);     //store the current registers
-    memcpy(camReg, edge_extract, 8);       //inject the edge extraction registers
-    camReg[2] = camReg_storage[2];         //get C2
-    camReg[3] = camReg_storage[3];         //get C3
-    take_a_picture();                      //data in memory for the moment, one frame
-    memcpy(EdgeData, CamData, 128 * 120);  //restore the current registers
-    memcpy(camReg, camReg_storage, 8);     //restore the current registers
-  }
-
   take_a_picture();  //data in memory for the moment, one frame
   image_TOKEN = 0;   //reset any attempt to take more than one picture without pushing a button or observe a difference
   detect_a_motion();
+  edge_extraction();
   memcpy(CamData_previous, CamData, 128 * 120);  //to deal with motion detection
   new_exposure = auto_exposure();                // self explanatory
 
@@ -301,7 +291,7 @@ void loop() {
         if (EdgeData[x + y * 128] > FOCUS_threshold) {
           img.drawPixel(x, y + display_offset, 0xF800);  //lookup_serial is autocontrast
         }
-        //img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[lookup_serial[EdgeData[x + y * 128]]]);  //lookup_serial is autocontrast
+        //img.drawPixel(x, y + display_offset, lookup_TFT_RGB565[EdgeData[x + y * 128]]);  //lookup_serial is autocontrast
       }
     }
   }
@@ -782,6 +772,21 @@ void detect_a_motion() {
   }
 }
 
+void edge_extraction() {
+  if (FOCUS_mode == 1) {
+    memset(EdgeData, 0, sizeof(EdgeData));  //clean the HDR data array
+    int offset = 0;
+    for (int y = 0; y < 128; y++) {
+      for (int x = 0; x < 128; x++) {
+        //formula from sensor datasheet
+        if ((x > 0) & (x < 128) & (y > 0) & (y < 128)) {
+          EdgeData[offset] = abs(4 * CamData[offset] - (CamData[offset - 128] + CamData[offset + 128] + CamData[offset - 1] + CamData[offset + 1]));
+        }
+        offset++;
+      }  // end for x
+    }    /* for y */
+  }
+}
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop() {
   if ((RAW_recording_mode == 0) | (image_TOKEN == 1)) {
