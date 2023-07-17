@@ -106,7 +106,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - At this step, flash the Pi Pico and verify that the device boots and the display works. It should be stuck to an error screen with the red LED flashing, this is normal as the device needs SD card and a sensor to go further.
 - Solder the JST connectors to the [tiny adapter board](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/128x160%20THT%20version/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board/Tiny%20adapter%20board.png) (INPUT and NORMAL OUT if you use a cable similar to the default sensor one linked in **Parts**) or just bend straight the pins of a female JST connector and plug it into the JST extension cable to inverse its gender.
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
-- Glue the Battery holder behind the pushbuttons (it will act as a hand grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your camera shell if necessary.
+- Glue the Battery holder behind the pushbuttons (it will act as a hand grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your precious camera shell if necessary.
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 - If you want to use the time lapse or HDR features, use a tripod and hold the Dashboy with any [universal phone holder](https://fr.aliexpress.com/item/1005004208664097.html) by the battery holder.
 
