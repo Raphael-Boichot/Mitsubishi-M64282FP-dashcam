@@ -110,7 +110,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 - If you want to use the time lapse or HDR features, use a tripod and hold the Dashboy with any [universal phone holder](https://fr.aliexpress.com/item/1005004208664097.html) by the battery holder.
 
-# Some random informations for Game Boy Camera nerds
+# Some random informations for you Game Boy Camera nerd !
 
 - The sensor has intrinsically many visual artifacts (horizontal and vertical lines, image echoes at certain exposures, etc.). None of them is specifically due to the Pi Pico. They were all observed with a Game Boy Camera in the same conditions of light.
 - The 16 bits exposure register is normally limited to 0x0030 despite the camera being able to go to 0x0001. This is advised in the sensor datasheet and the reason is that below this value, the image artifacts becomes so intense that they interfere with any auto-exposure algorithm based on pixel intensity. Technically, this creates exposure jitters and unpleasant behavior. Game Boy Camera mode have a range of exposure extended to 0x0010 by playing on other registers at the same time.
