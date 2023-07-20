@@ -73,7 +73,7 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 
 ## Required parts
 
-**The total cost (Game Boy Camera not included), considering that you start from scratch, is about 35€ (PCB included). It has been designed to use ultra-cheap and ultra-common parts only.** Most of parts can be recycled from used electronics or Arduino related projects. If you're a bit into electronics, you probably yet have most of the parts somewhere on shelves.
+**The total cost (Game Boy Camera not included), considering that you start from scratch, is about 35€ (PCB included). It has been designed to use ultra-cheap and ultra-common parts only.** Most of parts can be recycled from used electronics or Arduino related projects. If you're a bit into electronics, you probably yet have most of the parts somewhere on shelves. **It is fully through-hole so it necessitates nothing but very basic skills in soldering.**
 
 So you will need: 
 - [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Codes/128x160%20THT%20version/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
