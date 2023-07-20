@@ -69,10 +69,13 @@ Additionally, you can address other cool features by entering them in the [confi
 
 Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.aliexpress.com/item/1005001617519795.html) with [CS mount mod](https://www.thingiverse.com/thing:5024326), [CCTV fisheye with M12/CS adapters](https://fr.aliexpress.com/item/1005005496283838.html) and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm), sensor glued into a Zenit 12XP shell.
 
-# Building the 128x160 standard version (NiMH powered)
+# Building the device !
 
 ## Required parts
 
+**The total cost (Game Boy Camera not included), considering that you start from scratch, is about 35€ (PCB included).**
+
+So you will need: 
 - [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Codes/128x160%20THT%20version/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes.**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor, which is cool.
@@ -87,7 +90,7 @@ Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.ali
 - 6 [6x6 push buttons whatever their height](https://fr.aliexpress.com/item/1005003938244847.html).
 - 2 [microswitches SS-12D00G](https://fr.aliexpress.com/item/1005003938856402.html) to cut the main power and the display backlight which draws more current (30 mA) than the Pi Pico (25 mA) itself, for saving battery in case of long timelapses for example.
 
-The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not well recycled and non generic at all in terms of size in case of reuse. **The device does not allow to recharge the batteries** as NiMH requires very specific charging strategy. It can of course run with alkaline batteries too.
+The device is meant to be used with **NiMH batteries only**. Lithium batteries are evil because they are unstable, not well recycled and non generic at all in terms of size in case of reuse. **The device does not allow to recharge the batteries** as NiMH requires very specific charging strategy. It can of course run with alkaline batteries too. You can of course alter the design to use it with Lithium batteries and embedded charger, it works perfectly too.
 
 ## PCB and connection with the sensor
 
