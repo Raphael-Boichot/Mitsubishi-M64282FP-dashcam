@@ -775,7 +775,7 @@ void detect_a_motion() {
 }
 
 void edge_extraction() {
-  if (FOCUS_mode == 1) {
+  if (FOCUS_mode == 1) {                    //first pass
     memset(EdgeData, 0, sizeof(EdgeData));  //clean the HDR data array
     int offset = 0;
     for (int y = 0; y < 128; y++) {
@@ -783,6 +783,17 @@ void edge_extraction() {
         //formula from sensor datasheet
         if ((x > 0) & (x < 128) & (y > 0) & (y < 128)) {
           EdgeData[offset] = abs(4 * CamData[offset] - (CamData[offset - 128] + CamData[offset + 128] + CamData[offset - 1] + CamData[offset + 1]));
+        }
+        offset++;
+      }          // end for x
+    }            /* for y */
+    offset = 0;  //second pass to eliminate pure noise
+    for (int y = 0; y < 128; y++) {
+      for (int x = 0; x < 128; x++) {  // we search for weak threshold in Moore neighborhood
+        if ((x > 0) & (x < 128) & (y > 0) & (y < 128)) {
+          if ((EdgeData[offset - 127] < FOCUS_threshold) & (EdgeData[offset - 128] < FOCUS_threshold) & (EdgeData[offset - 129] < FOCUS_threshold) & (EdgeData[offset - 1] < FOCUS_threshold) & (EdgeData[offset + 127] < FOCUS_threshold) & (EdgeData[offset + 128] < FOCUS_threshold) & (EdgeData[offset + 129] < FOCUS_threshold) & (EdgeData[offset + 1] < FOCUS_threshold)) {
+            EdgeData[offset] = 0;
+          }
         }
         offset++;
       }  // end for x
