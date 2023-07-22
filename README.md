@@ -9,7 +9,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Picture of the device (example of PCB V1.0)
 
-![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_1.0.png)
+![showcase](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/PCB_version_1.0.png)
 
 # Multi-systems installation guide
 
