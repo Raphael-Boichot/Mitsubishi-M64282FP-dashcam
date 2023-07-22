@@ -80,7 +80,7 @@ So you will need:
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes ("Color: Pico Original").**
 - A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/1005004536839797.html). Note that it is pixel perfect with the sensor, which is cool.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
-- Some [9 pins JST ZH1.5MM connector](https://fr.aliexpress.com/item/32920487056.html).
+- Some [9 pins JST ZH1.5MM connector](https://fr.aliexpress.com/item/32920487056.html). If it comes with straight pins, you can bend them easily.
 - Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html).
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
 - A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html). It is based on a ME2108 DC/DC converter chip. Due to small voltage ripples, it requires an extra capacitor (see next parts).
