@@ -146,6 +146,6 @@ The code and current design come as it. If you're not happy with the current har
 - [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions, the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/) the [Powershell scripts](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/SD) and the [colorscale generator](https://github.com/HerrZatacke/gradient-values).
 - [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) and [Laurent Saint-Marcel](https://github.com/BackupGGCode/avr-gameboy-cam) for the Arduino code I started from (initial [source](http://sophiateam.undrgnd.free.fr/microcontroller/camera/) here). I'm not 100% sure of who is the initial author so I apologize for any error in citation.
 
-# Prototype used for developpment using a fancy purple board
+# Prototype used for developpment using a fancy purple board and a lithium battery charger unit
 
   ![Dashboy Camera prototype](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Prototype.png)
