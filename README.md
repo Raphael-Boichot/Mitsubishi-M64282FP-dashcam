@@ -133,7 +133,7 @@ According to an [internal Mitsubishi source](https://github.com/Raphael-Boichot/
 
 # Kind warning
 
-The code and current design come as it. If you're not happy with the current hardware, the PCB EasyDA design or the Arduino IDE, build your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
+The code and current design come as it. If you're not happy with the current hardware, the PCB EasyDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
 # Acknowledgments
 
