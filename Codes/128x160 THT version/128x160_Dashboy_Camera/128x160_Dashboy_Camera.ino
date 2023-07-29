@@ -26,14 +26,14 @@
 #include "splash.h"
 #include "prettyborder.h"
 
-// absence of SD card lead to general failure of the code, so to test without, better deactivate the feature at compiling
+//absence of the SD card leads to general failure of the code, so to test without, better deactivate the feature at compiling
 #ifdef USE_SD
 #include <SPI.h>  //for SD
 #include <SD.h>   //for SD
 #endif
 
-// tft directly addresses the display, im is a memory buffer for sprites
-// Here I create and update a giant 128*16 sprite in memory that I push to the screen when necessary, which is ultra fast because it uses DMA
+//tft directly addresses the display, im is a memory buffer for sprites
+//Here I create and update a giant 128*160 sprite in memory that I push to the screen when necessary, which is ultra fast way of rendering
 #ifdef USE_TFT
 #include <TFT_eSPI.h>                 //Include the graphics library (this includes the sprite functions)
 TFT_eSPI tft = TFT_eSPI();            //Create object "tft"
@@ -151,7 +151,7 @@ void setup() {
   x_max = x_min + x_box;
   y_max = y_min + y_box;
 
-  //now if code arrives at this point, this means that sensor and SD card are connected correctly in normal use
+  //now if code arrives at this point, this means that sensor and SD card are connected correctly, we can go further
 
 #ifdef USE_SD
   ID_file_creator("/Dashcam_storage.bin");          //create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
@@ -162,7 +162,7 @@ void setup() {
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy with variable gain and registers
     v_min = GB_v_min;
     v_max = GB_v_max;
-  } else {  //regular strategy with gain=8 and fixed registers
+  } else {  //regular strategy with gain=8 and fixed other registers except C
     v_min = regular_v_min;
     v_max = regular_v_max;
   }
