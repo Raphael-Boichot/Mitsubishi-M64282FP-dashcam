@@ -26,6 +26,7 @@
 #include "splash.h"
 #include "prettyborder.h"
 
+// absence of SD card lead to general failure of the code, so to test without, better deactivate the feature at compiling
 #ifdef USE_SD
 #include <SPI.h>  //for SD
 #include <SD.h>   //for SD
