@@ -1,4 +1,4 @@
-//Version 2.0 (1.0 was on ESP32)
+//Version 2.0 (1.0 was on ESP32 https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor/tree/main/ESP32_version_beta)
 //By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
 //I've minimized if not banished the use of local variables, pointers and structures to have a constant clear view of what happens and memory state.
 //The code is written to go fast, so the use of numerous lookup tables and precalculated arrays always present into ram.
