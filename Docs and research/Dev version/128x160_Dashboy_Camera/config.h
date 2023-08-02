@@ -1,12 +1,12 @@
-#define USE_TFT  //to allow using the TFT screen
-#define USE_SD   //to allow recording on SD
-#define ST7735   //for use with the TFT 128x160
-//#define ST7789 //for use with the TFT 240x240
-#define M64283FP  //additional support for the Mitsubishi M64283FP CMOS sensor
-//#define USE_OVERCLOCKING //self explanatory
+#define USE_TFT  //to allow using the TFT screen - deactivate for debug
+#define USE_SD   //to allow recording on SD - deactivate for debug
+#define ST7735   //for use with the TFT 128x160 (full frame image)
+//#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop)
+//#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor
+//#define USE_OVERCLOCKING //self explanatory, honestly it changes nothing to my great deception
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
-//#define USE_SNEAK_MODE //deactivates the LEDs
-//#define DEBUG_MODE //allow using the serial
+//#define USE_SNEAK_MODE //deactivates the LEDs, why not
+//#define DEBUG_MODE //allow using the serial to output image in ASCII 8 bits
 
 #ifdef ST7789
 #define x_ori 56
@@ -60,6 +60,7 @@ unsigned char x_max = x_min + x_box;           //calculate the autoexposure area
 unsigned char y_max = y_min + y_box;           //calculate the autoexposure area limits
 unsigned char display_offset = 16;             //offset for image on the 128*160 display
 unsigned char line_length = 4;                 //exposure area cross size
+bool M64283FP = 1;                             //restore correct edge enhancement in case the M64283FP is used
 
 //loockup table to convert 8 bits gray pixel value to RGB565 for the display
 //Go to https://herrzatacke.github.io/gradient-values/ to generate the colorscale for json !
@@ -108,8 +109,10 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
 #define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
 #define INT 25     //to pi pico pin GPIO25 internal LED;
 
-#ifdef M64283FP
+#ifdef TADDREGISTER
 #define TADD 22  //to pin TADD of the M64283FP CMOS sensor
+///////////////////////////{ 0bSSSSSSSS, 0bEEEEEEEE };
+unsigned char camTADD[2] = { 0b00000000, 0b00000000 };  //additional registers 8 and 9, START and END of image area in tiles (16x16)
 #endif
 
 //It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
@@ -142,7 +145,7 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
 //reg4 = 0b00000001; % P7 P6 P5 P4 P3 P2 P1 P0 filtering kernels, always 0x01 on a GB camera, but can be different here
 //reg5 = 0b00000000; % M7 M6 M5 M4 M3 M2 M1 M0 filtering kernels, always 0x00 on a GB camera, but can be different here
 //reg6 = 0b00000001; % X7 X6 X5 X4 X3 X2 X1 X0 filtering kernels, always 0x01 on a GB camera, but can be different here
-//reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0
+//reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0 (forbidden state)
 
 //P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly
 
@@ -161,18 +164,16 @@ unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b0
 unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 gives better black)
 unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 210 gives better white)
 char pixel_shift = 8;          //correction for dithering algorithm, more than minus 8 gives bland images
-/////////////////////////
+                               /////////////////////////
 
 //DashBoy Camera regular strategy: uses the maximum voltage scale (a bit more than 2 volts)
 //the ADC resolution is 0.8 mV (3.3/2^12, 12 bits) cut to 12.9 mV (8 bits), registers are close of those from the Game Boy Camera in mid light
 //With these registers, the output voltage is between 0.58 and 3.04 volts (on 3.3 volts), this is the best I can do.
-#ifndef M64283FP
 /////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
 unsigned char camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //registers
 unsigned char regular_v_min = 75;                                                                                                     //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
 unsigned char regular_v_max = 180;                                                                                                    //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 235 but 180 gives pure white)
 ////////////////////////
-#endif
 
 //DashBoy Camera strategy for the unobtainium M64283FP sensor
 //detail of the registers
@@ -183,19 +184,9 @@ unsigned char regular_v_max = 180;                                              
 //reg4 = SH  AZ  CL  []  [P3  P2  P1  P0] / CL + AZ + SH + OB =LOW -> automatic zero calibration
 //reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0]
 //reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0]
-//reg7 = like M64282FP
+//reg7 = like M64282FP BUT E register = 0000 deactivates the edge enhancement. To be like the M64282FP (50% intensity), E = 0100 with the M64282FP
 //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
-
-#ifdef M64283FP
-/////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC PPPP, 0bPPMOMMMM, 0bMMMMXXXX, 0bEEEEIVVV};
-unsigned char camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000011 };  //registers
-unsigned char regular_v_min = 75;                                                                                                     //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
-unsigned char regular_v_max = 180;                                                                                                    //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 235 but 180 gives pure white)
-///////////////////////////{ 0bSSSSSSSS, 0bSSSSSSSS };
-unsigned char camTADD[2] = { 0b00000000, 0b00000000 };  //additional registers
-////////////////////////
-#endif
 
 //Edge extraction feature (discarded but why not reuse it)
 /////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};

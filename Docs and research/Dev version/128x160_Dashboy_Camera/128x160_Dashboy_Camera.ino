@@ -130,7 +130,7 @@ void setup() {
   gpio_init(START);
   gpio_set_dir(START, GPIO_OUT);
 
-#ifdef M64283FP
+#ifdef TADDREGISTER
   gpio_init(TADD);
   gpio_set_dir(TADD, GPIO_OUT);
   gpio_put(TADD, 1);
@@ -164,6 +164,13 @@ void setup() {
   Next_ID = get_next_ID("/Dashcam_storage.bin");    //get the file number on SD card
   Next_dir = get_next_dir("/Dashcam_storage.bin");  //get the folder number on SD card
 #endif
+
+  if (M64283FP == 1) {  //universal M64283FP support - modify register E plus some other things
+    /////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC PPPP, 0bPPMOMMMM, 0bMMMMXXXX, 0bEEEEIVVV};
+    //camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000011 };
+    regular_v_min = 128;  //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
+    regular_v_max = 200;
+  }
 
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy with variable gain and registers
     v_min = GB_v_min;
@@ -558,6 +565,9 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   if ((SMOOTH_mode == 1) && (DITHER_mode == 0)) {  //cancel 2D border enhancement only in non dither mode
     camReg[1] = camReg[1] & 0b00011111;
   }
+  if (M64283FP == 1) {  //universal M64283F support - modify register E
+    camReg[7] = camReg[7] | 0b01000000;
+  }
 }
 
 unsigned int get_exposure(unsigned char camReg[8]) {
@@ -608,8 +618,8 @@ void camSetRegisters()  //Sets the sensor 8 registers
 
 void camSetRegistersTADD()  //Sets the sensor 2 ADDitional registers to TADD pin of the M64283FP (must be low)
 {
-#ifdef M64283FP
-  gpio_put(TADD, 0);  //must be low just for these two registers
+#ifdef TADDREGISTER
+  gpio_put(TADD, 0);  //must be low just for these two registers, but must look at the datasheet again
   for (int reg = 0; reg < 2; ++reg) {
     camSetReg(reg + 1, camTADD[reg]);  //adress 0 with TADD LOW does not exist
   }
