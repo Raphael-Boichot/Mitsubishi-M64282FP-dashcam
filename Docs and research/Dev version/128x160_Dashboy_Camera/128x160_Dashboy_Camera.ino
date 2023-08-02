@@ -77,7 +77,7 @@ bool SDcard_READY = 0;   //reserved, for bug on SD
 bool JSON_ready = 0;     //reserved, for bug on config.txt
 bool LOCK_exposure = 0;  //reserved, for locking exposure
 bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
-bool overshooting = 0;   //reserved, for anti-jittering system
+bool overshooting = 0;   //reserved, for register anti-jittering system
 char storage_file_name[20];
 char storage_file_dir[20];
 char storage_deadtime[20];
@@ -165,11 +165,17 @@ void setup() {
   Next_dir = get_next_dir("/Dashcam_storage.bin");  //get the folder number on SD card
 #endif
 
-  if (M64283FP == 1) {  //universal M64283FP support - modify register E plus some other things
+  if (M64283FP == 1) {  //special M64283FP support - modify register E plus some other things
     /////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC PPPP, 0bPPMOMMMM, 0bMMMMXXXX, 0bEEEEIVVV};
-    //camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000011 };
-    regular_v_min = 128;  //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
-    regular_v_max = 200;
+    /////camReg_single = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //registers
+    //with these registers the dark level is at 0 Volts, the sensor saturation at XX volts
+    camReg[0] = 0b10011111;  //positive image reading calibration + O register to -0.5V
+    camReg[1] = 0b11100000;  //Ratio of edge enhancement E to 50% + set gain to a certain value
+    //automatic dark calibration is activated by CL + AZ + SH + OB =LOW (nothing to do)
+    camReg[7] = 0b01000100;  //set gain to a certain value + Vref to +0.5V (0 not allowed)
+    GBCAMERA_mode = 0;       //M64283FP support is one set of register only
+    regular_v_min = 0;       //full scale
+    regular_v_max = 255;     //full scale
   }
 
   if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy with variable gain and registers
@@ -217,10 +223,10 @@ void setup() {
 
 void loop() {
   currentTime = millis();
-  take_a_picture();  //data in memory for the moment, one frame
-  image_TOKEN = 0;   //reset any attempt to take more than one picture without pushing a button or observe a difference
-  detect_a_motion();
-  edge_extraction();
+  take_a_picture();                              //data in memory for the moment, one frame
+  image_TOKEN = 0;                               //reset any attempt to take more than one picture without pushing a button or observe a difference
+  detect_a_motion();                             //does nothing if MOTION_sensor = 0
+  edge_extraction();                             //does nothing if FOCUS_mode = 0
   memcpy(CamData_previous, CamData, 128 * 120);  //to deal with motion detection
   new_exposure = auto_exposure();                // self explanatory
 
@@ -286,7 +292,7 @@ void loop() {
     }
 
     pre_allocate_Bayer_tables();  //just reordering the Game Boy Camera dithering registers into 3 square matrices
-    Dither_image();
+    Dither_image();               //apply dithering
   }
 
 #ifdef USE_SERIAL
@@ -367,8 +373,6 @@ void loop() {
     } else {
       delay(25);  //avoid image artifacts due to 5 volts instability after recording, not supposed to happens but...
     }
-
-
   }  //end of recording loop for regular camera mode
 
   if ((recording == 0) & (image_TOKEN == 0)) {  //just put informations to the display
@@ -394,7 +398,7 @@ void loop() {
       short_fancy_delay();
     }
     if ((gpio_get(PUSH) == 1) & (recording == 0)) {  //we want to record: get file/directory#
-      Next_dir++;                                    //update next directory except in any case
+      Next_dir++;                                    //update next directory
 
 #ifdef USE_SD
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //store last known file/directory# to SD card
@@ -410,11 +414,11 @@ void loop() {
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 
 void take_a_picture() {
-  camReset();             //resets the sensor
-  camSetRegisters();      //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
+  camReset();         //resets the sensor
+  camSetRegisters();  //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
   //camSetRegistersTADD();  //Sets 2 ADDitional registers to TADD pin of the M64283FP with TADD = LOW
-  camReadPicture();       //get pixels, dump them in CamData
-  camReset();             //probably not usefull but who knows...
+  camReadPicture();  //get pixels, dump them in CamData
+  camReset();        //probably not usefull but who knows...
 }
 
 double auto_exposure() {
@@ -564,9 +568,6 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   }
   if ((SMOOTH_mode == 1) && (DITHER_mode == 0)) {  //cancel 2D border enhancement only in non dither mode
     camReg[1] = camReg[1] & 0b00011111;
-  }
-  if (M64283FP == 1) {  //universal M64283F support - modify register E
-    camReg[7] = camReg[7] | 0b01000000;
   }
 }
 
