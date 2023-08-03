@@ -58,7 +58,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - **Raw recording mode** available in **time lapse mode** and **motion sensor mode**, records sensor data as a single file in the **/TL** or **/MS** folders respectively. It needs a separate tool for extracting an animation ([provided here](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/SD)). The 16 first bytes are keywords, image sizes (width and height in pixels) and registers, the following are raw data for one image in reading order, easy to recover with any other tool ! This mode allows recording at a solid 4 fps for long time with good light conditions. It is disabled in **Regular camera mode** (command is just ignored).
 - **Night Mode** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the sensor being natively not able to expose more than 1 second. Here there is no limit.
 - **Fixed exposure mode** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
-- **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files.
+- **Pretty border mode** generates 160x144 images with a fancy border like the Game Boy Camera. You can make your own with the tools provided to generate C-files. To roll between borders, just reboot the DashBoy while it accomodates for exposure after boot.
 - **2D enhancement mode** enforces the 2D image enhancement processed by the sensor in Game Boy Camera mode & non dithering mode only.
 - **Game Boy Camera mode** drives the DashBoy Camera exactly as the Game Boy Camera does, using the same registers and the same dithering matrices in default constrast. Images made in this mode are pixel identical to images produces with a Game Boy Camera in the same lightning condition if dithering is activated. When set to 0, this triggers a simplier "recipe" with fixed registers and fixed dithering matrix.
 - **Focus peaking** allows embossing the area with the best exposure as focusing with such low definition can sometimes be tricky.
@@ -113,7 +113,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 - If you want to use the time lapse or HDR features, use a tripod and hold the Dashboy with any [universal phone holder](https://fr.aliexpress.com/item/1005004208664097.html) by the battery holder.
 
-## Image of the populated PCB as you will het it with the current PCB version.
+## Image of the populated PCB as you will get it
 
 ![Dashboy populated PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
