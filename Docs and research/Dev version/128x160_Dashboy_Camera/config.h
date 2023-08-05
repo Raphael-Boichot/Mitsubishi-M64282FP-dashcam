@@ -6,7 +6,8 @@
 //#define USE_OVERCLOCKING //self explanatory, honestly it changes nothing to my great deception
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
-//#define DEBUG_MODE //allow using the serial to output image in ASCII 8 bits
+#define DEBUG_MODE  //allow additionnal outputs on display
+
 
 #ifdef ST7789
 #define x_ori 56
@@ -34,6 +35,8 @@ unsigned char jittering_threshold = 13;    //error threshold to keep/change regi
 unsigned int cycles = 7;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
+unsigned int low_exposure_limit = 0x0030;  //low exposure limit
+double multiplier = 1;                     //deals with autoexposure algorithm
 
 //default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
 bool TIMELAPSE_mode = 0;                       //0 = use s a regular camera, 1 = recorder for timelapses
@@ -51,6 +54,8 @@ unsigned char FOCUS_threshold = 100;           //0..255, self explanatory
 bool FIXED_EXPOSURE_mode = 0;                  //to activate fixed exposure delay mode
 int FIXED_delay = 2048;                        //here the result is a fixed exposure perfect for full moon photography
 int FIXED_divider = 1;                         //clock divider
+bool M64283FP = 1;                             //strategy for the M64283FP in single register strategy
+
 unsigned char x_box = 8 * 8;                   //x range for autoexposure (centered, like GB camera, 8 tiles)
 unsigned char y_box = 7 * 8;                   //y range for autoexposure (centered, like GB camera, 7 tiles)
 unsigned char max_line = 120;                  //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
@@ -60,7 +65,6 @@ unsigned char x_max = x_min + x_box;           //calculate the autoexposure area
 unsigned char y_max = y_min + y_box;           //calculate the autoexposure area limits
 unsigned char display_offset = 16;             //offset for image on the 128*160 display
 unsigned char line_length = 4;                 //exposure area cross size
-bool M64283FP = 1;                             //restore correct edge enhancement in case the M64283FP is used
 
 //loockup table to convert 8 bits gray pixel value to RGB565 for the display
 //Go to https://herrzatacke.github.io/gradient-values/ to generate the colorscale for json !
@@ -174,23 +178,6 @@ unsigned char camReg_single[8] = { 0b10011111, 0b11101000, 0b00000001, 0b0000000
 unsigned char regular_v_min = 75;                                                                                                     //minimal voltage returned by the sensor in 8 bits DEC (0.58 volts is 45 but 75 gives better black)
 unsigned char regular_v_max = 180;                                                                                                    //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 235 but 180 gives pure white)
 ////////////////////////
-
-//DashBoy Camera strategy for the unobtainium M64283FP sensor
-//detail of the registers
-//reg0 = like M64282FP
-//reg1 = like M64282FP
-//reg2 = like M64282FP
-//reg3 = like M64282FP
-//reg4 = SH  AZ  CL  []  [P3  P2  P1  P0] / CL + AZ + SH + OB =LOW -> automatic zero calibration
-//reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0]
-//reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0]
-//reg7 = like M64282FP BUT E register = 0000 deactivates the edge enhancement. To be like the M64282FP (50% intensity), E = 0100 with the M64282FP
-//reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
-//reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
-
-//Edge extraction feature (discarded but why not reuse it)
-/////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
-//unsigned char edge_extract[8] = { 0b00011111, 0b01101000, 0b00000001, 0b00000000, 0b00000010, 0b000000101, 0b00000001, 0b10000011 };  //registers
 
 //https://www.calculator.net/hex-calculator.html is your friend
 //https://www.rapidtables.com/convert/number/hex-to-decimal.html too

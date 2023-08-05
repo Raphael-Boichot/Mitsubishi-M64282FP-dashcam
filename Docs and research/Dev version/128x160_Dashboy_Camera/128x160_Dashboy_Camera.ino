@@ -70,6 +70,8 @@ unsigned int MOTION_sensor_counter = 0;
 unsigned char v_min, v_max;
 double difference = 0;
 double exposure_error = 0;
+double mean_value = 0;
+double error = 0;
 bool image_TOKEN = 0;    //reserved for CAMERA mode
 bool recording = 0;      //0 = idle mode, 1 = recording mode
 bool sensor_READY = 0;   //reserved, for bug on sensor
@@ -146,45 +148,36 @@ void setup() {
   set_sys_clock_khz(250000, true);  //about twice as fast as the regular 133 MHz
 #endif
 
-#ifdef DEBUG_MODE  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
+#ifdef USE_SERIAL  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(115200);
 #endif
 
-  init_sequence();                                                      //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
+  init_sequence();  //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
+  //now if code arrives at this point, this means that sensor and SD card are connected correctly, we can go further
   difference_threshold = motion_detection_threshold * 128 * 120 * 255;  //trigger threshold for motion sensor
   x_min = (128 - x_box) / 2;                                            //recalculate the autoexposure area limits with json config values
   y_min = (max_line - y_box) / 2;
   x_max = x_min + x_box;
   y_max = y_min + y_box;
 
-  //now if code arrives at this point, this means that sensor and SD card are connected correctly, we can go further
+  Support_for_the_M64283FP();  //DashBoy Camera strategy for the unobtainium M64283FP sensor
+
+  if (GBCAMERA_mode == 1) {       //Game Boy Camera strategy with variable gain and registers
+    low_exposure_limit = 0x0010;  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    multiplier = 1.1;             //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
+    v_min = GB_v_min;
+    v_max = GB_v_max;
+  } else {                        //regular strategy with gain=8 and fixed other registers except C
+    low_exposure_limit = 0x0030;  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    v_min = regular_v_min;
+    v_max = regular_v_max;
+  }
 
 #ifdef USE_SD
   ID_file_creator("/Dashcam_storage.bin");          //create a file on SD card that stores a unique file ID from 1 to 2^32 - 1 (in fact 1 to 99999)
   Next_ID = get_next_ID("/Dashcam_storage.bin");    //get the file number on SD card
   Next_dir = get_next_dir("/Dashcam_storage.bin");  //get the folder number on SD card
 #endif
-
-  if (M64283FP == 1) {  //special M64283FP support - modify register E plus some other things
-    /////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC PPPP, 0bPPMOMMMM, 0bMMMMXXXX, 0bEEEEIVVV};
-    /////camReg_single = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //registers
-    //with these registers the dark level is at 0 Volts, the sensor saturation at XX volts
-    camReg[0] = 0b10011111;  //positive image reading calibration + O register to -0.5V
-    camReg[1] = 0b11100000;  //Ratio of edge enhancement E to 50% + set gain to a certain value
-    //automatic dark calibration is activated by CL + AZ + SH + OB =LOW (nothing to do)
-    camReg[7] = 0b01000100;  //set gain to a certain value + Vref to +0.5V (0 not allowed)
-    GBCAMERA_mode = 0;       //M64283FP support is one set of register only
-    regular_v_min = 0;       //full scale
-    regular_v_max = 255;     //full scale
-  }
-
-  if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy with variable gain and registers
-    v_min = GB_v_min;
-    v_max = GB_v_max;
-  } else {  //regular strategy with gain=8 and fixed other registers except C
-    v_min = regular_v_min;
-    v_max = regular_v_max;
-  }
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max);  //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_lookup_tables(lookup_pico_to_GBD, 0, 255);   //pre allocate tables 0<->3.3V scale from pico to 0<->3.3V scale from MAC-GBD
@@ -422,7 +415,7 @@ void take_a_picture() {
 }
 
 double auto_exposure() {
-  double exp_regs, new_regs, error, mean_value;
+  double exp_regs, new_regs;
   unsigned char setpoint = (v_max + v_min) >> 1;  //set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;
   unsigned char least_change = 1;
@@ -443,10 +436,7 @@ double auto_exposure() {
   //this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
   //Here we can use 32 bits variables for ease of programming.
   //the bigger the error is, the bigger the correction on exposure is.
-  double multiplier = 1;
-  if (GBCAMERA_mode == 1) {
-    multiplier = 1.1;  //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
-  }
+
   exp_regs = camReg[2] * 256 + camReg[3];  //I know, it's a shame to use a double here but we have plenty of ram
   new_regs = exp_regs;
   if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
@@ -465,12 +455,12 @@ double auto_exposure() {
     least_change = 0xFF;  //least change must increase if exposure is high
   }
 
-  if ((error <= 10) & (error >= 4)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
-  if ((error >= -10) & (error <= -4)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
+  if ((error <= 10) & (error >= 5)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
+  if ((error >= -10) & (error <= -5)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
   if (new_regs < 0) {                                                      //maybe over precautious but who knows...
     new_regs = 0;
   }
-  exposure_error = error;  //just to pass the variable tp push_exposure
+  exposure_error = error;  //just to pass the variable to push_exposure
   return new_regs;
 }
 
@@ -479,18 +469,11 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   unsigned short int storage_regs;
   unsigned char old_strategy;
   unsigned char temp_camReg[8];
-  new_regs = current_exposure * factor;  //usefull for HDR mode only, either factor is always = 1
-  storage_regs = int(new_regs);          //enforce register type
-  if (GBCAMERA_mode == 1) {              //regular strategy with gain=8
-    if (storage_regs < 0x0010) {         //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-      storage_regs = 0x0010;             //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-    }
-  } else {                        //Game Boy Camera strategy with variable gain
-    if (storage_regs < 0x0030) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-      storage_regs = 0x0030;      //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
-    }
+  new_regs = current_exposure * factor;     //usefull for HDR mode only, either factor is always = 1
+  storage_regs = int(new_regs);             //enforce register type
+  if (storage_regs < low_exposure_limit) {  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    storage_regs = low_exposure_limit;      //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
   }
-
   if (new_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
       clock_divider = clock_divider + 1;
@@ -830,6 +813,35 @@ void edge_extraction() {
     }    /* for y */
   }
 }
+
+void Support_for_the_M64283FP() {
+  //DashBoy Camera strategy for the unobtainium M64283FP sensor
+  //detail of the registers
+  //reg0 = like M64282FP
+  //reg1 = like M64282FP
+  //reg2 = like M64282FP
+  //reg3 = like M64282FP
+  //reg4 = SH  AZ  CL  []  [P3  P2  P1  P0] / CL + AZ + SH + OB =LOW -> automatic zero calibration
+  //reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0]
+  //reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0]
+  //reg7 = like M64282FP BUT E register = 0000 deactivates the edge enhancement. To be like the M64282FP (50% intensity), E = 0100 with the M64282FP
+  //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
+  //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
+
+  if (M64283FP == 1) {              //special M64283FP support - modify register E plus some other things
+    camReg_single[0] = 0b10000000;  //0bZZOOOOOO - positive image reading calibration + O register to 0V
+    camReg_single[1] = 0b11100111;  //0bNVVGGGGG - 2D edge enhancement deactivated + set gain to 24.5dB
+                                    //automatic dark calibration is activated by CL + AZ + SH + OB =LOW (nothing to do)
+    camReg_single[4] = 0b00000001;  //0bSAC_PPPP - putting AZ to 1 creates image artifacts, I suppose this must be 0... datasheet contradicts itself
+    camReg_single[5] = 0b00000000;  //0bPPMOMMMM
+    camReg_single[6] = 0b00000001;  //0bMMMMXXXX
+    camReg_single[7] = 0b00010001;  //0bEEEEIVVV - set edge enhacement ratio to 12.5% + Vref to +0.5V (0 not allowed)
+    regular_v_min = 50;             //to reach full color scale
+    regular_v_max = 200;            //to reach full color scale
+    low_exposure_limit = 0x0001;
+  }
+}
+
 //////////////////////////////////////////////Output stuff///////////////////////////////////////////////////////////////////////////////////////////
 void recording_loop() {
   if ((RAW_recording_mode == 0) | (image_TOKEN == 1)) {
@@ -916,7 +928,6 @@ void recording_loop() {
   gpio_put(RED, 0);
 #endif
 }
-
 
 void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char v_min, unsigned char v_max) {
   double gamma_pixel;
@@ -1151,6 +1162,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     y_box = doc["exposureyWindow"];
     FOCUS_mode = doc["focusPeaking"];
     FOCUS_threshold = doc["focuspeakingThreshold"];
+    M64283FP = doc["M64283FPsensor"];
     Datafile.close();
   }
 #endif
@@ -1325,8 +1337,6 @@ void display_other_informations() {
     sprintf(exposure_string, "REG: 000%X", current_exposure);  //concatenate string for display;
   }
 
-  sprintf(multiplier_string, "Clock/%X", clock_divider);  //concatenate string for display;
-
   if (currentTime_exp > 1000) {
     sprintf(exposure_string_ms, "Exposure: %d ms", currentTime_exp);  //concatenate string for display;
   }
@@ -1340,11 +1350,8 @@ void display_other_informations() {
     sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp);  //concatenate string for display;
   }
 
-  if (exposure_error >= 0) {
-    sprintf(error_string, "Error: +%d", int(exposure_error));
-  } else {
-    sprintf(error_string, "Error: %d", int(exposure_error));
-  }
+  sprintf(multiplier_string, "Clock/%X", clock_divider);  //concatenate string for displaying night mode;
+  //sprintf(error_string, "Error: +%d", int(exposure_error));
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
@@ -1396,12 +1403,10 @@ void display_other_informations() {
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);  //in ms
-  img.setCursor(8, 24);
-  img.println(error_string);
-  img.setCursor(64, 126);
-  img.println(exposure_string);
   img.setCursor(8, 126);
   img.println(multiplier_string);
+  img.setCursor(64, 126);
+  img.println(exposure_string);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
   img.println(storage_file_name);
@@ -1453,7 +1458,50 @@ void display_other_informations() {
     }
     img.setCursor(114, 152);
     img.println(register_strategy, DEC);
+  } else {
+    img.setTextColor(TFT_CYAN);
+    img.setCursor(114, 152);
+    img.println("--");
   }
+
+  if (M64283FP == 0) {
+    img.setTextColor(TFT_CYAN);
+    img.setCursor(100, 144);
+    img.println("82FP");
+  }
+  if (M64283FP == 1) {
+    img.setTextColor(TFT_ORANGE);
+    img.setCursor(100, 144);
+    img.println("83FP");
+  }
+
+#ifdef DEBUG_MODE
+  if (exposure_error >= 0) {
+    sprintf(error_string, "Error: +%d", int(exposure_error));
+  } else {
+    sprintf(error_string, "Error: %d", int(exposure_error));
+  }
+  img.setTextColor(TFT_BLUE);
+  img.setCursor(8, 24);
+  img.println(error_string);
+  img.setCursor(8, 118);
+  img.println(camReg[0], HEX);
+  img.setCursor(24, 118);
+  img.println(camReg[1], HEX);
+  img.setCursor(40, 118);
+  img.println(camReg[2], HEX);
+  img.setCursor(56, 118);
+  img.println(camReg[3], HEX);
+  img.setCursor(72, 118);
+  img.println(camReg[4], HEX);
+  img.setCursor(88, 118);
+  img.println(camReg[5], HEX);
+  img.setCursor(104, 118);
+  img.println(camReg[6], HEX);
+  img.setCursor(120, 118);
+  img.println(camReg[7], HEX);
+#endif
+
 #endif
 }
 
