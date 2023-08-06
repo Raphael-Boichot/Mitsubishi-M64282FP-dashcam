@@ -167,8 +167,12 @@ void setup() {
     multiplier = 1.1;             //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
     v_min = GB_v_min;
     v_max = GB_v_max;
-  } else {                        //regular strategy with gain=8 and fixed other registers except C
-    low_exposure_limit = 0x0030;  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+  } else {  //regular strategy with fixed registers except C
+    if (M64283FP == 1) {
+      low_exposure_limit = 0x0021;  //recommended by the datasheet
+    } else {
+      low_exposure_limit = 0x0030;  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
+    }
     v_min = regular_v_min;
     v_max = regular_v_max;
   }
@@ -830,15 +834,14 @@ void Support_for_the_M64283FP() {
 
   if (M64283FP == 1) {              //special M64283FP support - modify register E plus some other things
     camReg_single[0] = 0b10000000;  //0bZZOOOOOO - positive image reading calibration + O register to 0V
-    camReg_single[1] = 0b11100111;  //0bNVVGGGGG - 2D edge enhancement deactivated + set gain to 24.5dB
+    camReg_single[1] = 0b11100111;  //0bNVVGGGGG - 2D edge enhancement activated + set gain to 24.5dB
                                     //automatic dark calibration is activated by CL + AZ + SH + OB =LOW (nothing to do)
     camReg_single[4] = 0b00000001;  //0bSAC_PPPP - putting AZ to 1 creates image artifacts, I suppose this must be 0... datasheet contradicts itself
     camReg_single[5] = 0b00000000;  //0bPPMOMMMM
     camReg_single[6] = 0b00000001;  //0bMMMMXXXX
     camReg_single[7] = 0b00010001;  //0bEEEEIVVV - set edge enhacement ratio to 12.5% + Vref to +0.5V (0 not allowed)
-    regular_v_min = 50;             //to reach full color scale
-    regular_v_max = 200;            //to reach full color scale
-    low_exposure_limit = 0x0001;
+    regular_v_min = 45;             //to reach full black
+    regular_v_max = 190;            //to reach full white
   }
 }
 
@@ -1459,19 +1462,19 @@ void display_other_informations() {
     img.setCursor(114, 152);
     img.println(register_strategy, DEC);
   } else {
-    img.setTextColor(TFT_CYAN);
+    img.setTextColor(TFT_ORANGE);
     img.setCursor(114, 152);
     img.println("--");
   }
 
   if (M64283FP == 0) {
     img.setTextColor(TFT_CYAN);
-    img.setCursor(100, 144);
+    img.setCursor(102, 144);
     img.println("82FP");
   }
   if (M64283FP == 1) {
     img.setTextColor(TFT_ORANGE);
-    img.setCursor(100, 144);
+    img.setCursor(102, 144);
     img.println("83FP");
   }
 
