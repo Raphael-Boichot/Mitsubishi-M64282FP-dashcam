@@ -1038,6 +1038,10 @@ void pre_allocate_image_with_pretty_borders() {
         number_pixel = prettyborder_6[index];
         pixel = Dithering_palette[prettyborder_6[index + 1]];
         break;
+      case 7:
+        number_pixel = prettyborder_7[index];
+        pixel = Dithering_palette[prettyborder_7[index + 1]];
+        break;
       default:
         BigBmpData[counter] = 0;
     }
@@ -1402,7 +1406,7 @@ void display_other_informations() {
     img.drawLine(x_max, y_max + display_offset, x_max - line_length, y_max + display_offset, TFT_MAGENTA);
     img.drawLine(x_max, y_max + display_offset, x_max, y_max + display_offset - line_length, TFT_MAGENTA);
   }
-  img.setTextColor(TFT_BLUE);
+  img.setTextColor(TFT_ORANGE);
   img.setCursor(8, 18);
   //img.println(exposure_string);//in register value
   img.println(exposure_string_ms);  //in ms
@@ -1484,7 +1488,7 @@ void display_other_informations() {
   } else {
     sprintf(error_string, "Error: %d", int(exposure_error));
   }
-  img.setTextColor(TFT_BLUE);
+  img.setTextColor(TFT_ORANGE);
   img.setCursor(8, 24);
   img.println(error_string);
   img.setCursor(8, 118);
@@ -1626,6 +1630,9 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
       break;
     case 6:
       img.println("Border: TV. GBCam");
+      break;
+    case 7:
+      img.println("Border: M64283FP");
       break;
     default:
       {
