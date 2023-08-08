@@ -3,7 +3,7 @@
 #define ST7735   //for use with the TFT 128x160 (full frame image)
 //#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop) - Beware, you also have to modify the TFT setup accordingly
 //#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor
-#define USE_OVERCLOCKING //self explanatory, use the Arduino IDE overclocking option to 250 MHz
+#define USE_OVERCLOCKING  //self explanatory, use the Arduino IDE overclocking option to 250 MHz
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
 //#define DEBUG_MODE  //allow additionnal outputs on display
@@ -54,7 +54,7 @@ unsigned char FOCUS_threshold = 100;   //0..255, self explanatory
 bool FIXED_EXPOSURE_mode = 0;          //to activate fixed exposure delay mode
 int FIXED_delay = 2048;                //here the result is a fixed exposure perfect for full moon photography
 int FIXED_divider = 1;                 //clock divider
-bool M64283FP = 1;                     //strategy for the M64283FP in single register strategy
+bool M64283FP = 0;                     //strategy for the M64283FP in single register strategy
 
 unsigned char x_box = 8 * 8;                   //x range for autoexposure (centered, like GB camera, 8 tiles)
 unsigned char y_box = 7 * 8;                   //y range for autoexposure (centered, like GB camera, 7 tiles)
@@ -164,9 +164,9 @@ char pixel_shift = 8;          //correction for dithering algorithm, more than m
 
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
-unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
-unsigned char M64282FP_v_min = 45;   //0 is OV, 255 is 3.3 volts
-unsigned char M64282FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
+unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
+unsigned char M64282FP_v_min = 45;                                                                                                      //0 is OV, 255 is 3.3 volts
+unsigned char M64282FP_v_max = 190;                                                                                                     //0 is OV, 255 is 3.3 volts
 //unsigned char camReg_M64282FP[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };old registers
 //unsigned char M64282FP_v_min = 75;   //0 is OV, 255 is 3.3 volts
 //unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
@@ -185,7 +185,7 @@ unsigned char M64282FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
 //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
-unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00010001 };  //registers
+unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00010001 };  //registers
 //positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB =LOW -> automatic zero calibration

@@ -47,6 +47,7 @@ unsigned char CamData[128 * 128];           //sensor data in 8 bits per pixel
 unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel from preceding loop for motion detection
 unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
 unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
+unsigned char CompData[160 * 144 / 4];      //sensor data compressed in 4 pixels per byte, 2 bits per pixel
 unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
 unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
@@ -154,8 +155,8 @@ void setup() {
 
   init_sequence();  //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   //now if code arrives at this point, this means that sensor and SD card are connected correctly, we can go further
-  difference_threshold = motion_detection_threshold * 128 * 120 * 255;  //trigger threshold for motion sensor
-  x_min = (128 - x_box) / 2;                                            //recalculate the autoexposure area limits with json config values
+  difference_threshold = motion_detection_threshold * 128 * max_line * 255;  //trigger threshold for motion sensor
+  x_min = (128 - x_box) / 2;                                                 //recalculate the autoexposure area limits with json config values
   y_min = (max_line - y_box) / 2;
   x_max = x_min + x_box;
   y_max = y_min + y_box;
@@ -190,7 +191,7 @@ void setup() {
     pre_allocate_image_with_pretty_borders();  //pre allocate bmp data for image with borders
     Pre_allocate_bmp_header(160, 144);
   } else {
-    Pre_allocate_bmp_header(128, 120);
+    Pre_allocate_bmp_header(128, max_line);
   }
 
   // initialize recording mode
@@ -202,30 +203,39 @@ void setup() {
   }
 
 
-  PRETTYBORDER_mode++;              //here the border is incremented, if device is booted during preset exposure (next loop), border will change
+  PRETTYBORDER_mode++;  //here the border is incremented, if device is booted during preset exposure (next loop), border will change
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 1);
+#endif
   Put_JSON_config("/config.json");  //Put data in json
-
-  // presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
+// presets the exposure time before displaying to avoid unpleasing result, maybe be slow in the dark
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 0);
+#endif
   for (int i = 1; i < 15; i++) {
     take_a_picture();
     new_exposure = auto_exposure();          // self explanatory
     push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
   }
-
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 1);
+#endif
   PRETTYBORDER_mode--;
   Put_JSON_config("/config.json");  //Put data in json, if device is rebooted before, increment the border #
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 0);
+#endif
 }
-
 //////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
   currentTime = millis();
-  take_a_picture();                              //data in memory for the moment, one frame
-  image_TOKEN = 0;                               //reset any attempt to take more than one picture without pushing a button or observe a difference
-  detect_a_motion();                             //does nothing if MOTION_sensor = 0
-  edge_extraction();                             //does nothing if FOCUS_mode = 0
-  memcpy(CamData_previous, CamData, 128 * 120);  //to deal with motion detection
-  new_exposure = auto_exposure();                // self explanatory
+  take_a_picture();                                   //data in memory for the moment, one frame
+  image_TOKEN = 0;                                    //reset any attempt to take more than one picture without pushing a button or observe a difference
+  detect_a_motion();                                  //does nothing if MOTION_sensor = 0
+  edge_extraction();                                  //does nothing if FOCUS_mode = 0
+  memcpy(CamData_previous, CamData, 128 * max_line);  //to deal with motion detection
+  new_exposure = auto_exposure();                     // self explanatory
 
   if (FIXED_EXPOSURE_mode == 1) {
     new_exposure = FIXED_delay;
@@ -787,7 +797,7 @@ bool camTestSensor()  //dummy cycle faking to take a picture, if it's not able t
 void detect_a_motion() {
   if (MOTION_sensor == 1) {
     difference = 0;
-    for (int i = 0; i < 128 * 120; i++) {
+    for (int i = 0; i < 128 * max_line; i++) {
       difference = difference + abs(CamData[i] - CamData_previous[i]);  //calculate the image difference
     }
     if ((difference > difference_threshold) & ((millis() - currentTime_MOTION) > delay_MOTION)) {
@@ -945,17 +955,15 @@ void pre_allocate_Bayer_tables() {
 void Dither_image() {  //dithering algorithm
   char pixel, pixel_out;
   int counter = 0;
-  pixel_out = 0;
-  for (int y = 0; y < 128; y++) {
+  for (int y = 0; y < max_line; y++) {
     for (int x = 0; x < 128; x++) {
       //pixel = CamData[counter];//non auto_contrasted values, may range between 0 and 255
       if (GBCAMERA_mode == 0) {
         pixel = lookup_serial[CamData[counter]];  //autocontrast is applied here, may range between 0 and 255
       }
       if (GBCAMERA_mode == 1) {
-        pixel = lookup_pico_to_GBD[CamData[counter]] - pixel_shift;  //raw value, in this mode the dithering does the autocontrast
+        pixel = lookup_pico_to_GBD[CamData[counter]];  //raw value, in this mode the dithering does the autocontrast
       }
-      pixel_out = Dithering_palette[3];
       if (pixel < Bayer_matDG_B[(x & 3) + 4 * (y & 3)]) {
         pixel_out = Dithering_palette[0];
       }
@@ -965,8 +973,11 @@ void Dither_image() {  //dithering algorithm
       if ((pixel >= Bayer_matLG_DG[(x & 3) + 4 * (y & 3)]) & (pixel < Bayer_matW_LG[(x & 3) + 4 * (y & 3)])) {
         pixel_out = Dithering_palette[2];
       }
+      if (pixel >= Bayer_matW_LG[(x & 3) + 4 * (y & 3)]) {
+        pixel_out = Dithering_palette[3];
+      }
       BayerData[counter] = pixel_out;
-      counter = counter + 1;
+      counter++;
     }
   }
 }
@@ -1182,14 +1193,14 @@ void dump_data_to_SD_card() {
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
         Datafile.write(BMP_header_generic, 54);                                       //fixed header for 128*120 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
-        Datafile.write(BmpData, 128 * 120);                                           //removing last tile line
+        Datafile.write(BmpData, 128 * max_line);                                      //removing last tile line
         Datafile.close();
       } else {
         Datafile.write("RAWDAT");  //Just a keyword
         Datafile.write(128);
-        Datafile.write(120);
+        Datafile.write(max_line);
         Datafile.write(camReg, 8);  //camera registers from the preceding image, close to the current one
-        Datafile.write(BmpData, 128 * 120);
+        Datafile.write(BmpData, 128 * max_line);
         Datafile.close();
       }
     }
@@ -1211,7 +1222,6 @@ void dump_data_to_SD_card() {
     }
   }
 #endif
-
   delay(25);  //allows current draw to stabilize before taking another shot
 }
 
@@ -1307,7 +1317,6 @@ void short_fancy_delay() {
 }
 
 void display_other_informations() {
-
 #ifdef USE_TFT
   current_exposure = get_exposure(camReg);  //get the current exposure register for TFT display
 #ifdef DEBUG_MODE
