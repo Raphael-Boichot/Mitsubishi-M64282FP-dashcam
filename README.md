@@ -30,7 +30,7 @@ Or if you [like pain](https://www.youtube.com/watch?v=IaUbdIDowJQ):
 
     **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
     
-- Compile your code and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
+- Compile your code **with overclock set at 250 MHz** and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 
 # Basic user manual
 
