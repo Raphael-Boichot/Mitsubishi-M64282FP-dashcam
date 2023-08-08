@@ -1,9 +1,9 @@
 #define USE_TFT  //to allow using the TFT screen - deactivate for debug
 #define USE_SD   //to allow recording on SD - deactivate for debug
 #define ST7735   //for use with the TFT 128x160 (full frame image)
-//#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop)
+//#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop) - Beware, you also have to modify the TFT setup accordingly
 //#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor
-//#define USE_OVERCLOCKING //self explanatory, honestly it changes nothing to my great deception
+#define USE_OVERCLOCKING //self explanatory, use the Arduino IDE overclocking option to 250 MHz
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
 //#define DEBUG_MODE  //allow additionnal outputs on display
@@ -32,7 +32,7 @@ unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colo
 double motion_detection_threshold = 0.025;
 double difference_threshold;               //trigger threshold for motion sensor
 unsigned char jittering_threshold = 13;    //error threshold to keep/change registers in Game Boy Camera Mode
-unsigned int cycles = 7;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned int cycles = 8;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;  //absolute low exposure limit whatever the strategy

@@ -145,8 +145,7 @@ void setup() {
   adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
 
 #ifdef USE_OVERCLOCKING
-  cycles = 16;                      //about twice as fast as the regular 133 MHz
-  set_sys_clock_khz(250000, true);  //about twice as fast as the regular 133 MHz
+  cycles = 19;  //setting for 250 MHz
 #endif
 
 #ifdef USE_SERIAL  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
@@ -1311,6 +1310,7 @@ void display_other_informations() {
 
 #ifdef USE_TFT
   current_exposure = get_exposure(camReg);  //get the current exposure register for TFT display
+#ifdef DEBUG_MODE
   if (current_exposure > 0x0FFF) {
     sprintf(exposure_string, "REG: %X", current_exposure);  //concatenate string for display
   }
@@ -1339,6 +1339,40 @@ void display_other_informations() {
 
   sprintf(multiplier_string, "Clock/%X", clock_divider);  //concatenate string for displaying night mode;
   //sprintf(error_string, "Error: +%d", int(exposure_error));
+
+  img.setTextColor(TFT_ORANGE);
+  img.setCursor(8, 18);
+  img.println(exposure_string_ms);  //in ms
+  img.setCursor(8, 126);
+  img.println(multiplier_string);
+  img.setCursor(64, 126);
+  img.println(exposure_string);
+
+  if (exposure_error >= 0) {
+    sprintf(error_string, "Error: +%d", int(exposure_error));
+  } else {
+    sprintf(error_string, "Error: %d", int(exposure_error));
+  }
+  img.setTextColor(TFT_ORANGE);
+  img.setCursor(8, 24);
+  img.println(error_string);
+  img.setCursor(8, 118);
+  img.println(camReg[0], HEX);
+  img.setCursor(24, 118);
+  img.println(camReg[1], HEX);
+  img.setCursor(40, 118);
+  img.println(camReg[2], HEX);
+  img.setCursor(56, 118);
+  img.println(camReg[3], HEX);
+  img.setCursor(72, 118);
+  img.println(camReg[4], HEX);
+  img.setCursor(88, 118);
+  img.println(camReg[5], HEX);
+  img.setCursor(104, 118);
+  img.println(camReg[6], HEX);
+  img.setCursor(120, 118);
+  img.println(camReg[7], HEX);
+#endif
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
@@ -1386,14 +1420,6 @@ void display_other_informations() {
     img.drawLine(x_max, y_max + display_offset, x_max - line_length, y_max + display_offset, TFT_MAGENTA);
     img.drawLine(x_max, y_max + display_offset, x_max, y_max + display_offset - line_length, TFT_MAGENTA);
   }
-  img.setTextColor(TFT_ORANGE);
-  img.setCursor(8, 18);
-  //img.println(exposure_string);//in register value
-  img.println(exposure_string_ms);  //in ms
-  img.setCursor(8, 126);
-  img.println(multiplier_string);
-  img.setCursor(64, 126);
-  img.println(exposure_string);
   img.setTextColor(TFT_WHITE);
   img.setCursor(0, 136);
   img.println(storage_file_name);
@@ -1461,34 +1487,6 @@ void display_other_informations() {
     img.setCursor(102, 144);
     img.println("83FP");
   }
-
-#ifdef DEBUG_MODE
-  if (exposure_error >= 0) {
-    sprintf(error_string, "Error: +%d", int(exposure_error));
-  } else {
-    sprintf(error_string, "Error: %d", int(exposure_error));
-  }
-  img.setTextColor(TFT_ORANGE);
-  img.setCursor(8, 24);
-  img.println(error_string);
-  img.setCursor(8, 118);
-  img.println(camReg[0], HEX);
-  img.setCursor(24, 118);
-  img.println(camReg[1], HEX);
-  img.setCursor(40, 118);
-  img.println(camReg[2], HEX);
-  img.setCursor(56, 118);
-  img.println(camReg[3], HEX);
-  img.setCursor(72, 118);
-  img.println(camReg[4], HEX);
-  img.setCursor(88, 118);
-  img.println(camReg[5], HEX);
-  img.setCursor(104, 118);
-  img.println(camReg[6], HEX);
-  img.setCursor(120, 118);
-  img.println(camReg[7], HEX);
-#endif
-
 #endif
 }
 
