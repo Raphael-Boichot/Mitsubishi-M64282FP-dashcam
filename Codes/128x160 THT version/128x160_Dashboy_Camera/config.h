@@ -185,12 +185,12 @@ unsigned char M64282FP_v_max = 190;                                             
 //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
-unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00010001 };  //registers
+unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers
 //positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB =LOW -> automatic zero calibration
 //putting AZ to 1 creates image artifacts, I suppose this must be 0... datasheet contradicts itself
-unsigned char M64283FP_v_min = 45;   //0 is OV, 255 is 3.3 volts
+unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
 unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
 #ifdef TADDREGISTER
 #define TADD 22  //to pin TADD of the M64283FP CMOS sensor
