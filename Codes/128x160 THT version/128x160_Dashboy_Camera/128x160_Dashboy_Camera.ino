@@ -165,6 +165,13 @@ void setup() {
     multiplier = 1.1;             //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
     v_min = GB_v_min;
     v_max = GB_v_max;
+    if (M64283FP == 1) {                     //strategy for the M64283FP sensor
+      camReg1[7] = camReg1[7] | 0b01000000;  //Forcing E register to 50% 2D edge enjancement
+      camReg2[7] = camReg2[7] | 0b01000000;
+      camReg3[7] = camReg3[7] | 0b01000000;
+      camReg4[7] = camReg4[7] | 0b01000000;
+      camReg5[7] = camReg5[7] | 0b01000000;
+    }
   } else {                              //regular strategy with fixed registers except C
     if (M64283FP == 1) {                //strategy for the M64283FP sensor
       low_exposure_threshold = 0x0021;  //recommended value by the datasheet of the M64283FP to avoid artifacts with 2D edge enhancement
