@@ -6,7 +6,7 @@
 #define USE_OVERCLOCKING  //self explanatory, use the Arduino IDE overclocking option to 250 MHz
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
-//#define DEBUG_MODE  //allow additionnal outputs on display
+#define DEBUG_MODE  //allow additionnal outputs on display
 
 
 #ifdef ST7789
