@@ -451,6 +451,7 @@ double auto_exposure() {
       i++;
     }
   }
+
   mean_value = accumulator / (counter);
   error = setpoint - mean_value;  //so in case of deviation, registers 2 and 3 are corrected
   //this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
@@ -473,6 +474,10 @@ double auto_exposure() {
   }
   if (exp_regs > 0x0FFF) {
     least_change = 0xFF;  //least change must increase if exposure is high
+  }
+
+  if ((M64283FP == 1) & (accumulator < 150000)) {  //Sensor saturated !
+    new_regs = low_exposure_threshold;             //anti-glare strategy...
   }
 
   if ((error <= 10) & (error >= 5)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
