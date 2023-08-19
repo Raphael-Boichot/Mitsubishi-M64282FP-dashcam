@@ -1316,6 +1316,39 @@ void Pre_allocate_bmp_header(unsigned int bitmap_width, unsigned int bitmap_heig
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
+void display_the_registers() {
+  unsigned char row, column;
+  unsigned char display_offset = 5;
+
+
+  img.setCursor(8, 118);
+  if (camReg[0] > 0x0F) {
+    img.println(camReg[0], HEX);
+  } else {
+    img.println("0");
+    img.setCursor(8 + display_offset, 118);
+    img.println(camReg[0], HEX);
+  }
+
+  img.setCursor(24, 118);
+  img.println(camReg[1], HEX);
+  img.setCursor(40, 118);
+  img.println(camReg[2], HEX);
+  img.setCursor(56, 118);
+  img.println(camReg[3], HEX);
+  img.setCursor(72, 118);
+  img.println(camReg[4], HEX);
+  img.setCursor(88, 118);
+  img.println(camReg[5], HEX);
+  img.setCursor(104, 118);
+  img.println(camReg[6], HEX);
+  img.setCursor(120, 118);
+  img.println(camReg[7], HEX);
+}
+
+
+
+
 void short_fancy_delay() {
 #ifndef USE_SNEAK_MODE
   for (int i = 0; i < 10; i++) {
@@ -1353,13 +1386,13 @@ void display_other_informations() {
   if (currentTime_exp <= 100) {
     sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp);  //concatenate string for display;
   }
-//  if (currentTime_exp <= 10) {
-//    sprintf(exposure_string_ms, "Exposure: 000%d millis", currentTime_exp);  //concatenate string for display;
-//  }
-    if ((current_exposure * 16) <= 10000) {
+  //  if (currentTime_exp <= 10) {
+  //    sprintf(exposure_string_ms, "Exposure: 000%d millis", currentTime_exp);  //concatenate string for display;
+  //  }
+  if ((current_exposure * 16) <= 10000) {
     sprintf(exposure_string_ms, "Exposure: %d us", current_exposure * 16);  //concatenate string for display;
   }
-    if ((current_exposure * 16) <= 1000) {
+  if ((current_exposure * 16) <= 1000) {
     sprintf(exposure_string_ms, "Exposure: 0%d us", current_exposure * 16);  //concatenate string for display;
   }
 
@@ -1382,21 +1415,46 @@ void display_other_informations() {
   img.setTextColor(TFT_ORANGE);
   img.setCursor(8, 24);
   img.println(error_string);
-  img.setCursor(8, 118);
+
+
+  img.setCursor(2, 118);
+  if (camReg[0] < 0x10) {
+    img.print("0");
+  }
   img.println(camReg[0], HEX);
-  img.setCursor(24, 118);
+
+  img.setCursor(18, 118);
+  if (camReg[1] < 0x10) {
+    img.print("0");
+  }
   img.println(camReg[1], HEX);
-  img.setCursor(40, 118);
+
+  img.setCursor(34, 118);
+  if (camReg[2] < 0x10) {
+    img.print("0");
+  }
   img.println(camReg[2], HEX);
-  img.setCursor(56, 118);
+
+  img.setCursor(50, 118);
+  if (camReg[3] < 0x10) {
+    img.print("0");
+  }
   img.println(camReg[3], HEX);
-  img.setCursor(72, 118);
+
+  img.setCursor(66, 118);
+  img.print("0");
   img.println(camReg[4], HEX);
-  img.setCursor(88, 118);
+  img.setCursor(82, 118);
+  img.print("0");
   img.println(camReg[5], HEX);
-  img.setCursor(104, 118);
+  img.setCursor(98, 118);
+  img.print("0");
   img.println(camReg[6], HEX);
-  img.setCursor(120, 118);
+
+  img.setCursor(114, 118);
+  if (camReg[7] < 0x10) {
+    img.print("0");
+  }
   img.println(camReg[7], HEX);
 #endif
 
