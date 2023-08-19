@@ -1316,39 +1316,6 @@ void Pre_allocate_bmp_header(unsigned int bitmap_width, unsigned int bitmap_heig
 }
 
 //////////////////////////////////////////////Display stuff///////////////////////////////////////////////////////////////////////////////////////////
-void display_the_registers() {
-  unsigned char row, column;
-  unsigned char display_offset = 5;
-
-
-  img.setCursor(8, 118);
-  if (camReg[0] > 0x0F) {
-    img.println(camReg[0], HEX);
-  } else {
-    img.println("0");
-    img.setCursor(8 + display_offset, 118);
-    img.println(camReg[0], HEX);
-  }
-
-  img.setCursor(24, 118);
-  img.println(camReg[1], HEX);
-  img.setCursor(40, 118);
-  img.println(camReg[2], HEX);
-  img.setCursor(56, 118);
-  img.println(camReg[3], HEX);
-  img.setCursor(72, 118);
-  img.println(camReg[4], HEX);
-  img.setCursor(88, 118);
-  img.println(camReg[5], HEX);
-  img.setCursor(104, 118);
-  img.println(camReg[6], HEX);
-  img.setCursor(120, 118);
-  img.println(camReg[7], HEX);
-}
-
-
-
-
 void short_fancy_delay() {
 #ifndef USE_SNEAK_MODE
   for (int i = 0; i < 10; i++) {
