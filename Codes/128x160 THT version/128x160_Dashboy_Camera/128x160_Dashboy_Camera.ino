@@ -1353,8 +1353,14 @@ void display_other_informations() {
   if (currentTime_exp <= 100) {
     sprintf(exposure_string_ms, "Exposure: 00%d ms", currentTime_exp);  //concatenate string for display;
   }
-  if (currentTime_exp <= 10) {
-    sprintf(exposure_string_ms, "Exposure: 000%d ms", currentTime_exp);  //concatenate string for display;
+//  if (currentTime_exp <= 10) {
+//    sprintf(exposure_string_ms, "Exposure: 000%d millis", currentTime_exp);  //concatenate string for display;
+//  }
+    if ((current_exposure * 16) <= 10000) {
+    sprintf(exposure_string_ms, "Exposure: %d us", current_exposure * 16);  //concatenate string for display;
+  }
+    if ((current_exposure * 16) <= 1000) {
+    sprintf(exposure_string_ms, "Exposure: 0%d us", current_exposure * 16);  //concatenate string for display;
   }
 
   sprintf(multiplier_string, "Clock/%X", clock_divider);  //concatenate string for displaying night mode;

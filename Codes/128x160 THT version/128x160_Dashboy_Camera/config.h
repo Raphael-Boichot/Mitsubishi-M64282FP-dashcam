@@ -146,6 +146,7 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
 //reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0 (forbidden state)
 //P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly
 //Game Boy Camera strategy: uses half the voltage scale
+//Note for finicky devs: register O must theoretically be adjusted between different sensors to get seamless transitions...
 ///////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
 unsigned char camReg1[8] = { 0b10101001, 0b00100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //low exposure time - high light
 //transition@ C=0x0030
@@ -185,7 +186,8 @@ unsigned char M64282FP_v_max = 190;                                             
 //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
-unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers
+unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers with black level calibration
+//unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11100001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration
 //positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB =LOW -> automatic zero calibration
