@@ -11,7 +11,7 @@ Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game 
 
 # Picture of the device (example of PCB V1.0)
 
-![Dashboy Camera V1.0](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_1.0.png)
+![Dashboy Camera V1.0](Docs%20and%20research/Image%20files/PCB_version_1.0.png)
 
 # Multi-systems installation guide
 
@@ -67,7 +67,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 # Some pictures made with the device
 
-![Dashboy Camera pictures](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Examples.png)
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples.png)
 
 Pictures were taken with the original plastic lens, [CCTV lenses](https://fr.aliexpress.com/item/1005001617519795.html) with [CS mount mod](https://www.thingiverse.com/thing:5024326), [CCTV fisheye with M12/CS adapters](https://fr.aliexpress.com/item/1005005496283838.html) and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm), sensor glued into a Zenit 12XP shell.
 
@@ -98,7 +98,7 @@ The device is meant to be used with **AA NiMH batteries**. Lithium batteries are
 
 PCB are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic) folder of the project. To connect the sensor to the board, use a female JST connector with bended pins in order to inverse the gender of the JST cable, or simply order the [breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board). Be carefull with the polarity: both faces of the cables must be the same (camera sensor cable side and extension cable side, see following images). This situation corresponds also to the INPUT<->NORMAL OUT of the breakout board if you order the extension cables given in **Required parts** section.
 
-![Dashboy Camera connections](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Ribbon_connection.png)
+![Dashboy Camera connections](Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
 PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyDA](https://easyeda.com/fr).
 
@@ -117,7 +117,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 
 ## Image of the populated PCB as you will get it
 
-![Dashboy populated PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/PCB_version_2.0.png)
+![Dashboy populated PCB](Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
 # Some random informations for you Game Boy Camera nerd !
 
@@ -148,4 +148,4 @@ The code and current design come as it. If you're not happy with the current har
 
 # Developpement steps
 
-  ![Dashboy Camera prototype](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Developpment_steps.gif)
+  ![Dashboy Camera prototype](Docs%20and%20research/Image%20files/Developpment_steps.gif)
