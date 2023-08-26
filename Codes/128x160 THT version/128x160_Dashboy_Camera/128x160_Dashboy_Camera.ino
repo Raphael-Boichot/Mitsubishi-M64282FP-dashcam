@@ -1486,7 +1486,7 @@ void display_other_informations() {
       }
       if (MOTION_sensor == 1) {
         if ((millis() - currentTime_MOTION) > delay_MOTION) {
-          img.println("TIMELAPSE to exit");
+          img.println("TIMELAPSE->exit");
         } else {
           img.setTextColor(TFT_RED);
           img.println("Sensor pre-delay");
