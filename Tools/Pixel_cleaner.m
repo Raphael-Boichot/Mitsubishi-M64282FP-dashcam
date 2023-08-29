@@ -1,8 +1,6 @@
 clc
 clear
 a=imread('test.png');
-
-fid=fopen('prettyborder.h','w');
 [hauteur, largeur, pro]=size(a);
 a=double(a(:,:,1));
 palette=unique(a)
