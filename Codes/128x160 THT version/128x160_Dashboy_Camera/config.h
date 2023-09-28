@@ -166,8 +166,8 @@ char pixel_shift = 8;          //correction for dithering algorithm, more than m
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
-unsigned char M64282FP_v_min = 45;                                                                                                      //0 is OV, 255 is 3.3 volts
-unsigned char M64282FP_v_max = 190;                                                                                                     //0 is OV, 255 is 3.3 volts
+unsigned char M64282FP_v_min = 75;                                                                                                      //0 is OV, 255 is 3.3 volts
+unsigned char M64282FP_v_max = 180;                                                                                                     //0 is OV, 255 is 3.3 volts
 //unsigned char camReg_M64282FP[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };old registers
 //unsigned char M64282FP_v_min = 75;   //0 is OV, 255 is 3.3 volts
 //unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
