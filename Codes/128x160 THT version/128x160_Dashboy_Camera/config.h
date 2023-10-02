@@ -32,7 +32,8 @@ unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colo
 double motion_detection_threshold = 0.025;
 double difference_threshold;               //trigger threshold for motion sensor
 unsigned char jittering_threshold = 13;    //error threshold to keep/change registers in Game Boy Camera Mode
-unsigned int cycles = 8;                   //time delay in processor cycles, to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+unsigned int cycles = 8;                   //time delay in processor cycles (@133 MHz), to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+//to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
 unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;  //absolute low exposure limit whatever the strategy
@@ -166,7 +167,7 @@ char pixel_shift = 8;          //correction for dithering algorithm, more than m
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
-unsigned char M64282FP_v_min = 75;                                                                                                      //0 is OV, 255 is 3.3 volts
+unsigned char M64282FP_v_min = 50;                                                                                                      //0 is OV, 255 is 3.3 volts
 unsigned char M64282FP_v_max = 180;                                                                                                     //0 is OV, 255 is 3.3 volts
 //unsigned char camReg_M64282FP[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };old registers
 //unsigned char M64282FP_v_min = 75;   //0 is OV, 255 is 3.3 volts

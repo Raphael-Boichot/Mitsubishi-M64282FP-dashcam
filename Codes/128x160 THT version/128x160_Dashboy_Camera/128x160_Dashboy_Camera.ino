@@ -146,6 +146,7 @@ void setup() {
 
 #ifdef USE_OVERCLOCKING
   cycles = 19;  //setting for 250 MHz
+  //to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
 #endif
 
 #ifdef USE_SERIAL  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
