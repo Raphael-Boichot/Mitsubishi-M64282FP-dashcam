@@ -7,8 +7,6 @@ The project fully emulates the sensor management strategy of the Game Boy Camera
 
 If you manage to touch the [unobtainium M64283FP](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Mitsubishi%20Integrated%20Circuit%20M64283FP%20Image%20Sensor.pdf), "enhanced" version of the [M64282FP](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Mitsubishi%20Integrated%20Circuit%20M64282FP%20Image%20Sensor.pdf), it's also compatible with the DashBoy Camera (and the Game Boy Camera in general). I was lucky enough to obtain a few of them, and was able to test them in real-life conditions. This sensor produces very smooth images due to an increased in IR sensitivity and some subtle changes in register tables.
 
-Want to discuss with the author or other Game Boy Camera nerds ? Join the [Game Boy Camera Club !](https://discord.gg/TDrcFKxAMU)
-
 Oh, and you may also check this similar project using a [STM32](https://github.com/mupfdev/CMOS-Holga) and a Holga camera that was coincidentally developped at the same period of time.
 
 # Picture of the device (example of PCB V1.0)
