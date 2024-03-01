@@ -1,5 +1,3 @@
-**Note: this archive is no longer maintained since Januray 2024. Enjoy it as it is !**
-
 # The DASHBOY CAMERA
 
 ## A digital camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
