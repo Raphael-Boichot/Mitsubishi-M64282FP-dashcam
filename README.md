@@ -1,6 +1,7 @@
 # The DASHBOY CAMERA
 ## A digital camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
 
+**Media coverage:**
 - **Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)**
 - **PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)**
 - **Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)**
@@ -86,8 +87,8 @@ So you will need:
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes ("Color: Pico Original").**
 - A [1.8 TFT SPI 128x160 display with SD card slot](https://fr.aliexpress.com/item/32964493983.html). Note that it is pixel perfect with the sensor, which is cool. Choose the red PCB one if any color choice. It must always come with a regular SD slot. Any similar one in another seller will do the job.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html). Any similar one in another seller will do the job.
-- Some [9 pins JST ZH1.5MM connector](https://fr.aliexpress.com/item/1005006028155508.html). Choose Horizontal or vertical SMD, ZH1.5MM, 9P. The PCB was made for the vertical version but both work.
-- Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html). Beware, the Aliexpress models are overall crap, they tends to loose connection easily after several bending. In case of doubt or display bug, change the ribbon cable without hesitation.
+- Some [9 pins JST/ZH1.5MM connector](https://fr.aliexpress.com/item/1005006028155508.html). Choose Horizontal or vertical SMD, ZH1.5MM, 9P. The PCB was made for the vertical version but both work.
+- Some [9 pins, double head, 10 cm, JST/ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html). Beware, the Aliexpress models are overall crap, they tends to loose connection easily after several bending. In case of doubt or display bug, change the ribbon cable without hesitation.
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
 - A [DC-DC 5 volts regulator with buck boost converter](https://fr.aliexpress.com/item/32813355879.html). It is based on a ME2108 DC/DC converter chip. Due to small voltage ripples at output, it requires an extra beefy capacitor (see next parts).
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap and do not hold battery correctly.
