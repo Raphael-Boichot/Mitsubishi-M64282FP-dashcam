@@ -3,7 +3,7 @@
 #define ST7735   //for use with the TFT 128x160 (full frame image)
 //#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop) - Beware, you also have to modify the TFT setup accordingly
 //#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor, unfinished, do not activate !
-#define USE_OVERCLOCKING  //self explanatory, use the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
+//#define USE_OVERCLOCKING  //self explanatory, use the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
 #define DEBUG_MODE  //allow additionnal outputs on display

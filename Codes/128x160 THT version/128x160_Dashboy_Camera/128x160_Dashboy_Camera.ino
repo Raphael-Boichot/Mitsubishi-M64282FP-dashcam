@@ -1134,7 +1134,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
   if (SD.exists(path)) {
     JSON_OK = 1;
     File Datafile = SD.open(path);
-    StaticJsonDocument<8192> doc;
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, Datafile);
     RAW_recording_mode = doc["timelapserawrecordingMode"];
     for (int i = 0; i < num_timelapses; i++) {
@@ -1183,7 +1183,7 @@ void Put_JSON_config(const char* path) {  //I've copy paste the library examples
                                           // Open file for reading
 
 #ifdef USE_SD
-  DynamicJsonDocument doc(8192);
+  JsonDocument doc;
   File Datafile = SD.open(path);
   deserializeJson(doc, Datafile);
   Datafile.close();
