@@ -2,9 +2,9 @@
 ## A digital camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
 
 ## Media coverage
-- Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)
-- PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)
-- Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)
+- **Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)**
+- **PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)**
+- **Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)**
 
 The project fully emulates the sensor management strategy of the Game Boy Camera while completely bypassing the MAC-GBD mapper, which means you can record pixel perfect images without the limitation of storage space or the need for a Game Boy Printer emulator. The device can output dithered 2 bits per pixel images (like the Game Boy Camera) as well as smooth 8 bits per pixel images that take advantage of the full sensor bit-depth. It features time lapse recording, live recording, motion detection, High Dynamic Range, multi-exposure, night mode, Peak Focusing, fancy borders and even more. It's a fully open project so fork it and play with it !
 
