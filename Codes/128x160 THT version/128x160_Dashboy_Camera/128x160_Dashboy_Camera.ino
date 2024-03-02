@@ -3,7 +3,7 @@
 //I've minimized if not banished the use of local variables, pointers and structures to have a constant clear view of what happens and memory state.
 //The code is written to go fast, so the use of numerous lookup tables and precalculated arrays always present into ram.
 
-//from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author
+//started from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author, anyway, only few lines of the starting code are still there
 //stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
 //version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
