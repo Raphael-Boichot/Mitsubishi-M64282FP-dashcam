@@ -1,7 +1,6 @@
 # The DASHBOY CAMERA
 ## A digital camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
 
-## Media coverage
 - **Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)**
 - **PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)**
 - **Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)**
