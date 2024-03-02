@@ -105,7 +105,7 @@ PCB are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64
 
 ![Dashboy Camera connections](Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
-PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyDA](https://easyeda.com/fr).
+PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyeDA](https://easyeda.com/fr).
 
 ## Building instructions
 
