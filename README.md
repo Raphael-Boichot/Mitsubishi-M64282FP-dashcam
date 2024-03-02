@@ -85,10 +85,10 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 So you will need: 
 - [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
 - An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes ("Color: Pico Original").**
-- A [1.8 TFT SPI 128x160 display](https://fr.aliexpress.com/item/32964493983.html). Note that it is pixel perfect with the sensor, which is cool. Choose the red PCB one if any color choice.
-- Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html).
+- A [1.8 TFT SPI 128x160 display with SD card slot](https://fr.aliexpress.com/item/32964493983.html). Note that it is pixel perfect with the sensor, which is cool. Choose the red PCB one if any color choice. It must always come with a regular SD slot. Any similar one in another seller will do the job.
+- Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html). Any similar one in another seller will do the job.
 - Some [9 pins JST ZH1.5MM connector](https://fr.aliexpress.com/item/1005006028155508.html). Choose Horizontal or vertical SMD, ZH1.5MM, 9P. The PCB was made for the vertical version but both work.
-- Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html).
+- Some [9 pins, double head, 10 cm, JST ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html). Beware, the Aliexpress models are overall crap, they tends to loose connection easily after several bending. In case of doubt or display bug, change the ribbon cable without hesitation.
 - Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
 - A [DC-DC 5 volts regulator](https://fr.aliexpress.com/item/32813355879.html). It is based on a ME2108 DC/DC converter chip. Due to small voltage ripples, it requires an extra capacitor (see next parts).
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap and do not hold battery correctly.
