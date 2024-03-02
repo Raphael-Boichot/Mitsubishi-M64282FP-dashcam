@@ -20,7 +20,7 @@ Oh, and you may also check this similar project using a [STM32](https://github.c
 
 # Multi-systems installation guide
 
-- **Just drop the [compiled uf2 file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Build) to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
+- **Just drop one of the [compiled uf2 files](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Build) to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
 
 Or if you [like pain](https://www.youtube.com/watch?v=IaUbdIDowJQ):
 
