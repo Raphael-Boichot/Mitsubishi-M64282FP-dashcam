@@ -169,7 +169,7 @@ The code and current design come as it. If you're not happy with the current har
 # Acknowledgments
 
 - [Andreas Hahn](https://github.com/HerrZatacke) for the fruitful technical dicussions, the [dithering pattern generator](https://herrzatacke.github.io/dither-pattern-gen/) the [Powershell scripts](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/SD), the [colorscale generator](https://github.com/HerrZatacke/gradient-values) and the [MF64283FP/82FP-compatible PCB](https://github.com/HerrZatacke/M64283FP-Camera-PCB). He provided many ideas, tools, concepts and design feedbacks, as well as a project for an ultra-small device that I hope will one day become a reality.
-- Razole for providing me some M64283FPs "under the counter" for free. I know, I haven't kept my promise to implement all the sensor's functions.
+- Razole for providing me some M64283FPs "under the counter" in exchange of the #000001 exemplary of the current device. And I know Razole, I haven't kept my promise to implement all the sensor's functions.
 - [Rafael Zenaro](https://github.com/zenaro147) because I stole chunks of code and ideas from the [NeoGB Printer project](https://github.com/zenaro147/NeoGB-Printer). Coding myself for the NeoGB printer on the crappy ESP32 gave me enough confidence to dare starting this quite convoluted project. Great thanks my friend, whatever you do now !
 - [Michael Shimniok](https://github.com/shimniok/avr-gameboy-cam) and/or [Laurent Saint-Marcel](https://github.com/BackupGGCode/avr-gameboy-cam) for the Arduino code I started from (initial [source](http://sophiateam.undrgnd.free.fr/microcontroller/camera/) here). I'm not 100% sure of who is the initial author so I apologize for any error in citation.
 
