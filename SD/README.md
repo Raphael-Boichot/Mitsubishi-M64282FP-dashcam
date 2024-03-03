@@ -3,8 +3,10 @@
 ## Powershell scripts made by [HerrZatacke](https://github.com/HerrZatacke)
 
 - **Upscaler_Camera.ps1** converts 1x BMP files from /Camera folder to 8x PNG;
-- **Upscaler_MS.ps1** converts 1x BMP files from /MS (Motion Sensor) folder to 8x PNG; 
-- **Upscaler_TL.ps1** converts 1x BMP files from /TL (Time Lapse) folder to 8x PNG; 
+- **Upscaler_MS.ps1** converts raw datafiles files from /MS (Motion Sensor) folder to 8x PNG; 
+- **Upscaler_TL.ps1** converts raw datafiles files from /TL (Time Lapse) folder to 8x PNG;
+
+I you want to directly store Motion Sensor and Timelapse images in BMP (for example because you have no access to Powershell on your OS, set timelapserawrecordingMode to 0 in json config file (see next section). Recording in BMP format directly decreases the available fps.
 
 ## json configuration file
 
