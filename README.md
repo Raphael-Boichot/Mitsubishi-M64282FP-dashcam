@@ -6,7 +6,7 @@
 - **PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)**
 - **Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)**
 
-Want to discuss about the projet ? Go to the [dedicated section](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/discussions)
+**Want to discuss about the projet ? Go to the [dedicated section](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/discussions)**
 
 The project fully emulates the sensor management strategy of the Game Boy Camera while completely bypassing the MAC-GBD mapper, which means you can record pixel perfect images without the limitation of storage space or the need for a Game Boy Printer emulator. The device can output dithered 2 bits per pixel images (like the Game Boy Camera) as well as smooth 8 bits per pixel images that take advantage of the full sensor bit-depth. It features time lapse recording, live recording, motion detection, High Dynamic Range, multi-exposure, night mode, Peak Focusing, fancy borders and even more. It's a fully open project so fork it and play with it !
 
@@ -90,7 +90,7 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ## Required parts
 
-**The total cost (Game Boy Camera not included), considering that you start from scratch, is about 35€ (PCB included). It has been designed to use ultra-cheap and ultra-common parts only.** Most of parts can be recycled from used electronics or Arduino related projects. If you're a bit into electronics, you probably yet have most of the parts somewhere on shelves. **It is fully through-hole so it necessitates nothing but very basic skills in soldering.**
+**The total cost (Game Boy Camera not included), considering that you start from scratch, is about 35€ (PCB included). It has been designed to use ultra-cheap and ultra-common parts only.** Most of parts can be recycled from used electronics or Arduino related projects. If you're a bit into electronics, you probably yet have most of the parts somewhere on shelves. **It is fully through-hole on purpose so it necessitates nothing but very basic skills in soldering.**
 
 So you will need: 
 - [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
@@ -160,7 +160,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Adding some cool features like [slit scan photography](https://fr.wikipedia.org/wiki/Slit-scan) or multi-shot in an [Action Sampler](https://shop.lomography.com/fr/actionsampler-clear) style was condidered but will destroy more or less the code structure and requires ton of free ram, so I balanced the interest of adding these features versus the code stability. Maybe one day.
 - Adding Game Boy Printer capabilities was imagined as is it quite easy to add ([everything is yet more or less written]((https://github.com/Raphael-Boichot/The-Arduino-SD-Game-Boy-Printer))), but it would require some more free GPIO pins and a menuing system to switch between a "shot mode" and "display/printer mode".
 - Adding a menuing system with a single joystick was imagined, but it requires basically starting the code from scratch. Indeed, the whole device is though as a timelapse machine, so the regular camera mode is written like a one image timelapse ! More generally, the code structure being one giant loop for display with stuff around, add a menuing system is not easy as it.
-- Make a full SMD device small and pretty (with sensor included on the PCB and a printed shell) to make a tiny digital camera form factor with it. Honestly, 100% possible, 100% ultra cool, but totally out of reach for me in 2024. I'm not a good designer or electronician at all, I'm just half-good at cracking differential equations.
+- Make a full SMD device small and pretty (with sensor included on the PCB and a printed shell) to make a tiny digital camera form factor with it. Honestly, 100% possible, 100% ultra cool, but totally out of reach for me in 2024. I'm not a good designer or electronician at all, I'm just half-good at cracking differential equations. Plus SMD stuff can be tricky as entry point for people not good at soldering (me included).
 
 # Kind warning
 
