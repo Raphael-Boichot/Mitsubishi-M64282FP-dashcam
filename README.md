@@ -144,18 +144,15 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - If you use a lens mod with the DashBoy camera, the lens aperture will define how dirty will look your sensor. The wider the opening, the less artifacts on the image. These speckles due to dust or surface roughness can barely be seens with a regular Game Boy Camera due to dithering but becomes very obvious in 8 bits mode where the image is much smoother. So the DashBoy Camera does not wear your sensor, it just reveals its true imperfections !
 - According to an [internal Mitsubishi source](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Yerazunis%20(1999)%20An%20Inexpensive%2C%20All%20Solid-state%20Video%20and%20Data%20Recorder%20for%20Accident%20Reconstruction.pdf), the use of the M64282FP artificial retina for road safety dashcam application was assessed in 1999. They recommend using the [MAX153 flash ADC](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/MAX153%20-%201Msps%2C%20%C2%B5P-Compatible%2C8-Bit%20ADC%20with%201%C2%B5A%20Power-Down.pdf) to convert analog signal fast enough for a live (5 fps !) rendering and recording of images. The MAC-GBD, mapper of the Game Boy Camera, [embeds a flash ADC](https://github.com/Raphael-Boichot/Game-Boy-chips-decapping-project#game-boy-camera-mac-gbd-mapper) too on its chip. The probability is thin but not zero that the MAC-GBD flash ADC would be simply a MAX153 adapted for this custom mapper. A copy of this experiment [is proposed here](https://github.com/Raphael-Boichot/Game-Boy-camera-sniffer). And yes it works !
 
-# Kind warning
-
-The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
-
-# Do list
-- ~~fix a labelling error on the sub-PCB for sensor connnection. The board is OK but the line labelling has some inconsistencies.~~ done
-- ~~add a version compiled at 125 MHz for long timelapses (saves battery but less responsive)~~ done
-
 # Things that were dismissed during dev for more or less good reasons
+
 - Direct recording in PNG format with the [PNGenc library](https://github.com/bitbank2/PNGenc), instead of BMP. I managed to embed this library into the [NeoGB printer](https://github.com/zenaro147/NeoGB-Printer) (after intense debugging I must admit), but no matter how I tune the memory management in the DashBoy Camera project, I sometimes ran out of memory despite the fact that I still have plenty. So I had a version 99% working but not 100%... I would say it's doable with a bit more of efforts. I've also tried to directly code a PNG encoder of my own to manage memory myself but it's a bit too convoluted for me at the moment. And BMP just works fine and fast in fact, I very like this encoding format.
 - Full support of the "extended" capabilities of the M64283FP sensor. Well, the "extended" capabilities are automatic dark level calibration which is completely bugged when I try to activate it as I said. And concerning the use of the extra TADD pin, it can be used to send new registers to perform hardware cropping and manage x/y projections, which will require very huge code modification to handle. As it is 10x easier to do this software and has a very limited aesthetical interest, so... The code is prepared for this but I was stuck in dev by lack of interest.
 - Adding some cool features like [slit scan photography](https://fr.wikipedia.org/wiki/Slit-scan) or multi-shot in an [Action Sampler](https://shop.lomography.com/fr/actionsampler-clear) style were condidered but will destroy more or less the code structure and requires ton of free ram, so I balanced the interest od these features versus the code stability.
+
+# Kind warning
+
+The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
 # Acknowledgments
 
