@@ -86,7 +86,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye with M12/CS adapters, and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm), sensor glued into a Zenit 12XP shell.
 
-# Some time lapses made with the device
+# Some timelapses made with the device
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Moon.gif)
 
