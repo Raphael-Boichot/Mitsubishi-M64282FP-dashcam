@@ -1,2 +1,1 @@
-
-To be edited with the Standard version of EasyEDA. These PCB versions have been validated in real.
+## To be edited with the Standard version of EasyEDA. These PCB versions have been validated in real.
