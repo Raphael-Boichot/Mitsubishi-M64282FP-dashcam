@@ -126,7 +126,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Connect the sensor to the extension cable or adapter board (beware of the polarity), place fresh AA batteries and enjoy your Dashboy Camera !
 - If you want to use the time lapse or HDR features, use a tripod and hold the Dashboy with any [universal phone holder](https://fr.aliexpress.com/item/1005004208664097.html) by the battery holder.
 
-## Image of the populated PCB as you will get it
+## Image of the populated PCB as you will get it (PCB version 2.0, the current one)
 
 ![Dashboy populated PCB](Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
