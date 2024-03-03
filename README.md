@@ -16,7 +16,7 @@ If you manage to touch the [unobtainium M64283FP](https://github.com/Raphael-Boi
 
 Oh, and you may also check this similar project using a [STM32](https://github.com/mupfdev/CMOS-Holga) and a Holga camera that was coincidentally developped at the same period of time.
 
-# Why such a primitive thing in 2024 ?
+## Why such a primitive thing in 2024 ?
 
 Because limitations give rise to creativity, because low tech is cool, because this sensor is historically one of the first digital sensors, because it's in fact entirely analog and entirely configurable with a simple protocol, because the pixel race has been bugging me since the 2000s, because the photographer makes the good picture and not the hardware and finally because the Game Boy camera 30-frame limit has always been a problem for me.
 
