@@ -149,7 +149,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
 
 # Do list
-- fix a labelling error on the sub-PCB for sensor connnection. The board is OK but the line labelling has some inconsistencies.
+- ~~fix a labelling error on the sub-PCB for sensor connnection. The board is OK but the line labelling has some inconsistencies.~~ done
 - ~~add a version compiled at 125 MHz for long timelapses (saves battery but less responsive)~~ done
 
 # Acknowledgments
