@@ -92,6 +92,8 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Dither.gif)
+
 # Building the device !
 
 ## Required parts
@@ -121,7 +123,7 @@ PCB are available in the [PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64
 
 ![Dashboy Camera connections](Docs%20and%20research/Image%20files/Ribbon_connection.png)
 
-PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyeDA Standard Edition](https://easyeda.com/fr).
+PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the gerber zip container to their site. JLCPCB has the advantage to be cheap and clean with the VAT for EU customers. Order HASL finish with 1.6 mm thickness for the two boards (default option). PCB designs and schematics can be edited with [EasyEDA Standard Edition](https://easyeda.com/fr).
 
 ## Building instructions
 
