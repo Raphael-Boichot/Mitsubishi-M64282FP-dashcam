@@ -61,6 +61,10 @@ It is mandatory to format the SD card in FAT32 and it is better to use the maxim
 
 The device outputs 1x BMP images natively but the projects comes with a [bunch of tools to convert and upscale them and make videos from image series](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/SD).
 
+# Using the DashBoy Camera "in a nutshell"
+
+![DashBoy Camera in a nutshell](Docs%20and%20research/Image%20files/Commands_in_a_nutshell.png)
+
 # Advanced user manual
 
 Additionally, you can address other cool features by entering them in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json):
