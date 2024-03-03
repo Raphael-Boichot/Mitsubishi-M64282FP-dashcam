@@ -148,7 +148,7 @@ The code and current design come as it. If you're not happy with the current har
 
 # Do list
 - fix a labelling error on the sub-PCB for sensor connnection. The board is OK but the line labelling has some inconsistencies.
-- add a version compiled at 125 MHz for long timelapses (saves battery but less responsive)
+- ~~add a version compiled at 125 MHz for long timelapses (saves battery but less responsive)~~ done
 
 # Acknowledgments
 
