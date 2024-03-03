@@ -92,6 +92,8 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
+# Example of dithered/non dithered image
+
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Dither.gif)
 
 # Building the device !
