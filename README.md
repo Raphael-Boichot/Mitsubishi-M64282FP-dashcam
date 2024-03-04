@@ -104,7 +104,7 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 So you will need: 
 - [PCB and optional sub PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic) ordered at [JLCPCB](https://jlcpcb.com/). Just drop the Gerber .zip files on their site and order with default options.
-- An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes ("Color: Pico Original").**
+- An [Arduino Pi Pico](https://fr.aliexpress.com/item/1005003928558306.html). **Be sure to select the regular/original green board with the official pinout and castellated holes ("Color: Pico Original").** And I know, the purple is [super fancy](Docs%20and%20research/Image%20files/Prototype.png), but the pinout is non standard.
 - A [1.8 TFT SPI 128x160 display with SD card slot](https://fr.aliexpress.com/item/32964493983.html). Note that it is pixel perfect with the sensor, which is cool. Choose the red PCB one if any color choice. It must always come with a regular SD slot. Any similar one in another seller will do the job.
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html). Any similar one in another seller will do the job.
 - Some [9 pins JST/ZH1.5MM connector](https://fr.aliexpress.com/item/1005006028155508.html). Choose Horizontal or vertical SMD, ZH1.5MM, 9P. The PCB was made for the vertical version but both work.
