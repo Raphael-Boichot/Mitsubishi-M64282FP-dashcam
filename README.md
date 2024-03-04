@@ -5,6 +5,7 @@
 - **Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)**
 - **PetaPixel: [This DIY Game Boy Camera Ditches the Game Boy, Keeps the Camera](https://petapixel.com/2023/07/31/this-diy-game-boy-camera-ditches-the-game-boy-keeps-the-camera/)**
 - **Hackster.io: [Turn a Game Boy Camera Into a Respectable Shooter](https://www.hackster.io/news/turn-a-game-boy-camera-into-a-respectable-shooter-63144660379f)**
+- **pxl/mag: [Capture HDR and 256 Grayscale with Game Boy Camera](https://pxlmag.com/capture-hdr-and-256-grayscale-with-game-boy-camera#google_vignette)**
 
 **Want to discuss about the projet ? Go to the [dedicated section](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/discussions)**
 
