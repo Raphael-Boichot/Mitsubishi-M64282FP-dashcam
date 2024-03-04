@@ -6,7 +6,7 @@
 - **Upscaler_MS.ps1** converts raw datafiles files from /MS (Motion Sensor) folder to 8x PNG; 
 - **Upscaler_TL.ps1** converts raw datafiles files from /TL (Time Lapse) folder to 8x PNG;
 
-I you want to directly store Motion Sensor and Timelapse images in BMP (for example because you have no access to Powershell on your OS, set timelapserawrecordingMode to 0 in json config file (see next section). Recording in BMP format directly decreases the available fps.
+I you want to directly store Motion Sensor and Timelapse images in BMP (for example because you have no access to Powershell on your OS, set timelapserawrecordingMode to 0 in json config file (see next section). Recording in BMP format decreases a bit the available recording fps (it goes down to about 3 at most instead of 4).
 
 ## json configuration file
 
@@ -14,7 +14,7 @@ I you want to directly store Motion Sensor and Timelapse images in BMP (for exam
 
 User can keep the current default values without modifying anything. Advanced user are advised to look into code what is the effect of each parameter. **Value can be changed but not the length of tables. Values MUST be entered as decimal.** Here is the signification of each variable in detail:
 
-- **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder
+- **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder (it od course increases the folder # automatically in case of folder capacity overflow);
 - **timelapseDelay:** list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
 - **prettyborderMode:** >1 = pretty borders, 0 = image without border. Quick reboot during "NOW BOOTING... message to roll over the borders;
 - **nightMode:** 1 = allows to go decrease the sensor clock to over expose image at night, 0 = constant sensor clock;
