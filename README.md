@@ -98,6 +98,10 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Dither.gif)
 
+# Examples of artifacts intrinsic to the sensor
+
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sensor_artifacts.gif)
+
 # Building the device !
 
 ## Required parts
