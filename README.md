@@ -17,8 +17,6 @@ The project fully emulates the sensor management strategy of the Game Boy Camera
 
 If you manage to touch the [unobtainium M64283FP](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Mitsubishi%20Integrated%20Circuit%20M64283FP%20Image%20Sensor.pdf), "prototype" version ([What ?](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/README.md#some-random-informations-for-you-game-boy-camera-nerd-)) of the [M64282FP](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Bibliography/Mitsubishi%20Integrated%20Circuit%20M64282FP%20Image%20Sensor.pdf), it's also compatible with the DashBoy Camera (and the Game Boy Camera in general). I was lucky enough to obtain a few of them, and was able to test them in real-life conditions. This sensor produces very smooth images due to an increased in IR sensitivity and some subtle changes in register E tables.
 
-Oh, and you may also check this similar project using a [STM32](https://github.com/mupfdev/CMOS-Holga) and a Holga camera that was coincidentally developped at the same period of time.
-
 Is this [Game Boy Camera of Theseus](https://en.wikipedia.org/wiki/Ship_of_Theseus) still performing Game Boy Camera photography ? Well, as the sensor is legit, as the Raspberry Pi Pico acts a "super MAC-GBD" (with more features regarding image treatment), the whole device is legit to my opinion.
 
 ## Why such a primitive thing in 2024 ?
