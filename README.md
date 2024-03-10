@@ -9,7 +9,7 @@
 - **DIYPhotography: [The Game Boy Camera, minus the Game Boy, shoots 256 greyscale and HDR](https://www.diyphotography.net/the-game-boy-camera-minus-the-game-boy-shoots-256-greyscale-and-hdr/)**
 - **TIMEEXTENSION: [This Game Boy Camera Eradicates The Need For A Game Boy](https://www.timeextension.com/news/2023/07/this-game-boy-camera-eradicates-the-need-for-a-game-boy)**
 
-**Want to discuss about the projet ? Go to the [dedicated section](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/discussions)** I'm not (and will not be) on any social media to this is the only way to get in touch with me.
+**Want to discuss about the projet ? Go to the [dedicated section](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/discussions).** I'm not on any social media to this is the only way to get in touch with me.
 
 The project fully emulates the sensor management strategy of the Game Boy Camera while completely bypassing the MAC-GBD mapper, which means you can record pixel perfect images without the limitation of storage space or the need for a Game Boy Printer emulator. The device can output dithered 2 bits per pixel images (like the Game Boy Camera) as well as smooth 8 bits per pixel images that take advantage of the full sensor bit-depth. It features time lapse recording, live recording, motion detection, High Dynamic Range, multi-exposure, night mode, Peak Focusing, fancy borders and even more. It's a fully open project so fork it and play with it !
 
