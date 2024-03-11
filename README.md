@@ -116,7 +116,7 @@ So you will need:
 - Two [4 gates bidirectionnal level shifters](https://fr.aliexpress.com/item/1005004560297038.html). Any similar one in another seller will do the job.
 - Some [9 pins JST/ZH1.5MM connector](https://fr.aliexpress.com/item/1005006028155508.html). Choose **vertical SMD**, ZH1.5MM, 9P. The PCB was made for the **vertical version only**, the horizontal will inverse polarity if you try to solder it anyway due to lack of clearance.
 - Some [9 pins, double head, 10 cm, JST/ZH1.5MM cables](https://fr.aliexpress.com/item/1005004501408268.html). Beware, the Aliexpress models are overall crap, they tends to loose connection easily after several bending. In case of doubt or display bug, change the ribbon cable without hesitation.
-- Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html).
+- Some [male and female pin headers](https://fr.aliexpress.com/item/1005002577212594.html) if you want a removable display or removable level shifters (why not ?).
 - A [DC-DC 5 volts regulator with buck boost converter](https://fr.aliexpress.com/item/32813355879.html). It is based on a ME2108 DC/DC converter chip. Due to small voltage ripples at output, it requires an extra beefy capacitor (see next parts).
 - A [2xAA battery holder with cover](https://fr.aliexpress.com/item/1005004651271276.html). Do not take opened ones as they are generally crap and do not hold battery correctly.
 - 2 [regular 5 mm LEDs](https://fr.aliexpress.com/item/32848810276.html) (red and green) and two [through hole resistors](https://fr.aliexpress.com/item/32866216363.html) of 250 to 1000 Ohms (low value = high brighness).
