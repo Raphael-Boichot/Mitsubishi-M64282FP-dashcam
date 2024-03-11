@@ -190,6 +190,13 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 - Adding an USB support with [tinyusb](https://github.com/hathach/tinyusb/) to turn the device into a webcam by using the second core. I know it's feasible, I know it would be super cool, but I've tried and failed.
 - Oh, and I never managed to move the writing to SD stuff on the second core (I did try just one time to be honest), so everything is handled by the first core only and each task treated in series. Once again, it must be doable with some minimal efforts but the current design fills my need as it in terms of velocity and it probably won't change much the ergonomy. Synchronizing the two cores is quite tricky anyway, according to [my limited experience](https://github.com/Raphael-Boichot/Game-Boy-camera-sniffer).
 
+# Troubleshooting
+- The screen stays white after flashing: error of TFT library linking, follow closely the installation guide with the Bodmer library and flash again;
+- The image colors on screen are inacurrate and the default parameters are lost: json config file corruption, the device runs on internal miminal configuration, copy a fresh config.json from repo to the SD card and reboot;
+- The image looks too dark or too bright on screen despite the auto-exposure working, the image jitters: loose connection with sensor, re-seat the 9 pins connector on both sides.
+- the screen shuts down but the auto-exposure continues to work: empty batteries;
+- the device works but very slowly: SD card corruption, the device struggles to access it so the slowdown.
+
 # Kind warning
 
 The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
