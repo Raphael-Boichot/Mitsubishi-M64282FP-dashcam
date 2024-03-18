@@ -1,22 +1,23 @@
 //Version 2.0 (1.0 was on ESP32 https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor/tree/main/ESP32_version_beta)
-//By Raphaël BOICHOT, made around 2023-01-27, Beware, I'm not a C developper at all so it won't be a pretty code !
+//Code is now too huge to be ported back on ESP32
+//By Raphaël BOICHOT, made around 2023-01-27. Beware, I'm not a C developper at all so it won't be a pretty code !
 //I've minimized if not banished the use of local variables, pointers and structures to have a constant clear view of what happens and memory state.
 //The code is written to go fast, so the use of numerous lookup tables and precalculated arrays always present into ram.
 
-//started from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author, anyway, only few lines of the starting code are still there
-//stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
-//version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
+//Started from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author, anyway, only few lines of the starting code are still there
+//I Stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
+//Version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
 
 //CamData[128 * 128] contains the raw signal from sensor in 8 bits
-//HDRData[128 * 128] contains an average of raw signal data from sensor for dithering in 32 bits
-//lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits
-//lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565
+//HDRData[128 * 128] contains an average of raw signal data from sensor with increased dynamic range
+//lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits for storing to SD card or sending to serial
+//lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565 for the display
 //BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bits
-//lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565
+//lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565 for the display
 //and so on...
 
 #include "ArduinoJson.h"
