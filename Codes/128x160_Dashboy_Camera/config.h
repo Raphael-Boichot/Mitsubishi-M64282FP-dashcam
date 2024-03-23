@@ -8,7 +8,6 @@
 //#define USE_SNEAK_MODE //deactivates the LEDs, why not
 #define DEBUG_MODE  //allow additionnal outputs on display
 
-
 #ifdef ST7789
 #define x_ori 56
 #define y_ori 40
@@ -30,9 +29,9 @@ double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of e
 double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colors as they will appear in the bmp file and display after dithering
 double motion_detection_threshold = 0.025;
-double difference_threshold;               //trigger threshold for motion sensor
-unsigned char jittering_threshold = 13;    //error threshold to keep/change registers in Game Boy Camera Mode
-unsigned int cycles = 8;                   //time delay in processor cycles (@133 MHz), to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
+double difference_threshold;             //trigger threshold for motion sensor
+unsigned char jittering_threshold = 13;  //error threshold to keep/change registers in Game Boy Camera Mode
+unsigned int cycles = 8;                 //time delay in processor cycles (@133 MHz), to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
 //to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
 unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
@@ -88,46 +87,14 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
                                               0xE71C, 0xE71C, 0xE71C, 0xE71C, 0xE73C, 0xE73C, 0xE73C, 0xE73C, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF7D, 0xEF7D, 0xEF7D, 0xEF7D,
                                               0xF79E, 0xF79E, 0xF79E, 0xF79E, 0xF7BE, 0xF7BE, 0xF7BE, 0xF7BE, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
 
-
 //Some various defines
 #define NOP __asm__ __volatile__("nop\n\t")  //minimal possible delay
 #define BITS_PER_PIXEL 16                    //How many bits per pixel in Sprite, here RGB565 format
 
-// the order of pins has no importance except that VOUT must be on some ADC
-#define VOUT 26  //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
-
-//the following pins must be shifted to 3.3V pico side<->5V sensor side
-#define READ 7    //to pi pico pin GPIO7 Read image signal, goes high on rising clock
-#define CLOCK 8   //to pi pico pin GPIO8 Clock input, pulled down internally, no specification given for frequency
-#define RESET 9   //to pi pico pin GPIO9 system reset, pulled down internally, active low, sent on rising edge of clock
-#define LOAD 10   //to pi pico pin GPIO10 parameter set enable, pulled down internally, Raise high as you clear the last bit of each register you send
-#define SIN 11    //to pi pico pin GPIO11 Image sensing start, pulled down internally, has to be high before rising CLOCK
-#define START 12  //to pi pico pin GPIO12 Image sensing start, pulled down internally, has to be high before rising CLOCK
-
-//the following are intended to allow interfering with the device
-#define LED 0      //to pi pico pin GPIO0 indicate exposure delay for the sensor <-> GND
-#define RED 1      //to pi pico pin GPIO1 indicate recording to SD card of issue with SD card <-> GND
-#define PUSH 13    //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
-#define TLC 14     //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
-#define LOCK 15    //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
-#define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
-#define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-#define INT 25     //to pi pico pin GPIO25 internal LED;
-
-//It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
-
-//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
-//SD_MISO - to pi pico pin GPIO16
-//SD_MOSI - to pi pico pin GPIO19
-//SD_CS   - to pi pico pin GPIO17
-//SD_SCK  - to pi pico pin GPIO18
-#define CHIPSELECT 17  //for SD card, but I recommend not changing it either
-
-//TFT screens pins are more flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
+#define LED 0       //to pi pico pin GPIO0 indicate exposure delay for the sensor <-> GND
+#define RED 1       //to pi pico pin GPIO1 indicate recording to SD card of issue with SD card <-> GND
+//TFT screens pins are quite flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
 //pins are configured into the Bodmer TFT e_SPI library, DO NOT CHANGE HERE, see read.me for details
-//Display LED       to pi pico pin 3V3
-//Display TFT_MISO  to pi pico pin GPIO99  //RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO0
-//Display TOUCH_CS  to pi pico pin GPIO99  //RESERVED BUT NOT USED, just to avoid a compiling message, can be GPIO1
 //Display SCK       to pi pico pin GPIO2
 //Display SDA       to pi pico pin GPIO3
 //Display CS        to pi pico pin GPIO4 (can use another pin if desired)
@@ -135,6 +102,32 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
 //Display RESET     to pi pico pin GPIO6 (can use another pin if desired)
 //Display GND       to pi pico pin GND (0V)
 //Display VCC       to pi pico pin VBUS Or +5V
+//the following pins must be level shifted to 3.3V pico side<->5V sensor side
+#define READ 7    //to pi pico pin GPIO7 Read image signal, goes high on rising clock
+#define CLOCK 8   //to pi pico pin GPIO8 Clock input, pulled down internally, no specification given for frequency
+#define RESET 9   //to pi pico pin GPIO9 system reset, pulled down internally, active low, sent on rising edge of clock
+#define LOAD 10   //to pi pico pin GPIO10 parameter set enable, pulled down internally, Raise high as you clear the last bit of each register you send
+#define SIN 11    //to pi pico pin GPIO11 Image sensing start, pulled down internally, has to be high before rising CLOCK
+#define START 12  //to pi pico pin GPIO12 Image sensing start, pulled down internally, has to be high before rising CLOCK
+//next pins are I/O for buttons
+#define PUSH 13     //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
+#define TLC 14      //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
+#define LOCK 15     //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
+//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
+//SD_MISO - to pi pico pin GPIO16
+//SD_CS   - to pi pico pin GPIO17
+#define CHIPSELECT 17  //for SD card, can be moved but I recommend not changing it either
+//SD_SCK  - to pi pico pin GPIO18
+//SD_MOSI - to pi pico pin GPIO19
+#define HDR 20      //to pi pico pin GPIO20 <-> 3.3V - HDR mode
+#define DITHER 21   //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
+// GPIO 22 is reserved for TADD register, but can be routed to external trigger if necessary
+// GPIO 23 and 24 are reserved for internal use of the pi pico (on-board SMPS Power Save and VBUS sense respectively), usable but not recommended
+#define INT 25      //to pi pico pin GPIO25 internal LED;
+#define VOUT 26     //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
+// GPIO 27 and 28 are free ADC or digital channels
+// GPIO 29 is reserved to measure VSYS
+//It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
 
 //some real settings used by the Mitsubishi M64282FP sensor on Game Boy Camera, except exposure
 //reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0 (V2 = V1 = V0 = 0 is not allowed)
@@ -201,7 +194,6 @@ unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
 unsigned char camTADD[2] = { 0b00000000, 0b00000000 };  //additional registers 8 and 9, START and END of image area in tiles (16x16)
 #endif
 //////////////
-
 
 //https://www.calculator.net/hex-calculator.html is your friend
 //https://www.rapidtables.com/convert/number/hex-to-decimal.html too
