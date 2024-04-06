@@ -19,11 +19,9 @@ If you manage to touch the [unobtainium M64283FP](https://github.com/Raphael-Boi
 
 Is this [Game Boy Camera of Theseus](https://en.wikipedia.org/wiki/Ship_of_Theseus) still performing Game Boy Camera photography ? Well, as the sensor is legit, as the Raspberry Pi Pico acts more or less as a "super MAC-GBD" (with access to more features regarding image treatment), the whole device is legit to my humble opinion of amateur artist. It has the Game Boy Camera "image signature" if you see what I mean.
 
-You're of course free to modify this project as you wish, all sources are available here (all files for PCBs, all source codes, all documentation used). The project was designed to be clean, cheap and easy to make (requiring only cheap and very common parts, very basic soldering skill required, no 3D printed parts, Arduino IDE).
+You're of course free to modify this project as you wish, all sources are available here (all files for PCBs, all source codes, all documentation used). **The project was designed to be clean, cheap and easy to make** (requiring only cheap and very common parts, very basic soldering skills, no 3D printed parts, simple Arduino IDE environment).
 
-## Why such a primitive thing in 2024 ?
-
-Because limitations give rise to creativity, because low tech is cool, because this sensor is historically one of the first digital sensors, because it's in fact entirely analog and entirely configurable with a simple protocol, because the pixel race has been bugging me since the 2000s, because the photographer makes the good picture and not the hardware and finally because the Game Boy camera 30-frame limit has always been a problem for me.
+**Why such a primitive thing in 2024 ?** Because limitations give rise to creativity, because low tech is cool, because this sensor is historically one of the first digital sensors, because it's in fact analog and entirely configurable with a simple protocol, because the pixel race has been bugging me since the 2000s, because the photographer makes the good picture and not the hardware and finally because the Game Boy camera 30-frame limit has always been a problem for me.
 
 # Picture of the device (example of PCB V1.0)
 
@@ -33,20 +31,23 @@ Because limitations give rise to creativity, because low tech is cool, because t
 
 - **Just drop one of the [compiled uf2 files](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Build) to the board in mass storage media mode (Connect the Pico to USB port with the BOOTSEL button pushed and release).**
 
-Or if you like pain:
+Or if you can sustain moderate pain:
 
 - Install the last [Arduino IDE](https://www.arduino.cc/en/software)
 - Install the [Earle F. Philhower Raspberry Pi Pico Arduino core for Arduino IDE](https://github.com/earlephilhower/arduino-pico) via the Arduino Board manager (see [installation guide](https://github.com/earlephilhower/arduino-pico#installing-via-arduino-boards-manager)).
 - Install the Benoit Blanchon [Arduino JSON library](https://github.com/bblanchon/ArduinoJson) via the Arduino library manager.
-- Import or install the Bodmer [TFT_eSPI library](https://github.com/Bodmer/TFT_eSPI) via the Arduino library manager.
+- Install the Bodmer [TFT_eSPI library](https://github.com/Bodmer/TFT_eSPI) via the Arduino library manager.
+
+Then:
+
 - Locate the TFT_eSPI library: **\Arduino\libraries\TFT_eSPI** folder in your Arduino libraries
-    
 - copy the [configuration file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/Codes/128x160%20THT%20version/128x160_Dashboy_Camera/128x160_TFT%20Setup) for the TFT display in this folder.
 - edit the User_Setup_Select.h and modify line 29:
 
     **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
     
 - Compile your code **with frequency set at 133 MHz** and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
+- Enjoy your brand new 0.015 Mpixels camera !
 
 # Basic user manual
 
