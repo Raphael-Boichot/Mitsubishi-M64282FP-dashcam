@@ -19,7 +19,7 @@ If you manage to touch the [unobtainium M64283FP](https://github.com/Raphael-Boi
 
 Is this [Game Boy Camera of Theseus](https://en.wikipedia.org/wiki/Ship_of_Theseus) still performing Game Boy Camera photography ? Well, as the sensor is legit, as the Raspberry Pi Pico acts more or less as a "super MAC-GBD" (with access to more features regarding image treatment), the whole device is legit to my humble opinion of amateur artist. It has the Game Boy Camera "image signature" if you see what I mean.
 
-You're of course free to modify this project as you wish, all sources are available here (all files for PCBs, all source codes, all documentation used). **The project was designed to be clean, cheap and easy to make** (requiring only cheap and very common parts, very basic soldering skills, no 3D printed parts, simple Arduino IDE environment).
+You're of course free to modify this project as you wish, all sources are available here (all files for PCBs, all source codes, all documentation used). **The project was designed to be clean, cheap and easy to make** (requiring only cheap and very common parts, very basic soldering skills, no 3D printed parts, simple Arduino IDE environment). It requires nothing but two hands.
 
 **Why such a primitive thing in 2024 ?** Because limitations give rise to creativity, because low tech is cool, because this sensor is historically one of the first digital sensors, because it's in fact analog and entirely configurable with a simple protocol, because the pixel race has been bugging me since the 2000s, because the photographer makes the good picture and not the hardware and finally because the Game Boy camera 30-frame limit has always been a problem for me.
 
