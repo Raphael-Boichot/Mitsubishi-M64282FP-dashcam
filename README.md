@@ -86,7 +86,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples.png)
 
-# Some more pictures made with the device (actual border)
+# More pictures made with the device (actual border)
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples_2.png)
 
