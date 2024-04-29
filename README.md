@@ -86,6 +86,8 @@ Additionally, you can address other cool features by entering them in the [confi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples.png)
 
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples_2.png)
+
 Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye with M12/CS adapters, and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm) with a [M42 lens mount](https://www.thingiverse.com/thing:6077684) or sensor glued into a Zenit 12XP hand made shell adapter.
 
 # Some timelapses made with the device
