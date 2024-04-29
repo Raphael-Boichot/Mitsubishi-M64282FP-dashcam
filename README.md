@@ -94,6 +94,8 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 # Some timelapses made with the device
 
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sun.gif)
+
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Moon.gif)
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
