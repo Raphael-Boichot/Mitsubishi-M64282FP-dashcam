@@ -1,71 +1,46 @@
 #define USE_TFT  //to allow using the TFT screen - deactivate for debug
 #define USE_SD   //to allow recording on SD - deactivate for debug
-#define ST7735   //for use with the TFT 128x160 (full frame image)
+#define ST7735   //for use with the TFT 128x160 (full frame image), default setup
 //#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop) - Beware, you also have to modify the TFT setup accordingly
-//#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor, unfinished, do not activate !
-//#define USE_OVERCLOCKING  //self explanatory, use the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
+//#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor, untested !
+//#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
-//#define USE_SNEAK_MODE //deactivates the LEDs, why not
-#define DEBUG_MODE  //allow additionnal outputs on display
+//#define USE_SNEAK_MODE  //deactivates the LEDs, why not
+#define DEBUG_MODE      //allow additionnal outputs on display
 
-#ifdef ST7789
-#define x_ori 56
-#define y_ori 40
-#endif
-
-#ifdef ST7735
+#ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
 #define x_ori 0
 #define y_ori 0
 #endif
 
-//The dithering patterns from the Game Boy Camera and homemade
+#ifdef ST7789  //possible other screen, 256x256 pixels, very tiny, pixel perfect but image centered on a post stamp...
+#define x_ori 56
+#define y_ori 40
+#endif
+
+///////////////default values in case config.json is not existing////////////////////////////////////////////////////////////////////
+bool RAW_recording_mode = 0;                                              //0 = save as BMP (slow), 1 = save as raw stream (fast)
+double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
+unsigned char PRETTYBORDER_mode = 1;                                      //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
+bool NIGHT_mode = 0;                                                      //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+double motion_detection_threshold = 0.01;
+double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
+//double exposure_list[8]={ 1, 1, 1, 1, 1, 1, 1, 1 };  //for fancy multi-exposure images or signal to noise ratio increasing
+//The dithering patterns from the single strategy mode
 //See for details https://github.com/HerrZatacke/dither-pattern-gen/ and https://herrzatacke.github.io/dither-pattern-gen/
 unsigned char Dithering_patterns_regular[] = { 0x2A, 0x5E, 0x9B, 0x51, 0x8B, 0xCA, 0x33, 0x69, 0xA6, 0x5A, 0x97, 0xD6, 0x44, 0x7C, 0xBA, 0x37, 0x6D, 0xAA, 0x4D, 0x87, 0xC6, 0x40, 0x78, 0xB6, 0x30, 0x65, 0xA2, 0x57, 0x93, 0xD2, 0x2D, 0x61, 0x9E, 0x54, 0x8F, 0xCE, 0x4A, 0x84, 0xC2, 0x3D, 0x74, 0xB2, 0x47, 0x80, 0xBE, 0x3A, 0x71, 0xAE };
-unsigned char Dithering_patterns_high[] = { 0x89, 0x92, 0xA2, 0x8F, 0x9E, 0xC6, 0x8A, 0x95, 0xAB, 0x91, 0xA1, 0xCF, 0x8D, 0x9A, 0xBA, 0x8B, 0x96, 0xAE, 0x8F, 0x9D, 0xC3, 0x8C, 0x99, 0xB7, 0x8A, 0x94, 0xA8, 0x90, 0xA0, 0xCC, 0x89, 0x93, 0xA5, 0x90, 0x9F, 0xC9, 0x8E, 0x9C, 0xC0, 0x8C, 0x98, 0xB4, 0x8E, 0x9B, 0xBD, 0x8B, 0x97, 0xB1 };
+bool GBCAMERA_mode = 1;  // 0 = single register strategy, 1 = Game Boy Camera strategy
+//the two next parameters to set autocontrast in 8 bits mode in Game Boy Camera mode ONLY
+unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 matches the brightess with dithering patterns)
+unsigned char GB_v_max = 195;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 195 matches the brightess with dithering patterns)
+bool BORDER_mode = 0;          //1 = enforce border enhancement whatever GBCAMERA_mode value
+bool SMOOTH_mode = 0;          //1 = cancel border enhancement whatever GBCAMERA_mode value
+//The dithering patterns from the Game Boy Camera, the "low" is only used for the highest exposure time (low light), because
 unsigned char Dithering_patterns_low[] = { 0x8C, 0x98, 0xAC, 0x95, 0xA7, 0xDB, 0x8E, 0x9B, 0xB7, 0x97, 0xAA, 0xE7, 0x92, 0xA2, 0xCB, 0x8F, 0x9D, 0xBB, 0x94, 0xA5, 0xD7, 0x91, 0xA0, 0xC7, 0x8D, 0x9A, 0xB3, 0x96, 0xA9, 0xE3, 0x8C, 0x99, 0xAF, 0x95, 0xA8, 0xDF, 0x93, 0xA4, 0xD3, 0x90, 0x9F, 0xC3, 0x92, 0xA3, 0xCF, 0x8F, 0x9E, 0xBF };
-unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };           //2 for regular strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
-double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
-//double exposure_list[8]={1, 1, 1, 1, 1, 1, 1, 1};//for fancy multi-exposure images or signal to noise ratio increasing
-double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
-unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };          //colors as they will appear in the bmp file and display after dithering
-double motion_detection_threshold = 0.025;
-double difference_threshold;             //trigger threshold for motion sensor
-unsigned char jittering_threshold = 13;  //error threshold to keep/change registers in Game Boy Camera Mode
-unsigned int cycles = 8;                 //time delay in processor cycles (@133 MHz), to fit with the 1MHz advised clock cycle for the sensor (set with a datalogger, do not touch !)
-//to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
-unsigned long delay_MOTION = 5000;         //time to place the camera before motion detection starts
-unsigned int max_files_per_folder = 1024;  //self explanatory, in BMP mode
-unsigned int low_exposure_limit = 0x0010;  //absolute low exposure limit whatever the strategy
-double multiplier = 1;                     //deals with autoexposure algorithm
-
-//default values in case config.json is not existing/////////////////////////////////////////////////////////////////////////////////////////////
-bool TIMELAPSE_mode = 0;               //0 = use s a regular camera, 1 = recorder for timelapses
-bool RAW_recording_mode = 0;           //0 = save as BMP (slow), 1 = save as raw stream (fast)
-unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
-unsigned char PRETTYBORDER_mode = 1;   //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
-bool NIGHT_mode = 0;                   //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
-bool HDR_mode = 0;                     //0 = regular capture, 1 = HDR mode
-bool GBCAMERA_mode = 0;                // 0 = single register strategy, 1 = Game Boy Camera strategy
-bool DITHER_mode = 0;                  //0 = Dithering ON, 0 = dithering OFF
-bool BORDER_mode = 0;                  //1 = enforce border enhancement whatever GBCAMERA_mode value
-bool SMOOTH_mode = 0;                  //1 = cancel border enhancement whatever GBCAMERA_mode value
-bool FOCUS_mode = 0;                   //1 = Focus peaking mode overlayed on image
-unsigned char FOCUS_threshold = 100;   //0..255, self explanatory
-bool FIXED_EXPOSURE_mode = 0;          //to activate fixed exposure delay mode
-int FIXED_delay = 2048;                //here the result is a fixed exposure perfect for full moon photography
-int FIXED_divider = 1;                 //clock divider
-bool M64283FP = 0;                     //strategy for the M64283FP in single register strategy
-
-unsigned char x_box = 8 * 8;                   //x range for autoexposure (centered, like GB camera, 8 tiles)
-unsigned char y_box = 7 * 8;                   //y range for autoexposure (centered, like GB camera, 7 tiles)
-unsigned char max_line = 120;                  //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
-unsigned char x_min = (128 - x_box) / 2;       //calculate the autoexposure area limits
-unsigned char y_min = (max_line - y_box) / 2;  //calculate the autoexposure area limits
-unsigned char x_max = x_min + x_box;           //calculate the autoexposure area limits
-unsigned char y_max = y_min + y_box;           //calculate the autoexposure area limits
-unsigned char display_offset = 16;             //offset for image on the 128*160 display
-unsigned char line_length = 4;                 //exposure area cross size
-
+unsigned char Dithering_patterns_high[] = { 0x89, 0x92, 0xA2, 0x8F, 0x9E, 0xC6, 0x8A, 0x95, 0xAB, 0x91, 0xA1, 0xCF, 0x8D, 0x9A, 0xBA, 0x8B, 0x96, 0xAE, 0x8F, 0x9D, 0xC3, 0x8C, 0x99, 0xB7, 0x8A, 0x94, 0xA8, 0x90, 0xA0, 0xCC, 0x89, 0x93, 0xA5, 0x90, 0x9F, 0xC9, 0x8E, 0x9C, 0xC0, 0x8C, 0x98, 0xB4, 0x8E, 0x9B, 0xBD, 0x8B, 0x97, 0xB1 };
+bool FIXED_EXPOSURE_mode = 0;  //to activate fixed exposure delay mode
+int FIXED_delay = 2048;        //here the result is a fixed exposure perfect for full moon photography
+int FIXED_divider = 1;         //clock divider
 //loockup table to convert 8 bits gray pixel value to RGB565 for the display
 //Go to https://herrzatacke.github.io/gradient-values/ to generate the colorscale for json !
 //Full project here https://github.com/HerrZatacke/gradient-values
@@ -86,13 +61,44 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
                                               0xD69A, 0xD69A, 0xD69A, 0xD69A, 0xD6BA, 0xD6BA, 0xD6BA, 0xD6BA, 0xDEDB, 0xDEDB, 0xDEDB, 0xDEDB, 0xDEFB, 0xDEFB, 0xDEFB, 0xDEFB,
                                               0xE71C, 0xE71C, 0xE71C, 0xE71C, 0xE73C, 0xE73C, 0xE73C, 0xE73C, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF7D, 0xEF7D, 0xEF7D, 0xEF7D,
                                               0xF79E, 0xF79E, 0xF79E, 0xF79E, 0xF7BE, 0xF7BE, 0xF7BE, 0xF7BE, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
+unsigned char x_box = 8 * 8;         //x range for autoexposure (centered, like GB camera, 8 tiles)
+unsigned char y_box = 7 * 8;         //y range for autoexposure (centered, like GB camera, 7 tiles)
+bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
+unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
+bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
+//////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
+//////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
+unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };  //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
+unsigned long delay_MOTION = 5000;                          //time to place the camera before motion detection starts
+unsigned int max_files_per_folder = 1024;                   //self explanatory, in BMP mode
+unsigned int low_exposure_limit = 0x0010;                   //absolute low exposure limit whatever the strategy
+ 
+//to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
+#ifdef USE_OVERCLOCKING
+  unsigned int cycles = 22;  //nop clock setting for 250 MHz
+#endif
+#ifndef USE_OVERCLOCKING
+  unsigned int cycles = 11;  //nop clock setting for 133 MHz
+#endif
+
+unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
+unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };  //colors as they will appear in the bmp file and display after dithering
+unsigned char max_line = 120;                                     //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
+unsigned char x_min = (128 - x_box) / 2;                          //calculate the autoexposure area limits
+unsigned char y_min = (max_line - y_box) / 2;                     //calculate the autoexposure area limits
+unsigned char x_max = x_min + x_box;                              //calculate the autoexposure area limits
+unsigned char y_max = y_min + y_box;                              //calculate the autoexposure area limits
+unsigned char display_offset = 16;                                //offset for image on the 128*160 display
+unsigned char line_length = 4;                                    //exposure area cross size
 //Some various defines
 #define NOP __asm__ __volatile__("nop\n\t")  //minimal possible delay
 #define BITS_PER_PIXEL 16                    //How many bits per pixel in Sprite, here RGB565 format
+//////////////end of general parameters////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define LED 0       //to pi pico pin GPIO0 indicate exposure delay for the sensor <-> GND
-#define RED 1       //to pi pico pin GPIO1 indicate recording to SD card of issue with SD card <-> GND
+//////////////GPIO stuff///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define LED 0  //to pi pico pin GPIO0 indicate exposure delay for the sensor <-> GND
+#define RED 1  //to pi pico pin GPIO1 indicate recording to SD card of issue with SD card <-> GND
 //TFT screens pins are quite flexible, I used a 1.8 TFT SPI 128*160 V1.1 model (ST7735 driver)
 //pins are configured into the Bodmer TFT e_SPI library, DO NOT CHANGE HERE, see read.me for details
 //Display SCK       to pi pico pin GPIO2
@@ -110,25 +116,40 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
 #define SIN 11    //to pi pico pin GPIO11 Image sensing start, pulled down internally, has to be high before rising CLOCK
 #define START 12  //to pi pico pin GPIO12 Image sensing start, pulled down internally, has to be high before rising CLOCK
 //next pins are I/O for buttons
-#define PUSH 13     //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
-#define TLC 14      //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
-#define LOCK 15     //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
+#define PUSH 13  //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
+#define TLC 14   //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
+#define LOCK 15  //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
 //Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
 //SD_MISO - to pi pico pin GPIO16
 //SD_CS   - to pi pico pin GPIO17
 #define CHIPSELECT 17  //for SD card, can be moved but I recommend not changing it either
 //SD_SCK  - to pi pico pin GPIO18
 //SD_MOSI - to pi pico pin GPIO19
-#define HDR 20      //to pi pico pin GPIO20 <-> 3.3V - HDR mode
-#define DITHER 21   //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-// GPIO 22 is reserved for TADD register, but can be routed to external trigger if necessary
-// GPIO 23 and 24 are reserved for internal use of the pi pico (on-board SMPS Power Save and VBUS sense respectively), usable but not recommended
-#define INT 25      //to pi pico pin GPIO25 internal LED;
-#define VOUT 26     //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
-// GPIO 27 and 28 are free ADC or digital channels
-// GPIO 29 is reserved to measure VSYS
-//It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
+#define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
+#define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
 
+//GPIO 22 is reserved for TADD register (see next), but can be routed to external trigger if you need one
+//if used to trigger TADD pin, better use a free level shifter channel rather in order to avoid using 3.3 volts on the sensor
+//#define INOUT 22  //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
+#ifdef TADDREGISTER
+#define TADD 22  //to pin TADD of the M64283FP CMOS sensor
+////////////////////////////START2x4bits/STOP2x4bits/see datasheet
+///////////////////////////{ 0bXXXXYYYY, 0bXXXXYYYY };
+unsigned char camTADD[2] = { 0b00000000, 0b11111111 };  //additional registers 8 and 9, START and STOP of image area in tiles (16x16)
+//these parameters should produce a 128*128 image too but never tested...
+#endif
+
+//GPIO 23 and 24 are reserved for internal use of the pi pico (on-board SMPS Power Save and VBUS sense respectively), usable but not recommended
+//seems that using one of them could help ADC stability but I never had any issue with them...
+#define INT 25   //to pi pico pin GPIO25 internal LED;
+#define VOUT 26  //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
+//GPIO 27 free ADC or digital channels
+//GPIO 28 free ADC or digital channels
+//GPIO 29 is reserved to measure VSYS
+//It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
+//////////////end of GPIO stuff///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //some real settings used by the Mitsubishi M64282FP sensor on Game Boy Camera, except exposure
 //reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0 (V2 = V1 = V0 = 0 is not allowed)
 //reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 set edge / type of edge
@@ -151,21 +172,17 @@ unsigned char camReg3[8] = { 0b10101011, 0b11100100, 0b00000000, 0b00000000, 0b0
 unsigned char camReg4[8] = { 0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };
 //transition@ C=0x8500
 unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //high exposure time - low light
-//It is assumed that usefull range is between 1.5 and 3.0 volts, so between 116 and 232
-unsigned char GB_v_min = 135;  //minimal voltage returned by the sensor in 8 bits DEC (1.5 volts is 112 but 135 gives better black)
-unsigned char GB_v_max = 210;  //maximal voltage returned by the sensor in 8 bits DEC (3.05 volts is 236 but 210 gives better white)
-char pixel_shift = 8;          //correction for dithering algorithm, more than minus 8 gives bland images
-                               /////////////////////////
+//the voltage scale in this mode is defined earlier in config.h
 
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
-unsigned char M64282FP_v_min = 50;                                                                                                      //0 is OV, 255 is 3.3 volts
-unsigned char M64282FP_v_max = 180;                                                                                                     //0 is OV, 255 is 3.3 volts
+//these values are not embedded into the config.json but could
+unsigned char M64282FP_v_min = 50;   //0 is OV, 255 is 3.3 volts
+unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //unsigned char camReg_M64282FP[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };old registers
 //unsigned char M64282FP_v_min = 75;   //0 is OV, 255 is 3.3 volts
 //unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
-////////////////////////
 
 //DashBoy Camera strategy for the unobtainium M64283FP sensor
 //detail of the registers
@@ -186,14 +203,10 @@ unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB =LOW -> automatic zero calibration
 //putting AZ to 1 creates image artifacts, I suppose this must be 0... datasheet contradicts itself
+//these values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
 unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
-#ifdef TADDREGISTER
-#define TADD 22  //to pin TADD of the M64283FP CMOS sensor
-///////////////////////////{ 0bSSSSSSSS, 0bEEEEEEEE };
-unsigned char camTADD[2] = { 0b00000000, 0b00000000 };  //additional registers 8 and 9, START and END of image area in tiles (16x16)
-#endif
-//////////////
+//////////////end of sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //https://www.calculator.net/hex-calculator.html is your friend
 //https://www.rapidtables.com/convert/number/hex-to-decimal.html too

@@ -1,31 +1,32 @@
+//By Raphaël BOICHOT, made around 2023-01-27. Beware, I'm not a developper at all so it won't be a pretty code !
 //Version 2.0 (1.0 was on ESP32 https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor/tree/main/ESP32_version_beta)
-//Code is now too huge to be ported back on ESP32
-//By Raphaël BOICHOT, made around 2023-01-27. Beware, I'm not a C developper at all so it won't be a pretty code !
-//I've minimized if not banished the use of local variables, pointers and structures to have a constant clear view of what happens and memory state.
-//The code is written to go fast, so the use of numerous lookup tables and precalculated arrays always present into ram.
-
+//Code is now too huge to be ported back on ESP32 due to its puny memory (theoretically 520 kB, in fact 160 kB but in real less than 110 kB without using sorcery)
+//I've minimized the use of local variables, pointers and structures to have a constant clear view of what happens in memory because I'm dumb.
+//The code is written to go FAST, so the use of numerous lookup tables and precalculated arrays always present into ram.
 //Started from a code of Laurent Saint-Marcel (lstmarcel@yahoo.fr) written in 2005/07/05 but I'm not 100% sure of the very first author, anyway, only few lines of the starting code are still there
-//I Stole some code for Rafael Zenaro NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
+//I also stole some code for Rafael Zenaro's NeoGB printer: https://github.com/zenaro147/NeoGB-Printer
 //Version for Arduino here (requires a computer): https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor
 //Made to be compiled on the Arduino IDE, using these libraries:
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
 
+//a bit of explanations on data structure:
 //CamData[128 * 128] contains the raw signal from sensor in 8 bits
 //HDRData[128 * 128] contains an average of raw signal data from sensor with increased dynamic range
 //lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits for storing to SD card or sending to serial
 //lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565 for the display
-//BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bits
+//BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bpp but stored in 8 bits
 //lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565 for the display
-//and so on...
+//and so on, you get the idea...
 
-#include "ArduinoJson.h"
-#include "pico/stdlib.h"
+//some general calls to deal with the RP2040 core for Arduino and the json stuff
+#include "ArduinoJson.h"   //self explanatory
+#include "pico/stdlib.h"   //stuff from pico sdk
 #include "hardware/adc.h"  //the GPIO commands are here
-#include "config.h"
-#include "splash.h"
-#include "prettyborder.h"
+#include "config.h"        //the camera meat is here
+#include "splash.h"        //splash and crash images in 8 bits (no compression, as I gain nothing)
+#include "prettyborder.h"  //2 bpp image borders encoded in 8 bits with cheap RLE compression (very efficient)
 
 //absence of the SD card leads to general failure of the code, so to test without, better deactivate the feature at compiling
 #ifdef USE_SD
@@ -33,7 +34,7 @@
 #include <SD.h>   //for SD
 #endif
 
-//tft directly addresses the display, im is a memory buffer for sprites
+//tft directly addresses the display, img is a memory buffer for sprites
 //Here I create and update a giant 128*160 sprite in memory that I push to the screen when necessary, which is ultra fast way of rendering
 #ifdef USE_TFT
 #include <TFT_eSPI.h>                 //Include the graphics library (this includes the sprite functions)
@@ -41,6 +42,7 @@ TFT_eSPI tft = TFT_eSPI();            //Create object "tft"
 TFT_eSprite img = TFT_eSprite(&tft);  //Create Sprite object "img" with pointer to "tft" object. The pointer is used by pushSprite() to push it onto the TFT
 #endif
 
+//I use 1D array only, because I was not sure wether 2D arrays would be supported. Anyway, It changes nothing
 unsigned char Dithering_patterns[48];       //storage for dithering tables
 unsigned char lookup_serial[256];           //autocontrast table generated in setup() from v_min and v_max
 unsigned char lookup_pico_to_GBD[256];      //convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
@@ -63,8 +65,9 @@ unsigned long previousTime = 0;
 unsigned long currentTime_MOTION = 0;
 unsigned long currentTime_exp = 0;
 unsigned long previousTime_exp = 0;
-unsigned long Next_ID, Next_dir;  //for directories and filenames
 unsigned long file_number;
+unsigned long Next_ID, Next_dir;       //for directories and filenames
+unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
 unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
@@ -74,35 +77,30 @@ double difference = 0;
 double exposure_error = 0;
 double mean_value = 0;
 double error = 0;
-bool image_TOKEN = 0;    //reserved for CAMERA mode
-bool recording = 0;      //0 = idle mode, 1 = recording mode
-bool sensor_READY = 0;   //reserved, for bug on sensor
-bool SDcard_READY = 0;   //reserved, for bug on SD
-bool JSON_ready = 0;     //reserved, for bug on config.txt
-bool LOCK_exposure = 0;  //reserved, for locking exposure
-bool MOTION_sensor = 0;  //reserved, to trigger motion sensor mode
-bool overshooting = 0;   //reserved, for register anti-jittering system
-char storage_file_name[20];
-char storage_file_dir[20];
-char storage_deadtime[20];
-char exposure_string[20];
-char multiplier_string[20];
-char error_string[20];
-char remaining_deadtime[20];
-char exposure_string_ms[20];
-char files_on_folder_string[20];
-char register_string[2];
-char difference_string[8];
+double difference_threshold;  //trigger threshold for motion sensor
+double multiplier = 1;        //deals with autoexposure algorithm
+bool TIMELAPSE_mode = 0;      //0 = use s a regular camera, 1 = recorder for timelapses
+bool HDR_mode = 0;            //0 = regular capture, 1 = HDR mode
+bool DITHER_mode = 0;         //0 = Dithering ON, 0 = dithering OFF
+bool image_TOKEN = 0;         //reserved for CAMERA mode
+bool recording = 0;           //0 = idle mode, 1 = recording mode
+bool sensor_READY = 0;        //reserved, for bug on sensor
+bool SDcard_READY = 0;        //reserved, for bug on SD
+bool JSON_ready = 0;          //reserved, for bug on config.txt
+bool LOCK_exposure = 0;       //reserved, for locking exposure
+bool MOTION_sensor = 0;       //reserved, to trigger motion sensor mode
+bool overshooting = 0;        //reserved, for register anti-jittering system
 
+char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
+char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
 char rank_timelapse = 0;                                        //rank in the timelapse array
 char register_strategy = 0;                                     //strategy # of the Game Boy Camera emulation
 
 //////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
-
 void setup() {
-  //interface input/output
+  //interface input/output, here I use the Pico SDK commands as they are faster (you can mix Arduino type and SDK type)
   gpio_init(PUSH);
   gpio_set_dir(PUSH, GPIO_IN);  //action button to record
   gpio_init(TLC);
@@ -134,21 +132,21 @@ void setup() {
   gpio_init(START);
   gpio_set_dir(START, GPIO_OUT);
 
+  //if you want to use GPIO22 as external trigger
+  //gpio_init(INOUT);
+  //gpio_set_dir(INOUT, GPIO_IN);  //to use with remote for example
+  //gpio_set_dir(INOUT, GPIO_OUT); //to use with a flash for example
+
 #ifdef TADDREGISTER
   gpio_init(TADD);
   gpio_set_dir(TADD, GPIO_OUT);
-  gpio_put(TADD, 1);
+  gpio_put(TADD, 1);  //must be HIGH by default, just put LOW for sedeing registers, see datasheet of the M64283FP
 #endif
 
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
   //adc_gpio_init(VOUT); // I have no idea why, but this command has no effect, you have to use the command below
   adc_select_input(VOUT - 26);  //there are several ADC channels to choose from. 0 is GPIO26, 1 is GPIO27 and so on...
-
-#ifdef USE_OVERCLOCKING
-  cycles = 19;  //setting for 250 MHz
-  //to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
-#endif
 
 #ifdef USE_SERIAL  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(115200);
@@ -165,10 +163,10 @@ void setup() {
   if (GBCAMERA_mode == 1) {       //Game Boy Camera strategy with variable gain and registers
     low_exposure_limit = 0x0010;  //minimum of the sensor for these registers, below there are verticals artifacts, see sensor documentation for details
     multiplier = 1.1;             //as GB camera uses only the upper voltage scale the autoexposure must be boosted a little in that case to be comfortable
-    v_min = GB_v_min;
+    v_min = GB_v_min;             //those were chosen to maximize contrast
     v_max = GB_v_max;
     if (M64283FP == 1) {                     //strategy for the M64283FP sensor
-      camReg1[7] = camReg1[7] | 0b01000000;  //Forcing E register to 50% 2D edge enjancement
+      camReg1[7] = camReg1[7] | 0b01000000;  //Forcing E register to 50% 2D edge enhancement, see https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Register_E.png
       camReg2[7] = camReg2[7] | 0b01000000;
       camReg3[7] = camReg3[7] | 0b01000000;
       camReg4[7] = camReg4[7] | 0b01000000;
@@ -177,11 +175,11 @@ void setup() {
   } else {                              //regular strategy with fixed registers except C
     if (M64283FP == 1) {                //strategy for the M64283FP sensor
       low_exposure_threshold = 0x0021;  //recommended value by the datasheet of the M64283FP to avoid artifacts with 2D edge enhancement
-      v_min = M64283FP_v_min;
+      v_min = M64283FP_v_min;           //those were chosen to maximize contrast
       v_max = M64283FP_v_max;
     } else {                            //strategy for the M64282FP sensor
       low_exposure_threshold = 0x0030;  //recommended value by the datasheet of the M64282FP to avoid artifacts with 2D edge enhancement
-      v_min = M64282FP_v_min;
+      v_min = M64282FP_v_min;           //those were chosen to maximize contrast
       v_max = M64282FP_v_max;
     }
   }
@@ -194,8 +192,8 @@ void setup() {
 
   pre_allocate_lookup_tables(lookup_serial, v_min, v_max);  //pre allocate tables for TFT and serial output auto contrast
   pre_allocate_lookup_tables(lookup_pico_to_GBD, 0, 255);   //pre allocate tables 0<->3.3V scale from pico to 0<->3.3V scale from MAC-GBD
-  //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts
-  if (PRETTYBORDER_mode > 0) {
+  //yes, the flash ADC of the MAC-GBD is probably rated for 0<->3.3 volts (even probably 3.36V)
+  if (PRETTYBORDER_mode > 0) {                 //border or no border ?
     pre_allocate_image_with_pretty_borders();  //pre allocate bmp data for image with borders
     Pre_allocate_bmp_header(160, 144);
   } else {
@@ -203,13 +201,12 @@ void setup() {
   }
 
   // initialize recording mode
-  if (timelapse_list[0] >= 0) {  //there is a time in ms in the list
+  if (timelapse_list[0] >= 0) {  //there is a time in ms in the list, get it
     TIMELAPSE_mode = 1;
     TIMELAPSE_deadtime = timelapse_list[0];
-  } else {  //there is "-1 or -2" in the list, regular mode is called
+  } else {  //there is -1 or -2 in the list, regular mode is called
     TIMELAPSE_mode = 0;
   }
-
 
   PRETTYBORDER_mode++;  //here the border is incremented, if device is booted during preset exposure (next loop), border will change
 #ifndef USE_SNEAK_MODE
@@ -233,9 +230,9 @@ void setup() {
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
-}
-//////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
+}  //end of setup
 
+//////////////////////////////////////////////Main loop, core 0///////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
   currentTime = millis();
   take_a_picture();                                   //data in memory for the moment, one frame
@@ -243,7 +240,7 @@ void loop() {
   detect_a_motion();                                  //does nothing if MOTION_sensor = 0
   edge_extraction();                                  //does nothing if FOCUS_mode = 0
   memcpy(CamData_previous, CamData, 128 * max_line);  //to deal with motion detection
-  new_exposure = auto_exposure();                     // self explanatory
+  new_exposure = auto_exposure();                     //self explanatory
 
   if (FIXED_EXPOSURE_mode == 1) {
     new_exposure = FIXED_delay;
@@ -315,7 +312,7 @@ void loop() {
 #endif
 
 #ifdef USE_TFT
-  img.fillSprite(TFT_BLACK);  //prepare the image in ram
+  img.fillSprite(TFT_BLACK);  //prepare the "video ram" (big sprite)
   for (unsigned char x = 0; x < 128; x++) {
     for (unsigned char y = 0; y < 120; y++) {
       if (DITHER_mode == 1) {
@@ -343,13 +340,13 @@ void loop() {
     sprintf(files_on_folder_string, "%X/%X", files_on_folder, max_files_per_folder);
     img.println(files_on_folder_string);
     display_other_informations();
-    img.pushSprite(x_ori, y_ori);  // dump image to display
+    img.pushSprite(x_ori, y_ori);  //dump image to display
 #endif
-    if ((currentTime - previousTime) > TIMELAPSE_deadtime) {
-      recording_loop();  // Wait for deadtime set in config.txt
+    if ((currentTime - previousTime) > TIMELAPSE_deadtime) {  //Wait for deadtime set in config.txt
+      recording_loop();                                       //here is the juicy stuff
     }
     //if (TIMELAPSE_deadtime > 10000) {
-    sleep_ms(min(TIMELAPSE_deadtime / 10, 1000));  //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure
+    sleep_ms(min(TIMELAPSE_deadtime / 10, 1000));  //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure, saves battery
     //}
   }  //end of recording loop for timelapse
 
@@ -360,7 +357,7 @@ void loop() {
     Next_dir = get_next_dir("/Dashcam_storage.bin");  //get the folder number on SD card, just to store it in memory and rewrite it at the end
 #endif
 
-    image_TOKEN = 1;
+    image_TOKEN = 1;  //gives a single token for recording
   }
 
   if ((image_TOKEN == 1) & (recording == 0)) {  //prepare for recording one shot
@@ -410,7 +407,7 @@ void loop() {
     if ((gpio_get(PUSH) == 1) & (recording == 1)) {  //we want to stop recording
       recording = 0;
       files_on_folder = 0;
-      short_fancy_delay();
+      short_fancy_delay();  //blinks red to acknowledge action
     }
     if ((gpio_get(PUSH) == 1) & (recording == 0)) {  //we want to record: get file/directory#
       Next_dir++;                                    //update next directory
@@ -419,7 +416,7 @@ void loop() {
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //store last known file/directory# to SD card
 #endif
 
-      recording = 1;
+      recording = 1;  //keep on timelapse
       previousTime = currentTime;
       short_fancy_delay();
     }
@@ -427,7 +424,6 @@ void loop() {
 }  //end of main loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
-
 void take_a_picture() {
   camReset();         //resets the sensor
   camSetRegisters();  //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
@@ -437,9 +433,9 @@ void take_a_picture() {
 }
 
 double auto_exposure() {
-  double exp_regs, new_regs;
+  double exp_regs, new_regs;                      //doubles are luxury but we are on a powerfull device and 8 bits arithmetics is not always fun
   unsigned char setpoint = (v_max + v_min) >> 1;  //set point is just voltage mid scale, why not...
-  unsigned int accumulator = 0;
+  unsigned int accumulator = 0;                   //exposure integrator
   unsigned char least_change = 1;
   unsigned int counter = 0;
   int i = 0;
@@ -457,11 +453,13 @@ double auto_exposure() {
   mean_value = accumulator / (counter);
   error = setpoint - mean_value;  //so in case of deviation, registers 2 and 3 are corrected
   //this part is very similar to what a Game Boy Camera does, except that it does the job with only bitshift operators and in more steps.
-  //Here we can use 32 bits variables for ease of programming.
-  //the bigger the error is, the bigger the correction on exposure is.
+  //you can check https://github.com/untoxa/gb-photo/blob/7bde50533d4e7d30d5203d7adabe244513c279c9/src/state_camera.c#L1009
+  //to see a "real" autoexposure algortihm of my own in full 8 bits arithmetics
+  //Here we can use 32 bits variables for ease of programming. The bigger the error is, the bigger the correction on exposure is, simple.
 
-  exp_regs = camReg[2] * 256 + camReg[3];  //I know, it's a shame to use a double here but we have plenty of ram
+  exp_regs = camReg[2] * 256 + camReg[3];  //I know, it's a shame to use a double here but we have quite plenty of ram
   new_regs = exp_regs;
+  //These parameters are bullet proofed and were tuned during hours of tests, you may not find better ones
   if (error > 80) new_regs = exp_regs * (2 * multiplier);  //raw tuning
   if (error < -80) new_regs = exp_regs / (2 * multiplier);
   if ((error <= 80) & (error >= 50)) new_regs = exp_regs * (1.3 * multiplier);  //yes floating point, I know...
@@ -472,20 +470,20 @@ double auto_exposure() {
   if ((error >= -30) & (error <= -10)) new_regs = exp_regs / (1.03 * multiplier);
 
   if (exp_regs > 0x00FF) {
-    least_change = 0x0F;  //least change must increase if exposure is high
+    least_change = 0x0F;  //least change must increase if exposure time is high
   }
   if (exp_regs > 0x0FFF) {
-    least_change = 0xFF;  //least change must increase if exposure is high
+    least_change = 0xFF;  //least change must increase a lot if exposure time is very high
   }
 
   if ((M64283FP == 1) & (accumulator < 150000)) {  //Sensor saturated !
-    new_regs = low_exposure_threshold;             //anti-glare strategy...
+    new_regs = low_exposure_threshold;             //anti-glare strategy for the dodgy M64283FP sensor...
   }
 
-  if ((error <= 10) & (error >= 5)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice
-  if ((error >= -10) & (error <= -5)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice
+  if ((error <= 10) & (error >= 5)) new_regs = exp_regs + least_change;    //this level is critical to avoid flickering in full sun, 3-4 is nice too
+  if ((error >= -10) & (error <= -5)) new_regs = exp_regs - least_change;  //this level is critical to avoid flickering in full sun,  3-4 is nice too
   if (new_regs < 0) {                                                      //maybe over precautious but who knows...
-    new_regs = 0;
+    new_regs = 0;                                                          //this must never happened
   }
   exposure_error = error;  //just to pass the variable to push_exposure
   return new_regs;
@@ -503,18 +501,17 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   }
   if (new_regs > 0xFFFF) {  //maximum of the sensor, about 1 second
     if (NIGHT_mode == 1) {
-      clock_divider = clock_divider + 1;
+      clock_divider = clock_divider + 1;  //the sensor is downclocked to increase exposure in this mode
     }
     storage_regs = 0xFFFF;
   }
-
   if (NIGHT_mode == 1) {
     if (storage_regs < 0x1000) {
-      clock_divider = 1;  //Normal situation is to be always 1, so that clock is about 1MHz
+      clock_divider = 1;  //Normal situation is to be always 1, so that clock is about 1MHz. This looks very sketchy but it works well
     }
   }
 
-  if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy
+  if (GBCAMERA_mode == 1) {  //Game Boy Camera strategy, found by datalogging a real camera
     old_strategy = register_strategy;
     if (storage_regs < 0x0030) {
       register_strategy = 1;
@@ -532,13 +529,15 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
       register_strategy = 5;
     }
 
+    //this part forces the camera to not jump in register stategy when exposure is changing very slowly
+    //I think this is what a real camera does too, I've tried many different tricks to avoid jittering between strategies but this one works well
     overshooting = 0;
     if ((abs(exposure_error) < jittering_threshold) & (exposure_error > 0))  //Avoid register jittering
     {
       if (!(old_strategy == register_strategy)) {
-        overshooting = 1;
+        overshooting = 1;  //this just change the color of an indicator on screen
       }
-      register_strategy = old_strategy;  //keep the previous registers
+      register_strategy = old_strategy;  //keep the previous registers because doing fine tuning
     }
 
     switch (register_strategy) {
@@ -560,16 +559,17 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
       default:
         {};  //do nothing
     }
-  } else {
+  } else {  // this in NOT Game Boy Camera mode so a single strategy register is chosen
     if (M64283FP == 1) {
       memcpy(temp_camReg, camReg_M64283FP, 8);  //regular single strategy mode
     } else {
       memcpy(temp_camReg, camReg_M64282FP, 8);  //regular single strategy mode
     }
     if (storage_regs < low_exposure_threshold) {
-      temp_camReg[1] = temp_camReg[1] & 0b00011111;  //cancel 2D border enhancement
+      temp_camReg[1] = temp_camReg[1] & 0b00011111;  //cancel 2D border enhancement, to avoid jailbars at low exposure time
     }
   }
+  //regsiters are updated now
   camReg[0] = temp_camReg[0];
   camReg[1] = temp_camReg[1];
   camReg[2] = storage_regs >> 8;
@@ -579,6 +579,7 @@ void push_exposure(unsigned char camReg[8], double current_exposure, double fact
   camReg[6] = temp_camReg[6];
   camReg[7] = temp_camReg[7];
 
+  //this part is more experimental than usefull but I decide to let it just for fun
   if ((BORDER_mode == 1) && (DITHER_mode == 0)) {  //enforce 2D border enhancement only in non dither mode
     camReg[1] = camReg[1] | 0b11100000;
   }
@@ -593,7 +594,7 @@ unsigned int get_exposure(unsigned char camReg[8]) {
   return exp_regs;
 }
 
-void camDelay()  //Allow a lag in processor cycles to maintain signals long enough
+void camDelay()  //Allow a lag in processor cycles to maintain signals long enough, critical for exposure time, sensor must be clocked at 1 MHz MAXIMUM (can be less, see nigth mode)
 {
   for (int i = 0; i < cycles; i++) NOP;
 }
@@ -603,7 +604,7 @@ void camSpecialDelay()  //Allow an extra lag in processor cycles during exposure
   for (int i = 0; i < cycles * clock_divider; i++) NOP;
 }
 
-void camInit()  //Initialise the IO ports for the camera
+void camInit()  //Initialise the IO ports for the camera, see datasheets of the sensors, timing is not critical here
 {
   gpio_put(CLOCK, 0);
   gpio_put(RESET, 1);
@@ -612,7 +613,7 @@ void camInit()  //Initialise the IO ports for the camera
   gpio_put(SIN, 0);
 }
 
-void camReset()  //Sends a RESET pulse to sensor
+void camReset()  //Sends a RESET pulse to sensor, see datasheets of the sensors, timing is not critical here
 {
   gpio_put(CLOCK, 1);
   camDelay();
@@ -626,13 +627,14 @@ void camReset()  //Sends a RESET pulse to sensor
   camDelay();
 }
 
-void camSetRegisters()  //Sets the sensor 8 registers
+void camSetRegisters()  //Sets the sensor 8 registers, can be 10 for the M64283FP sensor
 {
   for (int reg = 0; reg < 8; ++reg) {
     camSetReg(reg, camReg[reg]);
   }
 }
 
+//never tested, use at your own risk !!!
 void camSetRegistersTADD()  //Sets the sensor 2 ADDitional registers to TADD pin of the M64283FP (must be low)
 {
 #ifdef TADDREGISTER
@@ -681,7 +683,7 @@ void camSetReg(unsigned char regaddr, unsigned char regval)  //Sets one of the 8
   }
 }
 
-void camReadPicture()  //Take a picture, read it and send it through the serial port.
+void camReadPicture()  //Take a picture, read it and store it
 {
   unsigned int pixel;  //Buffer for pixel read in
   int x, y;
@@ -734,7 +736,7 @@ void camReadPicture()  //Take a picture, read it and send it through the serial 
       }  // end for x
     }    /* for y */
 
-    while (gpio_get(READ) == 1) {  //Go through the remaining rows
+    while (gpio_get(READ) == 1) {  //Go through the remaining rows, not sure if mandatory as we got all pixels but why not
       gpio_put(CLOCK, 0);
       camDelay();
       gpio_put(CLOCK, 1);
@@ -746,7 +748,7 @@ void camReadPicture()  //Take a picture, read it and send it through the serial 
 }
 
 bool camTestSensor()  //dummy cycle faking to take a picture, if it's not able to go through the whole cycle, the camera will stop with error message
-{                     //it basically checks if READ is able to change at the good moment during the sequence
+{                     //it basically checks if READ is able to change at the good moment during the sequence, if not, sensor not responding
   bool sensor_OK = 1;
   int x, y;
   int currentTime;
@@ -814,26 +816,26 @@ void detect_a_motion() {
       difference = difference + abs(CamData[i] - CamData_previous[i]);  //calculate the image difference
     }
     if ((difference > difference_threshold) & ((millis() - currentTime_MOTION) > delay_MOTION)) {
-      image_TOKEN = 1;
+      image_TOKEN = 1;  //gives a token to record one image
       MOTION_sensor_counter++;
     }
   }
 }
 
-void edge_extraction() {
+void edge_extraction() {                    //the sensor can do this too but it requires taking two images which is slower than online software implementation
   if (FOCUS_mode == 1) {                    //first pass
-    memset(EdgeData, 0, sizeof(EdgeData));  //clean the HDR data array
+    memset(EdgeData, 0, sizeof(EdgeData));  //clean the data array
     int offset = 0;
     for (int y = 0; y < 128; y++) {
       for (int x = 0; x < 128; x++) {
-        //formula from sensor datasheet
+        //formula from sensor datasheet, just a border extraction kernel
         if ((x > 0) & (x < 128) & (y > 0) & (y < 128)) {
           EdgeData[offset] = abs(4 * CamData[offset] - (CamData[offset - 128] + CamData[offset + 128] + CamData[offset - 1] + CamData[offset + 1]));
         }
         offset++;
       }          // end for x
     }            /* for y */
-    offset = 0;  //second pass to eliminate pure noise
+    offset = 0;  //second pass to eliminate pure noise, not mandatory but fancier
     for (int y = 0; y < 128; y++) {
       for (int x = 0; x < 128; x++) {  // we search for weak threshold in Moore neighborhood
         if ((x > 0) & (x < 128) & (y > 0) & (y < 128)) {
@@ -888,7 +890,7 @@ void recording_loop() {
         HDRData[i] = HDRData[i] + CamData[i];  //sum data
       }
     }
-    //now time to average all this shit
+    //now time to average all that shit
     for (int i = 0; i < 128 * 128; i++) {
       CamData[i] = HDRData[i] / num_HDR_images;  //do the average
     }
@@ -938,20 +940,20 @@ void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char 
   double gamma_pixel;
   for (int i = 0; i < 256; i++) {  //building the autocontrat table lookup_serial
     if (i < v_min) {
-      lookup_serial[i] = 0x00;
+      lookup_serial[i] = 0x00;  //must never happen
     }
     if ((i >= v_min) & (i <= v_max)) {
       gamma_pixel = ((i - double(v_min)) / (double(v_max) - double(v_min))) * 255;
       lookup_serial[i] = int(gamma_pixel);
     }
     if (i > v_max) {
-      lookup_serial[i] = 0xFF;
+      lookup_serial[i] = 0xFF;  //must never happen
     }
   }
 }
 
 void pre_allocate_Bayer_tables() {
-  //this reorganizes the thresholding matrices from Game Boy Camera registers to "Bayer like" matrices
+  //this reorganizes the thresholding matrices from Game Boy Camera registers to "Bayer like" matrices in reading order (natural order in camera is weird)
   int counter = 0;
   for (int y = 0; y < 4; y++) {
     for (int x = 0; x < 4; x++) {
@@ -965,7 +967,7 @@ void pre_allocate_Bayer_tables() {
   }
 }
 
-void Dither_image() {  //dithering algorithm
+void Dither_image() {  //dithering algorithm, I very struggled to understand it but OK now thanks to https://herrzatacke.github.io/dither-pattern-gen/
   char pixel, pixel_out;
   int counter = 0;
   for (int y = 0; y < max_line; y++) {
@@ -998,7 +1000,7 @@ void Dither_image() {  //dithering algorithm
 void make_image_with_pretty_borders() {
   int image_counter = 8 * 128;              //remove the 8 first pixel line like a Game Boy Camera
   int pretty_image_counter = 16 * 160;      //beginning of first pixel to fill
-  for (int line = 0; line < 112; line++) {  //line counter
+  for (int line = 0; line < 112; line++) {  //line counter, copy lines 8 to 120
     pretty_image_counter = pretty_image_counter + 16;
     for (int x = 0; x < 128; x++) {  //column counter
       BigBmpData[pretty_image_counter] = BmpData[image_counter];
@@ -1009,13 +1011,14 @@ void make_image_with_pretty_borders() {
   }
 }
 
-void pre_allocate_image_with_pretty_borders() {
-  memset(BigBmpData, 0, sizeof(BigBmpData));  //clean the BigBmpData data array
+void pre_allocate_image_with_pretty_borders() {  //current border is stored in ram at boot as a big array, so borders can't be changed dynamically
+                                                 //it's a design choice to increase velocity by sacrifying some ram
+  memset(BigBmpData, 0, sizeof(BigBmpData));     //clean the BigBmpData data array
   int counter = 0;
   int index = 0;
   char pixel = 0;
   char number_pixel = 0;
-  while (counter < 160 * 144) {  //el cheapo RLE decoder
+  while (counter < 160 * 144) {  //el cheapo RLE decoder, totally pointless so totally rad
     switch (PRETTYBORDER_mode) {
       case 1:
         number_pixel = prettyborder_1[index];
@@ -1053,11 +1056,11 @@ void pre_allocate_image_with_pretty_borders() {
       BigBmpData[counter] = pixel;
       counter = counter + 1;
     }
-    index = index + 2;
+    index = index + 2;  //because data are encoded as {number of pixels, color, number of pixels, colors, etc}, 160x144 pixels
   }
 }
 
-void dump_data_to_serial() {  //output data directly to the serial monitor
+void dump_data_to_serial() {  //output data directly to the serial monitor; only for debug
   char pixel;
   for (int i = 0; i < 128 * 128; i++) {
     pixel = lookup_serial[CamData[i]];  //to get data with autocontrast
@@ -1072,8 +1075,8 @@ void dump_data_to_serial() {  //output data directly to the serial monitor
 }
 
 //////////////////////////////////////////////SD stuff///////////////////////////////////////////////////////////////////////////////////////////
-
-void ID_file_creator(const char* path) {
+void ID_file_creator(const char* path) {  //from fresh SD, device needs a "secret" binary storage file
+//this file may never be erased and is accessed frequently as it counts all images recorded, this why it is not embedded in json stuff
 #ifdef USE_SD
   uint8_t buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   if (!SD.exists(path)) {
@@ -1085,7 +1088,7 @@ void ID_file_creator(const char* path) {
 #endif
 }
 
-unsigned long get_next_ID(const char* path) {
+unsigned long get_next_ID(const char* path) {  //get the next file #
 #ifdef USE_SD
   uint8_t buf[4];
   File Datafile = SD.open(path);
@@ -1096,7 +1099,7 @@ unsigned long get_next_ID(const char* path) {
   return Next_ID;
 }
 
-unsigned long get_next_dir(const char* path) {
+unsigned long get_next_dir(const char* path) {  //get the next directory #
 #ifdef USE_SD
   uint8_t buf[4];
   File Datafile = SD.open(path);
@@ -1108,7 +1111,7 @@ unsigned long get_next_dir(const char* path) {
   return Next_dir;
 }
 
-void store_next_ID(const char* path, unsigned long Next_ID, unsigned long Next_dir) {
+void store_next_ID(const char* path, unsigned long Next_ID, unsigned long Next_dir) {  //store current file # and directory #
 #ifdef USE_SD
   uint8_t buf[4];
   File Datafile = SD.open(path, FILE_WRITE);
@@ -1127,8 +1130,7 @@ void store_next_ID(const char* path, unsigned long Next_ID, unsigned long Next_d
 #endif
 }
 
-bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
-  // Open file for reading
+bool Get_JSON_config(const char* path) {  //I've copy paste the library examples, josn file stores the user parameters
   bool JSON_OK = 0;
 
 #ifdef USE_SD
@@ -1180,8 +1182,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
   return JSON_OK;
 }
 
-void Put_JSON_config(const char* path) {  //I've copy paste the library examples
-                                          // Open file for reading
+void Put_JSON_config(const char* path) {  //I've copy paste the library examples, just used at boot to cycle the border #
 
 #ifdef USE_SD
   JsonDocument doc;
@@ -1196,7 +1197,7 @@ void Put_JSON_config(const char* path) {  //I've copy paste the library examples
 #endif
 }
 
-void dump_data_to_SD_card() {
+void dump_data_to_SD_card() {  //self explanatory
 
 #ifdef USE_SD
   File Datafile = SD.open(storage_file_name, FILE_WRITE);
@@ -1332,7 +1333,7 @@ void short_fancy_delay() {
 void display_other_informations() {
 #ifdef USE_TFT
   current_exposure = get_exposure(camReg);  //get the current exposure register for TFT display
-#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE                           ////////////////beginning of debug informations//////////////////////////////////////
   if (current_exposure > 0x0FFF) {
     sprintf(exposure_string, "REG: %X", current_exposure);  //concatenate string for display
   }
@@ -1385,7 +1386,7 @@ void display_other_informations() {
   img.setCursor(8, 24);
   img.println(error_string);
 
-
+  //this part writes the camera registers on screen
   img.setCursor(2, 118);
   if (camReg[0] < 0x10) {
     img.print("0");
@@ -1425,7 +1426,7 @@ void display_other_informations() {
     img.print("0");
   }
   img.println(camReg[7], HEX);
-#endif
+#endif  ////////////////end of debug informations//////////////////////////////////////
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
@@ -1450,6 +1451,8 @@ void display_other_informations() {
       img.println("Time Lapse Mode RAW");
     }
   }
+
+  //this part draws the exposure area on screen, majenta default, green when exposure is locked
   if (LOCK_exposure == 1) {
     img.drawRect(0, display_offset, 128, max_line, TFT_GREEN);
     img.drawLine(x_min, y_min + display_offset, x_min + line_length, y_min + display_offset, TFT_GREEN);
@@ -1543,7 +1546,7 @@ void display_other_informations() {
 #endif
 }
 
-//the void sequence is made in order to have a dramatic effect
+//the void sequence is elaborated in order to have a dramatic effect
 void init_sequence() {  //not 100% sure why, but screen must be initialized before the SD...
 
 #ifdef USE_TFT
@@ -1640,6 +1643,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 24);
 
+  //reboot when this text appears to cycle between borders
   switch (PRETTYBORDER_mode) {
     case 0:
       img.println("No border mode");
@@ -1668,7 +1672,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
     default:
       {
         img.setTextColor(TFT_RED);
-        img.println("BORDER ERROR");
+        img.println("BORDER ERROR");  //this must never happen
       }
   }
 
@@ -1687,12 +1691,14 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #ifdef USE_SD
   if ((SDcard_READY == 0) | (sensor_READY == 0)) {  //get stuck here if any problem to avoid further board damage
 
+#ifdef USE_TFT
     for (unsigned char x = 0; x < 128; x++) {
       for (unsigned char y = 0; y < 112; y++) {
-        img.drawPixel(x, y + 44, lookup_TFT_RGB565[crashscreen[x + y * 128]]);
+        img.drawPixel(x, y + 44, lookup_TFT_RGB565[crashscreen[x + y * 128]]);  //https://tcrf.net/Proto:Game_Boy_Camera
       }
     }
     img.pushSprite(x_ori, y_ori);  //dump image to display
+#endif
 
     while (1) {
 
