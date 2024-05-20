@@ -108,6 +108,12 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sensor_artifacts.gif)
 
+# Examples of images taken with a M64283FP sensor
+
+![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/M64283FP_example.png)
+
+![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/Stormy_weather.gif)
+
 # Building the device !
 
 ## Required parts
