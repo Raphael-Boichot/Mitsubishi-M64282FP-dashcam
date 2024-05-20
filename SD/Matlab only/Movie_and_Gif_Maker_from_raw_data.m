@@ -1,7 +1,14 @@
 clc
 clear
+%script to be run in the ./TL or ./MS folder
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%User parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 upscaling_factor=4;%...upscaling factor
-delay=0.2;%delay between pictures for animated gifs
+delay=0.05;%delay between pictures for animated gifs
+gif_skip=1;%includes only one image over gif_skip into the gif
+%filenames are automatically generated
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 listing = dir('*.raw');
 for i=1:1:length(listing)
@@ -19,9 +26,9 @@ for i=1:1:length(listing)
     for i=1:1:length(k)-1
         offset=k(i)+16;
         pixel_data=data_raw(offset:offset+(height)*width-1);
-%         minimum=min(min(pixel_data(128:end-128*8)));
-%         maximum=max(max(pixel_data(128:end-128*8)));
-%         pixel_data=(pixel_data-minimum)*(255/(maximum-minimum));
+        %         minimum=min(min(pixel_data(128:end-128*8)));
+        %         maximum=max(max(pixel_data(128:end-128*8)));
+        %         pixel_data=(pixel_data-minimum)*(255/(maximum-minimum));
         pixels=uint8(rot90(reshape(pixel_data,width,height),3));
         pixels=fliplr(pixels);
         imshow(pixels);
@@ -32,7 +39,9 @@ for i=1:1:length(listing)
         if i==1
             imwrite(imind,map,[name(1:end-4),'.gif'],'gif', 'Loopcount',inf,'DelayTime',delay);
         else
-            imwrite(imind,map,[name(1:end-4),'.gif'],'gif','WriteMode','append','DelayTime',delay);
+            if rem(i,gif_skip)==0
+                imwrite(imind,map,[name(1:end-4),'.gif'],'gif','WriteMode','append','DelayTime',delay);
+            end
         end
         imwrite(scaled,['./',name(1:end-4),'/',name(1:end-4),num2str(i,'%04d'),'.png'])
     end
