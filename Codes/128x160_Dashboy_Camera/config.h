@@ -7,6 +7,7 @@
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
 #define DEBUG_MODE      //allow additionnal outputs on display
+//#define DEBAGAME_MODE   //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
 #define x_ori 0

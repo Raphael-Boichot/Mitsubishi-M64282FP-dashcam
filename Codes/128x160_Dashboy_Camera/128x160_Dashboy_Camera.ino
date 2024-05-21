@@ -68,10 +68,12 @@ unsigned long previousTime_exp = 0;
 unsigned long file_number;
 unsigned long Next_ID, Next_dir;       //for directories and filenames
 unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
+unsigned long masked_pixels = 0;       //accumulator for dark/masked pixels
 unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
 unsigned int MOTION_sensor_counter = 0;
+unsigned int voltage_display = 0;  //for DEGABAME mode
 unsigned char v_min, v_max;
 double difference = 0;
 double exposure_error = 0;
@@ -93,6 +95,7 @@ bool overshooting = 0;        //reserved, for register anti-jittering system
 
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
 char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
+char mask_pixels_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
 char rank_timelapse = 0;                                        //rank in the timelapse array
@@ -688,6 +691,7 @@ void camReadPicture()  //Take a picture, read it and store it
   unsigned int pixel;  //Buffer for pixel read in
   int x, y;
   int subcounter = 0;
+  masked_pixels = 0;
   //Camera START sequence
   gpio_put(CLOCK, 0);
   camDelay();  //ensure load bit is cleared from previous call
@@ -704,6 +708,7 @@ void camReadPicture()  //Take a picture, read it and store it
 #ifndef USE_SNEAK_MODE
   gpio_put(LED, 1);
 #endif
+
   bool skip_loop = 0;
   previousTime_exp = millis();
   while (1) {  //Wait for READ to go high, this is the loop waiting for exposure
@@ -728,7 +733,13 @@ void camReadPicture()  //Take a picture, read it and store it
         gpio_put(CLOCK, 0);
         camDelay();
         pixel = adc_read();                //The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
-        CamData[subcounter] = pixel >> 4;  //record only
+        CamData[subcounter] = pixel >> 4;  //record only 8 bits
+
+#ifdef DEBAGAME_MODE
+        if (y > 123) {
+          masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
+        }
+#endif
         subcounter = subcounter + 1;
         camDelay();
         gpio_put(CLOCK, 1);
@@ -1427,6 +1438,25 @@ void display_other_informations() {
   }
   img.println(camReg[7], HEX);
 #endif  ////////////////end of debug informations//////////////////////////////////////
+
+#ifdef DEBAGAME_MODE  ///begining of debagame mode//////////////////////////////////////
+  voltage_display = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000;
+  sprintf(mask_pixels_string, "Mpix: +%d mV", voltage_display);  //average voltage of masked pixelms
+  img.setCursor(2, 110);
+  img.println(mask_pixels_string);
+  voltage_display = (camReg[7] & 0b00000111) * (1000 * 0.5);
+  sprintf(mask_pixels_string, "Vreg: +%d mV", voltage_display);  //Vref
+  img.setCursor(2, 102);
+  img.println(mask_pixels_string);
+  voltage_display = (camReg[0] & 0b00011111) * 32;
+  if ((camReg[0] & 0b00100000) == 0x20) {
+    sprintf(mask_pixels_string, "Oreg: +%d mV", voltage_display);  //register O positive
+  } else {
+    sprintf(mask_pixels_string, "Oreg: -%d mV", voltage_display);  //register O negative
+  }
+  img.setCursor(2, 94);
+  img.println(mask_pixels_string);
+#endif  /////////////////////end of debagame mode//////////////////////////////////////
 
   img.setCursor(0, 0);
   img.setTextColor(TFT_CYAN);
