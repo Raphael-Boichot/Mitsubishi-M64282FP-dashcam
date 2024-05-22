@@ -11,15 +11,6 @@
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
 
-//a bit of explanations on data structure:
-//CamData[128 * 128] contains the raw signal from sensor in 8 bits
-//HDRData[128 * 128] contains an average of raw signal data from sensor with increased dynamic range
-//lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits for storing to SD card or sending to serial
-//lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565 for the display
-//BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bpp but stored in 8 bits
-//lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565 for the display
-//and so on, you get the idea...
-
 //some general calls to deal with the RP2040 core for Arduino and the json stuff
 #include "ArduinoJson.h"   //self explanatory
 #include "pico/stdlib.h"   //stuff from pico sdk
@@ -41,65 +32,6 @@
 TFT_eSPI tft = TFT_eSPI();            //Create object "tft"
 TFT_eSprite img = TFT_eSprite(&tft);  //Create Sprite object "img" with pointer to "tft" object. The pointer is used by pushSprite() to push it onto the TFT
 #endif
-
-//I use 1D array only, because I was not sure wether 2D arrays would be supported. Anyway, It changes nothing
-unsigned char Dithering_patterns[48];       //storage for dithering tables
-unsigned char lookup_serial[256];           //autocontrast table generated in setup() from v_min and v_max
-unsigned char lookup_pico_to_GBD[256];      //convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
-unsigned char CamData[128 * 128];           //sensor data in 8 bits per pixel
-unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel from preceding loop for motion detection
-unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
-unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
-unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
-unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
-unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
-unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
-unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
-unsigned char BayerData[128 * 128];         //dithered image data
-unsigned char camReg[8];                    //empty register array
-unsigned char camReg_storage[8];            //empty register array
-unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
-unsigned short int pixel_TFT_RGB565;
-unsigned long currentTime = 0;
-unsigned long previousTime = 0;
-unsigned long currentTime_MOTION = 0;
-unsigned long currentTime_exp = 0;
-unsigned long previousTime_exp = 0;
-unsigned long file_number;
-unsigned long Next_ID, Next_dir;       //for directories and filenames
-unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
-unsigned long masked_pixels = 0;       //accumulator for dark/masked pixels
-unsigned int current_exposure, new_exposure;
-unsigned int low_exposure_threshold = 0;
-unsigned int files_on_folder = 0;
-unsigned int MOTION_sensor_counter = 0;
-unsigned int voltage_display = 0;  //for DEGABAME mode
-unsigned char v_min, v_max;
-double difference = 0;
-double exposure_error = 0;
-double mean_value = 0;
-double error = 0;
-double difference_threshold;  //trigger threshold for motion sensor
-double multiplier = 1;        //deals with autoexposure algorithm
-bool TIMELAPSE_mode = 0;      //0 = use s a regular camera, 1 = recorder for timelapses
-bool HDR_mode = 0;            //0 = regular capture, 1 = HDR mode
-bool DITHER_mode = 0;         //0 = Dithering ON, 0 = dithering OFF
-bool image_TOKEN = 0;         //reserved for CAMERA mode
-bool recording = 0;           //0 = idle mode, 1 = recording mode
-bool sensor_READY = 0;        //reserved, for bug on sensor
-bool SDcard_READY = 0;        //reserved, for bug on SD
-bool JSON_ready = 0;          //reserved, for bug on config.txt
-bool LOCK_exposure = 0;       //reserved, for locking exposure
-bool MOTION_sensor = 0;       //reserved, to trigger motion sensor mode
-bool overshooting = 0;        //reserved, for register anti-jittering system
-
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
-char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
-char mask_pixels_string[20];
-char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
-char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
-char rank_timelapse = 0;                                        //rank in the timelapse array
-char register_strategy = 0;                                     //strategy # of the Game Boy Camera emulation
 
 //////////////////////////////////////////////Setup, core 0/////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
@@ -1439,36 +1371,35 @@ void display_other_informations() {
   img.println(camReg[7], HEX);
 #endif  ////////////////end of debug informations//////////////////////////////////////
 
-#ifdef DEBAGAME_MODE  ///begining of debagame mode//////////////////////////////////////
-  voltage_display = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000; //get the average of 4 last lines of pixels (masked), convert in mV
-  sprintf(mask_pixels_string, "Mpix: +%d mV", voltage_display);  //average voltage of masked pixels (dark signal) in mV, is equal to Vref + reg O + saturation voltage (Vsat)
-  //The sum Vref + reg O + saturation voltage (or dark signal) must be as close as Vref as possible by adjsuting register O (fine tuning)
-  //other said, Vsat must equal reg O (Vsat vary with exposure time)
+#ifdef DEBAGAME_MODE                                               ///begining of debagame mode//////////////////////////////////////
+  dark_level = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000;  //get the average of 4 last lines of pixels (masked), convert in mV
+  sprintf(mask_pixels_string, "Dark: +%d mV", dark_level);        //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
+  //The sum Vref + reg O + offset must be as close as V ref as possible by adjsuting register O (fine tuning)
+  //other said, the Voffset must ideally be cancelled by reg O (the Voffset varies vary with exposure time, gain, sensor, temperature, etc.)
   //in order to ensure an independance of "image aspect" to the sensor.
-  img.setCursor(2, 102);
-  img.println(mask_pixels_string);
-  voltage_display = (camReg[7] & 0b00000111) * (1000 * 0.5); //get register V (Vref), convert in mV
-  sprintf(mask_pixels_string, "Vreg: +%d mV", voltage_display);  //theoretical Vref
-  img.setCursor(2, 94);
-  img.println(mask_pixels_string);
-  voltage_display = (camReg[0] & 0b00011111) * 32; //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
-  if ((camReg[0] & 0b00100000) == 0x20) {
-    sprintf(mask_pixels_string, "Oreg: +%d mV", voltage_display);  //register O positive, max +992mV
-  } else {
-    sprintf(mask_pixels_string, "Oreg: -%d mV", voltage_display);  //register O negative, max -992mV
-  }
   img.setCursor(2, 86);
   img.println(mask_pixels_string);
-  //saturation voltage = dark signal - (Vref + regO)
-    if ((camReg[0] & 0b00100000) == 0x20) {
-  voltage_display=(masked_pixels / (128 * 4)) * (3.3 / 255) * 1000-camReg[7] & 0b00000111) * (1000 * 0.5)-(camReg[0] & 0b00011111) * 32);
- } else {
-voltage_display=(masked_pixels / (128 * 4)) * (3.3 / 255) * 1000-camReg[7] & 0b00000111) * (1000 * 0.5)-(camReg[0] & 0b00011111) * 32);
- }
- sprintf(mask_pixels_string, "Vsat: +%d mV", voltage_display);  //theoretical Vref
+
+  V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);     //get register V (Vref), convert in mV
+  sprintf(mask_pixels_string, "Vref: +%d mV", V_ref);  //theoretical Vref
+  img.setCursor(2, 94);
+  img.println(mask_pixels_string);
+
+  O_reg = (camReg[0] & 0b00011111) * 32;  //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
+  if ((camReg[0] & 0b00100000) == 0x20) {
+    O_reg=O_reg; //register O positive, do nothing, max +992mV
+  } else {
+    O_reg=O_reg*-1; //register O negative, max -992mV
+  }
+  sprintf(mask_pixels_string, "Oreg: %d mV", O_reg);
+  img.setCursor(2, 102);
+  img.println(mask_pixels_string);
+
+  //pure offset = dark level - (Vref + register O), must be as close as zero as possible
+  V_Offset = dark_level - (V_ref + O_reg);
+  sprintf(mask_pixels_string, "Voff: %d mV", V_Offset);  //pure offset, must ideally be exactly cancelled by register O
   img.setCursor(2, 110);
   img.println(mask_pixels_string);
-  
 #endif  /////////////////////end of debagame mode//////////////////////////////////////
 
   img.setCursor(0, 0);

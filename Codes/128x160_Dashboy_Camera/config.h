@@ -6,7 +6,7 @@
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
-#define DEBUG_MODE      //allow additionnal outputs on display
+#define DEBUG_MODE  //allow additionnal outputs on display
 //#define DEBAGAME_MODE   //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
@@ -74,13 +74,13 @@ unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };  //2 for single regis
 unsigned long delay_MOTION = 5000;                          //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;                   //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;                   //absolute low exposure limit whatever the strategy
- 
+
 //to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
 #ifdef USE_OVERCLOCKING
-  unsigned int cycles = 22;  //nop clock setting for 250 MHz
+unsigned int cycles = 22;  //nop clock setting for 250 MHz
 #endif
 #ifndef USE_OVERCLOCKING
-  unsigned int cycles = 11;  //nop clock setting for 133 MHz
+unsigned int cycles = 11;  //nop clock setting for 133 MHz
 #endif
 
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
@@ -152,7 +152,7 @@ unsigned char camTADD[2] = { 0b00000000, 0b11111111 };  //additional registers 8
 
 //////////////sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //some real settings used by the Mitsubishi M64282FP sensor on Game Boy Camera, except exposure
-//reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0 (V2 = V1 = V0 = 0 is not allowed)
+//reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0 (V = 0 is not allowed anyway)
 //reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 set edge / type of edge
 //reg2 = 0b00000001; % C17 C16 C15 C14 C13 C12 C11 C10 / exposure time by 4096 ms steps (max 1.0486 s)
 //reg3 = 0b00000000; % C07 C06 C05 C04 C03 C02 C01 C00 / exposure time by 16 µs steps (max 4096 ms)
@@ -285,3 +285,76 @@ const unsigned char BMP_indexed_palette[1024] = { 0x00, 0x00, 0x00, 0x00, 0x01, 
 
 //HEX characters in ASCII table for serial output to Matlab
 const unsigned char LUT_serial[16] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46 };
+
+//a bit of explanations on data structure is necessary here:
+//CamData[128 * 128] contains the raw signal from sensor in 8 bits
+//HDRData[128 * 128] contains an average of raw signal data from sensor with increased dynamic range
+//lookup_serial[CamData[...]] is the sensor data with autocontrast in 8 bits for storing to SD card or sending to serial
+//lookup_TFT_RGB565[lookup_serial[CamData[...]]] is the sensor data with autocontrast in 16 bits RGB565 for the display
+//BayerData[128 * 128] contains the sensor data with dithering AND autocontrast in 2 bpp but stored in 8 bits
+//lookup_TFT_RGB565[BayerData[...]] contains the sensor data with dithering AND autocontrast in 16 bits RGB565 for the display
+//and so on, you get the idea...
+
+//I use 1D array only, because I was not sure wether 2D arrays would be supported. Anyway, It changes nothing
+//////////////global variables////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+unsigned char Dithering_patterns[48];       //storage for dithering tables
+unsigned char lookup_serial[256];           //autocontrast table generated in setup() from v_min and v_max
+unsigned char lookup_pico_to_GBD[256];      //convert 0<->3.3V scale from pico to 0<->3.0V scale from MAC-GBD
+unsigned char CamData[128 * 128];           //sensor data in 8 bits per pixel
+unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel from preceding loop for motion detection
+unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
+unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
+unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
+unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
+unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
+unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
+unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
+unsigned char BayerData[128 * 128];         //dithered image data
+unsigned char camReg[8];                    //empty register array
+unsigned char camReg_storage[8];            //empty register array
+unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
+unsigned short int pixel_TFT_RGB565;
+unsigned long currentTime = 0;
+unsigned long previousTime = 0;
+unsigned long currentTime_MOTION = 0;
+unsigned long currentTime_exp = 0;
+unsigned long previousTime_exp = 0;
+unsigned long file_number;
+unsigned long Next_ID, Next_dir;       //for directories and filenames
+unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
+unsigned long masked_pixels = 0;       //accumulator for dark/masked pixels
+unsigned int current_exposure, new_exposure;
+unsigned int low_exposure_threshold = 0;
+unsigned int files_on_folder = 0;
+unsigned int MOTION_sensor_counter = 0;
+unsigned int dark_level = 0;   //for DEGABAME mode
+unsigned int V_ref = 0;        //for DEGABAME mode
+int O_reg = 0;                 //for DEGABAME mode
+int V_Offset = 0;              //for DEGABAME mode
+unsigned char v_min, v_max;
+double difference = 0;
+double exposure_error = 0;
+double mean_value = 0;
+double error = 0;
+double difference_threshold;  //trigger threshold for motion sensor
+double multiplier = 1;        //deals with autoexposure algorithm
+bool TIMELAPSE_mode = 0;      //0 = use s a regular camera, 1 = recorder for timelapses
+bool HDR_mode = 0;            //0 = regular capture, 1 = HDR mode
+bool DITHER_mode = 0;         //0 = Dithering ON, 0 = dithering OFF
+bool image_TOKEN = 0;         //reserved for CAMERA mode
+bool recording = 0;           //0 = idle mode, 1 = recording mode
+bool sensor_READY = 0;        //reserved, for bug on sensor
+bool SDcard_READY = 0;        //reserved, for bug on SD
+bool JSON_ready = 0;          //reserved, for bug on config.txt
+bool LOCK_exposure = 0;       //reserved, for locking exposure
+bool MOTION_sensor = 0;       //reserved, to trigger motion sensor mode
+bool overshooting = 0;        //reserved, for register anti-jittering system
+
+char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
+char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
+char mask_pixels_string[20];
+char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
+char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
+char rank_timelapse = 0;                                        //rank in the timelapse array
+char register_strategy = 0;                                     //strategy # of the Game Boy Camera emulation
+//////////////end of global variables///////////////////////////////////////////////////////////////////////////////////////////////////////////////
