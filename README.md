@@ -84,7 +84,7 @@ Additionally, you can address other cool features by entering them in the [confi
 
 # Expert mode
 
-You can also directly play with the #define options in config.h and recompile the code to:
+You can also directly play with the **#define** options in [config.h](/Codes/128x160_Dashboy_Camera/config.h) and recompile the code to:
 - deactivate the Leds (sneak mode);
 - deactivate the SD card or the TFT screen to debug;
 - activate the serial output and spit images as hexadecimal text to interface the camera with another software like Matlab, but it is rather slow. I used that initially for debugging without display, and I kept that mode for tricky bugs requiring access to the arrays for example;
