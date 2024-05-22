@@ -86,6 +86,7 @@ unsigned int cycles = 11;  //nop clock setting for 133 MHz
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };  //colors as they will appear in the bmp file and display after dithering
 unsigned char max_line = 120;                                     //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
+//unsigned char max_line = 128;                                   //outputs the whole image in "no border" mode
 unsigned char x_min = (128 - x_box) / 2;                          //calculate the autoexposure area limits
 unsigned char y_min = (max_line - y_box) / 2;                     //calculate the autoexposure area limits
 unsigned char x_max = x_min + x_box;                              //calculate the autoexposure area limits
@@ -199,13 +200,12 @@ unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers with black level calibration
-//unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11100001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration
-//positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB = LOW -> to what I understand, outputs black level on the first pixel line and activate the auto-calibration circuit
 //AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) = open loop calibration
-//So to have a real 128x128 image, AZ + SH + OB must be high
-//these values are not embedded into the config.json but could
+//So to have a real 128x128 image, AZ + SH + OB must be HIGH
+
+//these next values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
 unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
 //////////////end of sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

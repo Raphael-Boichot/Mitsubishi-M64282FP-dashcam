@@ -667,10 +667,16 @@ void camReadPicture()  //Take a picture, read it and store it
         pixel = adc_read();                //The ADC is 12 bits, this sacrifies the 4 least significant bits to simplify transmission
         CamData[subcounter] = pixel >> 4;  //record only 8 bits
 
-#ifdef DEBAGAME_MODE
-        if (y > 123) {
-          masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
-        }
+#ifdef DEBAGAME_MODE  //black pixel line is the first line on the M64283FP and the 4 last in the M64282FP, do not ask me why...
+if (M64283FP == 1) {
+  if (y == 0) {
+    masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
+  }
+} else {
+  if (y == 127) { //I take just one line with the 82FP to stay consistent with the 83FP
+    masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
+  }
+}
 #endif
         subcounter = subcounter + 1;
         camDelay();
@@ -1371,8 +1377,8 @@ void display_other_informations() {
   img.println(camReg[7], HEX);
 #endif  ////////////////end of debug informations//////////////////////////////////////
 
-#ifdef DEBAGAME_MODE                                               ///begining of debagame mode//////////////////////////////////////
-  dark_level = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000;  //get the average of 4 last lines of pixels (masked), convert in mV
+#ifdef DEBAGAME_MODE                                              ///begining of debagame mode//////////////////////////////////////
+  dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;      //get the average of the last line of pixels (masked), convert in mV
   sprintf(mask_pixels_string, "Dark: +%d mV", dark_level);        //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
   //The sum Vref + reg O + offset must be as close as V ref as possible by adjsuting register O (fine tuning)
   //other said, the Voffset must ideally be cancelled by reg O (the Voffset varies vary with exposure time, gain, sensor, temperature, etc.)
