@@ -36,7 +36,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **exposureyWindow:** exposure box heigth in pixels, centered (max is 120, whole image);
 - **focusPeaking:** 0 = normal mode, 1 = [focus peaking](https://en.wikipedia.org/wiki/Focus_peaking) activated;
 - **focuspeakingThreshold:** threshold for focus peaking. The lower the value, the more pixels indicates good focusing (values 0..255).
-- **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor
+- **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor. It is advised to deactivate gameboycameraMode when using this mode to swicth to a single register strategy.
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
 
