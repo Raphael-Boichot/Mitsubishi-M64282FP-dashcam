@@ -152,8 +152,8 @@ unsigned char camTADD[2] = { 0b00000000, 0b11111111 };  //additional registers 8
 
 //////////////sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //some real settings used by the Mitsubishi M64282FP sensor on Game Boy Camera, except exposure
-//reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 zero point calibration / output reference voltage fine -> O and V add themselves, if !V==0 (V = 0 is not allowed anyway)
-//reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 set edge / type of edge
+//reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 enable black level calibration with fixed reg O/ output reference voltage fine -> O and V add themselves, if !V==0 (V = 0 is not allowed anyway)
+//reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 negative output / set edge / type of edge / gain
 //reg2 = 0b00000001; % C17 C16 C15 C14 C13 C12 C11 C10 / exposure time by 4096 ms steps (max 1.0486 s)
 //reg3 = 0b00000000; % C07 C06 C05 C04 C03 C02 C01 C00 / exposure time by 16 µs steps (max 4096 ms)
 //reg4 = 0b00000001; % P7 P6 P5 P4 P3 P2 P1 P0 filtering kernels, always 0x01 on a GB camera, but can be different here
@@ -192,7 +192,7 @@ unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //reg2 = like M64282FP
 //reg3 = like M64282FP
 //reg4 = SH  AZ  CL  []  [P3  P2  P1  P0]
-//reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0]
+//reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0] //OB low enables outputing black level on line 1 instead of VOUT
 //reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0]
 //reg7 = like M64282FP but E register is shifted in value
 //reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
@@ -202,8 +202,8 @@ unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000
 //unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11100001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration
 //positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
-//CL + AZ + SH + OB =LOW -> automatic zero calibration
-//putting AZ to 1 creates image artifacts, I suppose this must be 0... datasheet contradicts itself
+//CL + AZ + SH + OB =LOW -> to what I understand, output black level on the first pixel line and activate the auto-calibration circuit
+
 //these values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
 unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
