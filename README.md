@@ -1,5 +1,5 @@
 # The DASHBOY CAMERA
-## A digital 8 bit camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
+## A digital 8-bit camera made from the Mitsubishi M64282FP artificial retina and a Raspberry Pi Pico. 
 
 **Media coverage:**
 - **Hackaday: [A Game Boy Camera, Without The Game Boy](https://hackaday.com/2023/07/29/a-game-boy-camera-without-the-game-boy/)**
