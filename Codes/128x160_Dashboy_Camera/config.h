@@ -202,8 +202,9 @@ unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000
 //unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11100001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration
 //positive image reading calibration + O register to 0V
 //2D edge enhancement activated + set gain to 24.5dB
-//CL + AZ + SH + OB =LOW -> to what I understand, output black level on the first pixel line and activate the auto-calibration circuit
-
+//CL + AZ + SH + OB = LOW -> to what I understand, outputs black level on the first pixel line and activate the auto-calibration circuit
+//AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) = open loop calibration
+//So to have a real 128x128 image, AZ + SH + OB must be high
 //these values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
 unsigned char M64283FP_v_max = 190;  //0 is OV, 255 is 3.3 volts
