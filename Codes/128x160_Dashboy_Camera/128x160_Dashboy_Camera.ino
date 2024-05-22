@@ -1440,22 +1440,35 @@ void display_other_informations() {
 #endif  ////////////////end of debug informations//////////////////////////////////////
 
 #ifdef DEBAGAME_MODE  ///begining of debagame mode//////////////////////////////////////
-  voltage_display = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000;
-  sprintf(mask_pixels_string, "Mpix: +%d mV", voltage_display);  //average voltage of masked pixelms
-  img.setCursor(2, 110);
-  img.println(mask_pixels_string);
-  voltage_display = (camReg[7] & 0b00000111) * (1000 * 0.5);
-  sprintf(mask_pixels_string, "Vreg: +%d mV", voltage_display);  //Vref
+  voltage_display = (masked_pixels / (128 * 4)) * (3.3 / 255) * 1000; //get the average of 4 last lines of pixels (masked), convert in mV
+  sprintf(mask_pixels_string, "Mpix: +%d mV", voltage_display);  //average voltage of masked pixels (dark signal) in mV, is equal to Vref + reg O + saturation voltage (Vsat)
+  //The sum Vref + reg O + saturation voltage (or dark signal) must be as close as Vref as possible by adjsuting register O (fine tuning)
+  //other said, Vsat must equal reg O (Vsat vary with exposure time)
+  //in order to ensure an independance of "image aspect" to the sensor.
   img.setCursor(2, 102);
   img.println(mask_pixels_string);
-  voltage_display = (camReg[0] & 0b00011111) * 32;
-  if ((camReg[0] & 0b00100000) == 0x20) {
-    sprintf(mask_pixels_string, "Oreg: +%d mV", voltage_display);  //register O positive
-  } else {
-    sprintf(mask_pixels_string, "Oreg: -%d mV", voltage_display);  //register O negative
-  }
+  voltage_display = (camReg[7] & 0b00000111) * (1000 * 0.5); //get register V (Vref), convert in mV
+  sprintf(mask_pixels_string, "Vreg: +%d mV", voltage_display);  //theoretical Vref
   img.setCursor(2, 94);
   img.println(mask_pixels_string);
+  voltage_display = (camReg[0] & 0b00011111) * 32; //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
+  if ((camReg[0] & 0b00100000) == 0x20) {
+    sprintf(mask_pixels_string, "Oreg: +%d mV", voltage_display);  //register O positive, max +992mV
+  } else {
+    sprintf(mask_pixels_string, "Oreg: -%d mV", voltage_display);  //register O negative, max -992mV
+  }
+  img.setCursor(2, 86);
+  img.println(mask_pixels_string);
+  //saturation voltage = dark signal - (Vref + regO)
+    if ((camReg[0] & 0b00100000) == 0x20) {
+  voltage_display=(masked_pixels / (128 * 4)) * (3.3 / 255) * 1000-camReg[7] & 0b00000111) * (1000 * 0.5)-(camReg[0] & 0b00011111) * 32);
+ } else {
+voltage_display=(masked_pixels / (128 * 4)) * (3.3 / 255) * 1000-camReg[7] & 0b00000111) * (1000 * 0.5)-(camReg[0] & 0b00011111) * 32);
+ }
+ sprintf(mask_pixels_string, "Vsat: +%d mV", voltage_display);  //theoretical Vref
+  img.setCursor(2, 110);
+  img.println(mask_pixels_string);
+  
 #endif  /////////////////////end of debagame mode//////////////////////////////////////
 
   img.setCursor(0, 0);
