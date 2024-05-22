@@ -82,6 +82,18 @@ Additionally, you can address other cool features by entering them in the [confi
 - **Fixed exposure mode (default OFF)** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **2D enhancement mode (default OFF)** enforces the 2D image enhancement processed by the sensor in Game Boy Camera mode & non dithering mode only, whatever the register used.
 
+# Expert mode
+
+You can also directly play with the #define options in config.h and recompile the code to:
+- deactivate the Leds (sneak mode);
+- deactivate the SD card or the TFT screen to debug;
+- activate the serial output and spit images as hexadecimal text to interface the camera with another software like Matlab, but it is rather slow. I used that initially for debugging without display, and I kept that mode for tricky bugs requiring access to the arrays for example;
+- change screen driver from ST7735 128x128 pixels (default) to ST7789 256x256 pixels TFT display. Beware, you must also modify the config file (comment/uncomment stuff, everything is explained) for the TFT library, see the installtion guide;
+- use the TADD regsiter of the M64283FP. You should wire the TADD pin through a free gate of the level shifter (high level side) and wire the low level side to GPIO22. See comments in code for the next steps. I assume you are nerd enough at this point to manage next steps by yourself, the code is ready;
+- activate overclocking. I yet provide an overclocked build at the maximum possible frequency that do no crashes but it drains battery too fast to my own taste, despite being more responsive;
+- deactivate the register display on screen or debug mode if it bothers you (why not after all, I though it was fun to keep it);
+- activate the [debagame mode](https://tcrf.net/Proto:Game_Boy_Camera) that give access to advanced sensor calibration paremeters. It displays on screen the voltage of masked pixels, the offset voltage, the register O and the register V and compare them. If you do not see what it means, it's normal, nobody is supposed to.
+
 # Some pictures made with the device (old border)
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Examples.png)
