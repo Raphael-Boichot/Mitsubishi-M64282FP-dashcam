@@ -45,7 +45,7 @@ Then:
 - Compile your code **with frequency set at 133 MHz** and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 - Enjoy your brand new 0.015 Mpixels camera !
 
-# Basic user manual
+# Casual user manual (requirement: just pushing buttons)
 
 The **Dashboy Camera** uses a [configuration file](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json) that must be placed at the root of SD card which has priority on the internal default parameters. The device cannot boot without a working sensor and a working SD card. Status of sensor, SD card and configuration file are indicated on the splashscreen.
 
@@ -71,7 +71,7 @@ The device outputs 1x BMP images natively but the projects comes with a [bunch o
 
 ![DashBoy Camera in a nutshell](Docs%20and%20research/Image%20files/Commands_in_a_nutshell.png)
 
-# Advanced user manual
+# Advanced user manual (requirement: playing with json file)
 
 Additionally, you can address other cool features by entering them in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json):
 - **Game Boy Camera mode (default ON)** drives the DashBoy Camera exactly as the Game Boy Camera does, using the same registers and the same dithering matrices in default constrast. Images made in this mode are pixel identical to images produces with a Game Boy Camera in the same lightning condition if dithering is activated. When set to 0, this triggers a simplier "recipe" with fixed registers and fixed dithering matrix.
@@ -82,7 +82,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - **Fixed exposure mode (default OFF)** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **2D enhancement mode (default OFF)** enforces the 2D image enhancement processed by the sensor in Game Boy Camera mode & non dithering mode only, whatever the register used.
 
-# Nerd user manual
+# Nerd user manual (requirement: recompiling the code)
 
 You can also directly play with the **#define** options in [config.h](/Codes/128x160_Dashboy_Camera/config.h) and recompile the code to:
 - deactivate the Leds (sneak mode);
