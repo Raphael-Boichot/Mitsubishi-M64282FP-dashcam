@@ -199,9 +199,10 @@ unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers with black level calibration
+//unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11000001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration, image is crap ^^
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + AZ + SH + OB = LOW -> to what I understand, outputs black level on the first pixel line and activate the auto-calibration circuit
-//AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) = open loop calibration
+//AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) -> the image becomes disgusting !
 //So to have a real 128x128 image, AZ + SH + OB must be HIGH
 //the datasheet says exactly "Adjust the O register so that this dark pixel output (optical black) level becomes the Vref value"
 //this is valid both for the 82FP and 83FP, except that it is automatic with the 83FP and open loop with the 82FP
