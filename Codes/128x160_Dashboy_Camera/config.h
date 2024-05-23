@@ -179,12 +179,10 @@ unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b0
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64282FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000001 };  //registers
+
 //these values are not embedded into the config.json but could
 unsigned char M64282FP_v_min = 50;   //0 is OV, 255 is 3.3 volts
 unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
-//unsigned char camReg_M64282FP[8] = { 0b10011111, 0b11101000, 0b00000001, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };old registers
-//unsigned char M64282FP_v_min = 75;   //0 is OV, 255 is 3.3 volts
-//unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 
 //DashBoy Camera strategy for the unobtainium M64283FP sensor
 //detail of the registers
@@ -204,6 +202,8 @@ unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000
 //CL + AZ + SH + OB = LOW -> to what I understand, outputs black level on the first pixel line and activate the auto-calibration circuit
 //AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) = open loop calibration
 //So to have a real 128x128 image, AZ + SH + OB must be HIGH
+//the datasheet says exactly "Adjust the O register so that this dark pixel output (optical black) level becomes the Vref value"
+//this is valid both for the 82FP and 83FP, except that it is automatic with the 83FP and open loop with the 82FP
 
 //these next values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
