@@ -6,9 +6,8 @@
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
-#define DEBUG_MODE  //allow additionnal outputs on display
-//#define DEBAGAME_MODE   //more variables: masked pixel, O reg and V reg voltages
-//#define ENABLE_AUTOCALIBRATION  //for M64262FP, dynamic register O tuning to cancel Voffset
+#define DEBUG_MODE     //allow additionnal outputs on display
+#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
 #define x_ori 0
@@ -86,14 +85,15 @@ unsigned int cycles = 11;  //nop clock setting for 133 MHz
 
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };  //colors as they will appear in the bmp file and display after dithering
+unsigned char max_line_for_recording = 120;                       //choose 128 to record the whole image BUT powershell scripts have to be modified !!!
 unsigned char max_line = 120;                                     //last 5-6 rows of pixels contains dark pixel value and various artifacts, so I remove 8 to have a full tile line
 //unsigned char max_line = 128;                                   //outputs the whole image in "no border" mode
-unsigned char x_min = (128 - x_box) / 2;                          //calculate the autoexposure area limits
-unsigned char y_min = (max_line - y_box) / 2;                     //calculate the autoexposure area limits
-unsigned char x_max = x_min + x_box;                              //calculate the autoexposure area limits
-unsigned char y_max = y_min + y_box;                              //calculate the autoexposure area limits
-unsigned char display_offset = 16;                                //offset for image on the 128*160 display
-unsigned char line_length = 4;                                    //exposure area cross size
+unsigned char x_min = (128 - x_box) / 2;       //calculate the autoexposure area limits
+unsigned char y_min = (max_line - y_box) / 2;  //calculate the autoexposure area limits
+unsigned char x_max = x_min + x_box;           //calculate the autoexposure area limits
+unsigned char y_max = y_min + y_box;           //calculate the autoexposure area limits
+unsigned char display_offset = 16;             //offset for image on the 128*160 display
+unsigned char line_length = 4;                 //exposure area cross size
 //Some various defines
 #define NOP __asm__ __volatile__("nop\n\t")  //minimal possible delay
 #define BITS_PER_PIXEL 16                    //How many bits per pixel in Sprite, here RGB565 format
@@ -329,10 +329,10 @@ unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
 unsigned int MOTION_sensor_counter = 0;
-int dark_level = 0;            //for DEGABAME mode
-int V_ref = 0;                 //for DEGABAME mode
-int O_reg = 0;                 //for DEGABAME mode
-int V_Offset = 0;              //for DEGABAME mode
+int dark_level = 0;  //for DEGABAME mode
+int V_ref = 0;       //for DEGABAME mode
+int O_reg = 0;       //for DEGABAME mode
+int V_Offset = 0;    //for DEGABAME mode
 unsigned char v_min, v_max;
 double difference = 0;
 double exposure_error = 0;

@@ -360,12 +360,11 @@ void loop() {
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 void take_a_picture() {
-  dynamic_calibration();    //calibrate the register O if needed and activated
-  camReset();               //resets the sensor
-  camSetRegisters();        //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
+  camReset();         //resets the sensor
+  camSetRegisters();  //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
   //camSetRegistersTADD();  //Sets 2 ADDitional registers to TADD pin of the M64283FP with TADD = LOW
-  camReadPicture();         //get pixels, dump them in CamData
-  camReset();               //probably not usefull but who knows...
+  camReadPicture();  //get pixels, dump them in CamData
+  camReset();        //probably not usefull but who knows...
 }
 
 double auto_exposure() {
@@ -530,26 +529,6 @@ unsigned int get_exposure(unsigned char camReg[8]) {
   return exp_regs;
 }
 
-void dynamic_calibration() {
-#ifdef ENABLE_AUTOCALIBRATION
-  if (M64283FP == 1) {
-      //do nothing, the M64283FP sensor is yet able to perform this task by default
-    }
-  else { //a M64282FP sensor is connected
-    dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;  //get the average of the last line of pixels (masked), convert in mV
-    V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);            //get register V (Vref), convert in mV
-    O_reg = (camReg[0] & 0b00011111) * 32;                      //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
-    V_Offset = dark_level - (V_ref + O_reg);                    //offset to cancel with O register
-    if (V_Offset > 32) {                                        //32 mV diffrence (1 unit) ? change O
-      camReg[0] = camReg[0] - 1;
-    } 
-    if (V_Offset < -32) {    
-      camReg[0] = camReg[0] + 1;
-    }
-  }
-#endif
-}
-
 void camDelay()  //Allow a lag in processor cycles to maintain signals long enough, critical for exposure time, sensor must be clocked at 1 MHz MAXIMUM (can be less, see nigth mode)
 {
   for (int i = 0; i < cycles; i++) NOP;
@@ -689,15 +668,16 @@ void camReadPicture()  //Take a picture, read it and store it
         CamData[subcounter] = pixel >> 4;  //record only 8 bits
 
 #ifdef DEBAGAME_MODE  //black pixel line is the first line on the M64283FP and the 4 last in the M64282FP, do not ask me why...
-if (M64283FP == 1) {
-  if (y == 0) {
-    masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
-  }
-} else {
-  if (y == 127) { //I take just one line with the 82FP to stay consistent with the 83FP
-    masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
-  }
-}
+        if (M64283FP == 1) {
+          if (y == 0) {
+            masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
+          }
+        } else {
+          if (y == 127) {                                         //I take just one line with the 82FP to stay consistent with the 83FP
+            masked_pixels = masked_pixels + CamData[subcounter];  //used to calculate the black level voltage
+            //funfact: these pixels are always stuck at the maximal saturation voltage.
+          }
+        }
 #endif
         subcounter = subcounter + 1;
         camDelay();
@@ -1177,14 +1157,14 @@ void dump_data_to_SD_card() {  //self explanatory
       if ((RAW_recording_mode == 0) | ((image_TOKEN == 1) & (MOTION_sensor == 0))) {  //forbid raw recording in single shot mode
         Datafile.write(BMP_header_generic, 54);                                       //fixed header for 128*120 image
         Datafile.write(BMP_indexed_palette, 1024);                                    //indexed RGB palette
-        Datafile.write(BmpData, 128 * max_line);                                      //removing last tile line
+        Datafile.write(BmpData, 128 * max_line_for_recording);                        //removing last tile line
         Datafile.close();
       } else {
         Datafile.write("RAWDAT");  //Just a keyword
         Datafile.write(128);
-        Datafile.write(max_line);
+        Datafile.write(max_line_for_recording);
         Datafile.write(camReg, 8);  //camera registers from the preceding image, close to the current one
-        Datafile.write(BmpData, 128 * max_line);
+        Datafile.write(BmpData, 128 * max_line_for_recording);
         Datafile.close();
       }
     }
@@ -1398,9 +1378,9 @@ void display_other_informations() {
   img.println(camReg[7], HEX);
 #endif  ////////////////end of debug informations//////////////////////////////////////
 
-#ifdef DEBAGAME_MODE                                              ///begining of debagame mode//////////////////////////////////////
-  dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;      //get the average of the last line of pixels (masked), convert in mV
-  sprintf(mask_pixels_string, "Dark: +%d mV", dark_level);        //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
+#ifdef DEBAGAME_MODE                                          ///begining of debagame mode//////////////////////////////////////
+  dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;  //get the average of the last line of pixels (masked), convert in mV
+  sprintf(mask_pixels_string, "Dark: %d mV", dark_level);    //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
   //The sum Vref + reg O + offset must be as close as V ref as possible by adjsuting register O (fine tuning)
   //other said, the Voffset must ideally be cancelled by reg O (the Voffset varies vary with exposure time, gain, sensor, temperature, etc.)
   //in order to ensure an independance of "image aspect" to the sensor.
@@ -1408,15 +1388,15 @@ void display_other_informations() {
   img.println(mask_pixels_string);
 
   V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);     //get register V (Vref), convert in mV
-  sprintf(mask_pixels_string, "Vref: +%d mV", V_ref);  //theoretical Vref
+  sprintf(mask_pixels_string, "Vref: %d mV", V_ref);  //theoretical Vref
   img.setCursor(2, 94);
   img.println(mask_pixels_string);
 
   O_reg = (camReg[0] & 0b00011111) * 32;  //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
   if ((camReg[0] & 0b00100000) == 0x20) {
-    O_reg=O_reg; //register O positive, do nothing, max +992mV
+    O_reg = O_reg;  //register O positive, do nothing, max +992mV
   } else {
-    O_reg=O_reg*-1; //register O negative, max -992mV
+    O_reg = O_reg * -1;  //register O negative, max -992mV
   }
   sprintf(mask_pixels_string, "Oreg: %d mV", O_reg);
   img.setCursor(2, 102);
