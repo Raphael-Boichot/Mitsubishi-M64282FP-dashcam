@@ -8,6 +8,7 @@
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
 #define DEBUG_MODE  //allow additionnal outputs on display
 //#define DEBAGAME_MODE   //more variables: masked pixel, O reg and V reg voltages
+//#define ENABLE_AUTOCALIBRATION  //for M64262FP, dynamic register O tuning to cancel Voffset
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
 #define x_ori 0
@@ -328,8 +329,8 @@ unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
 unsigned int MOTION_sensor_counter = 0;
-unsigned int dark_level = 0;   //for DEGABAME mode
-unsigned int V_ref = 0;        //for DEGABAME mode
+int dark_level = 0;            //for DEGABAME mode
+int V_ref = 0;                 //for DEGABAME mode
 int O_reg = 0;                 //for DEGABAME mode
 int V_Offset = 0;              //for DEGABAME mode
 unsigned char v_min, v_max;

@@ -360,11 +360,12 @@ void loop() {
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
 void take_a_picture() {
-  camReset();         //resets the sensor
-  camSetRegisters();  //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
+  dynamic_calibration();    //calibrate the register O if needed and activated
+  camReset();               //resets the sensor
+  camSetRegisters();        //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
   //camSetRegistersTADD();  //Sets 2 ADDitional registers to TADD pin of the M64283FP with TADD = LOW
-  camReadPicture();  //get pixels, dump them in CamData
-  camReset();        //probably not usefull but who knows...
+  camReadPicture();         //get pixels, dump them in CamData
+  camReset();               //probably not usefull but who knows...
 }
 
 double auto_exposure() {
@@ -527,6 +528,26 @@ unsigned int get_exposure(unsigned char camReg[8]) {
   double exp_regs;
   exp_regs = camReg[2] * 256 + camReg[3];  //
   return exp_regs;
+}
+
+void dynamic_calibration() {
+#ifdef ENABLE_AUTOCALIBRATION
+  if (M64283FP == 1) {
+      //do nothing, the M64283FP sensor is yet able to perform this task by default
+    }
+  else { //a M64282FP sensor is connected
+    dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;  //get the average of the last line of pixels (masked), convert in mV
+    V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);            //get register V (Vref), convert in mV
+    O_reg = (camReg[0] & 0b00011111) * 32;                      //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
+    V_Offset = dark_level - (V_ref + O_reg);                    //offset to cancel with O register
+    if (V_Offset > 32) {                                        //32 mV diffrence (1 unit) ? change O
+      camReg[0] = camReg[0] - 1;
+    } 
+    if (V_Offset < -32) {    
+      camReg[0] = camReg[0] + 1;
+    }
+  }
+#endif
 }
 
 void camDelay()  //Allow a lag in processor cycles to maintain signals long enough, critical for exposure time, sensor must be clocked at 1 MHz MAXIMUM (can be less, see nigth mode)
