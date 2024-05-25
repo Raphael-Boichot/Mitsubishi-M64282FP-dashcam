@@ -155,7 +155,7 @@ unsigned char camTADD[2] = { 0b00000000, 0b11111111 };  //additional registers 8
 //////////////sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //some real settings used by the Mitsubishi M64282FP sensor on Game Boy Camera, except exposure
 //reg0 = 0b10011111; % Z1 Z0 O5 O4 O3 O2 O1 O0 enable black level calibration with fixed reg O/ output reference voltage fine -> O and V add themselves, if !V==0 (V = 0 is not allowed anyway)
-//reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 negative output / set edge / type of edge / gain
+//reg1 = 0b11100100; % N VH1 VH0 G4 G3 G2 G1 G0 set edge / type of edge / gain
 //reg2 = 0b00000001; % C17 C16 C15 C14 C13 C12 C11 C10 / exposure time by 4096 ms steps (max 1.0486 s)
 //reg3 = 0b00000000; % C07 C06 C05 C04 C03 C02 C01 C00 / exposure time by 16 µs steps (max 4096 ms)
 //reg4 = 0b00000001; % P7 P6 P5 P4 P3 P2 P1 P0 filtering kernels, always 0x01 on a GB camera, but can be different here
