@@ -217,8 +217,8 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 - Adding some cool features like [slit scan photography](https://fr.wikipedia.org/wiki/Slit-scan) or multi-shot in an [Action Sampler](https://shop.lomography.com/fr/actionsampler-clear). Maybe one day, I'm currently a bit short in memory to embed this.
 - Adding Game Boy Printer capabilities was imagined as is it quite easy to add ([everything is yet more or less written]((https://github.com/Raphael-Boichot/The-Arduino-SD-Game-Boy-Printer))). It is a bit _too_ niche, even if I'm a maniac of hacking the printer myself.
 - Adding a menuing system with a single joystick was imagined, but it requires basically starting the code from scratch. In the same mood, a full touchscreen interface would be cool and probably easier to code.
-- Making a full SMD device small and pretty (with sensor included on the PCB and a printed shell) to make a tiny digital camera form factor with it. Too complicated and too demanding for me alone.
-- Adding an USB support with [tinyusb](https://github.com/earlephilhower/Adafruit_TinyUSB_Arduino/tree/master) to turn the device into a webcam by using the second core. I did not manage to make it work with any Arduino IDE library and gave up. Maybe in the future.
+- Making a full SMD device small and pretty (with sensor included on the PCB and a printed shell) to make a tiny digital camera. Too much work knowing that the current design perfectly fills my needs.
+- Adding an USB support with [tinyusb](https://github.com/earlephilhower/Adafruit_TinyUSB_Arduino/tree/master) to turn the device into a webcam by using the second core. I did not manage to make any Arduino IDE compatible library working with Windows 10 USB camera support and gave up. Maybe in the future  if I give another try.
 
 # Some dev notes
 
