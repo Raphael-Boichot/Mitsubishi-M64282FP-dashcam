@@ -205,7 +205,10 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 - The M64283 sensor came in FP version (plastic case) and K version (ceramic package). Informations about the K version are very scarse (No clean image available online). It probably fills an industrial niche where hardened electronics and IR transparency are desired. On the other hand, no known M64282K version is reported anywhere on the internet.
 - You can [directly drop a M64283FP on a Game Boy Camera sensor board](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Sensor%20board%20with%20a%20M64283FP.png) as quite luxury replacement chip. [The image will just look softer](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Image%20of%20a%20M64282FP%20taken%20with%20a%20M64283FP.png), to not say deceptive, as the table for E register (edge enhancement ratio) is not the same. Basically the 2D edge enhancement effect is cancelled if the [E register table used by the regular camera M64282FP sensor is injected into the M64283FP sensor](Docs%20and%20research/Image%20files/Register_E.png). The M64283FP sensor is also unstable during exposure changes, (VOUT can goes to 0 when sensor is rapidely saturated in intense light and stay stuck in this state, for no reason), which reinforces my belief that this is a prototype version. Full (and tested) support is provided on the DashBoy Camera, patching these two issues (Sensor going crazy and table E register inaccuracy), in order to allow using the 83FP sensor smoothly and get pleasant images. Artifacts (vertical bars with 2D enhancement and ghost images) are quite similar between the 82 and 83FP sensors.
 
-**M64283FP sensor directly drop on a PCB sensor board (and happy with that)**
+**The M64283FP and M64282FP sensors are pinout compatible**
+![](/Docs%20and%20research/Image%20files/Sensor%20comparison.png)
+
+**M64283FP sensor directly drop on a PCB sensor board (and happy to take image like that)**
 ![](/Docs%20and%20research/Image%20files/Sensor%20board%20with%20a%20M64283FP.png)
 
 **The register E used by the Game Boy Camera by default disables the edge enhancement of the M64283FP sensor**
