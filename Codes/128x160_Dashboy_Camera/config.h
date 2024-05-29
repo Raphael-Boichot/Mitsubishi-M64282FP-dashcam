@@ -2,12 +2,11 @@
 #define USE_SD   //to allow recording on SD - deactivate for debug
 #define ST7735   //for use with the TFT 128x160 (full frame image), default setup
 //#define ST7789 //for use with the minuscule TFT 240x240 (128x160 image centered, no crop) - Beware, you also have to modify the TFT setup accordingly
-//#define TADDREGISTER  //additional support for the Mitsubishi M64283FP CMOS sensor, untested !
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
 #define DEBUG_MODE     //allow additionnal outputs on display
-#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
+//#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
 #define x_ori 0
@@ -130,19 +129,9 @@ unsigned char line_length = 4;                 //exposure area cross size
 //SD_MOSI - to pi pico pin GPIO19
 #define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-
-//GPIO 22 is reserved for TADD register (see next), but can be routed to external trigger if you need one
-//if used to trigger TADD pin, better use a free level shifter channel rather in order to avoid using 3.3 volts on the sensor
-//#define INOUT 22  //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
-#ifdef TADDREGISTER
-#define TADD 22  //to pin TADD of the M64283FP CMOS sensor
-////////////////////////////START2x4bits/STOP2x4bits/see datasheet
-///////////////////////////{ 0bXXXXYYYY, 0bXXXXYYYY };
-unsigned char camTADD[2] = { 0b00000000, 0b11111111 };  //additional registers 8 and 9, START and STOP of image area in tiles (16x16)
-//these parameters should produce a 128*128 image too but never tested...
-#endif
-
-//GPIO 23 and 24 are reserved for internal use of the pi pico (on-board SMPS Power Save and VBUS sense respectively), usable but not recommended
+#define INOUT 22  //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
+//GPIO 23 is reserved for internal use of the pi pico (on-board SMPS Power Save), usable but not recommended
+//GPIO 24 is reserved for internal use of the pi pico (VBUS sense), usable but not recommended
 //seems that using one of them could help ADC stability but I never had any issue with them...
 #define INT 25   //to pi pico pin GPIO25 internal LED;
 #define VOUT 26  //to pi pico pin GPIO26/A0 Analog signal from sensor, read shortly after clock is set low, native 12 bits, converted to 8 bits
@@ -199,13 +188,11 @@ unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers with black level calibration
-//unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b11000001, 0b00010000, 0b00000001, 0b01000001 };  //registers without black level calibration, image is crap ^^
 //2D edge enhancement activated + set gain to 24.5dB
-//CL + AZ + SH + OB = LOW -> to what I understand, outputs black level on the first pixel line and activate the auto-calibration circuit
-//AZ + SH + OB = HIGH -> acts as a M64282FP (whatever CL state ? not written in datasheet) -> the image becomes disgusting !
-//So to have a real 128x128 image, AZ + SH + OB must be HIGH
-//the datasheet says exactly "Adjust the O register so that this dark pixel output (optical black) level becomes the Vref value"
-//this is valid both for the 82FP and 83FP, except that it is automatic with the 83FP and open loop with the 82FP
+//CL + OB = LOW -> outputs black level on the first pixel line and activates the auto-calibration circuit
+//CL + OB = HIGH -> acts more or less as a M64282FP, no calibration other than with register O
+//SH and AZ are never described correctly and the Japanese datasheet recommends put them always LOW, so let's do this
+//see https://github.com/Raphael-Boichot/Play-with-the-Mitsubishi-M64283FP-sensor
 
 //these next values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts

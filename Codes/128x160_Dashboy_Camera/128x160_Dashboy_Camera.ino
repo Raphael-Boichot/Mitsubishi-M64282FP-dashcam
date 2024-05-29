@@ -72,12 +72,6 @@ void setup() {
   //gpio_set_dir(INOUT, GPIO_IN);  //to use with remote for example
   //gpio_set_dir(INOUT, GPIO_OUT); //to use with a flash for example
 
-#ifdef TADDREGISTER
-  gpio_init(TADD);
-  gpio_set_dir(TADD, GPIO_OUT);
-  gpio_put(TADD, 1);  //must be HIGH by default, just put LOW for sedeing registers, see datasheet of the M64283FP
-#endif
-
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
   //adc_gpio_init(VOUT); // I have no idea why, but this command has no effect, you have to use the command below
@@ -101,6 +95,18 @@ void setup() {
     v_min = GB_v_min;             //those were chosen to maximize contrast
     v_max = GB_v_max;
     if (M64283FP == 1) {                     //strategy for the M64283FP sensor
+      camReg1[4] = camReg1[4] | 0b00100000;  //the CL register must be HIGH to disable autocalibration, see https://github.com/Raphael-Boichot/Play-with-the-Mitsubishi-M64283FP-sensor
+      camReg2[4] = camReg2[4] | 0b00100000;
+      camReg3[4] = camReg3[4] | 0b00100000;
+      camReg4[4] = camReg4[4] | 0b00100000;
+      camReg5[4] = camReg5[4] | 0b00100000;
+
+      camReg1[5] = camReg1[5] | 0b00010000;  //the OB register must be HIGH to disable autocalibration, see https://github.com/Raphael-Boichot/Play-with-the-Mitsubishi-M64283FP-sensor
+      camReg2[5] = camReg2[5] | 0b00010000;
+      camReg3[5] = camReg3[5] | 0b00010000;
+      camReg4[5] = camReg4[5] | 0b00010000;
+      camReg5[5] = camReg5[5] | 0b00010000;
+
       camReg1[7] = camReg1[7] | 0b01000000;  //Forcing E register to 50% 2D edge enhancement, see https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/Docs%20and%20research/Image%20files/Register_E.png
       camReg2[7] = camReg2[7] | 0b01000000;
       camReg3[7] = camReg3[7] | 0b01000000;
@@ -362,9 +368,8 @@ void loop() {
 void take_a_picture() {
   camReset();         //resets the sensor
   camSetRegisters();  //Send 8 registers to the sensor, enough for driving the M64282FP/M64283FP
-  //camSetRegistersTADD();  //Sets 2 ADDitional registers to TADD pin of the M64283FP with TADD = LOW
-  camReadPicture();  //get pixels, dump them in CamData
-  camReset();        //probably not usefull but who knows...
+  camReadPicture();   //get pixels, dump them in CamData
+  camReset();         //probably not usefull but who knows...
 }
 
 double auto_exposure() {
@@ -555,11 +560,9 @@ void camReset()  //Sends a RESET pulse to sensor, see datasheets of the sensors,
   gpio_put(CLOCK, 0);
   camDelay();
   gpio_put(RESET, 0);
-  camDelay();
   gpio_put(CLOCK, 1);
   camDelay();
   gpio_put(RESET, 1);
-  camDelay();
 }
 
 void camSetRegisters()  //Sets the sensor 8 registers, can be 10 for the M64283FP sensor
@@ -567,18 +570,6 @@ void camSetRegisters()  //Sets the sensor 8 registers, can be 10 for the M64283F
   for (int reg = 0; reg < 8; ++reg) {
     camSetReg(reg, camReg[reg]);
   }
-}
-
-//never tested, use at your own risk !!!
-void camSetRegistersTADD()  //Sets the sensor 2 ADDitional registers to TADD pin of the M64283FP (must be low)
-{
-#ifdef TADDREGISTER
-  gpio_put(TADD, 0);  //must be low just for these two registers, but must look at the datasheet again
-  for (int reg = 0; reg < 2; ++reg) {
-    camSetReg(reg + 1, camTADD[reg]);  //adress 0 with TADD LOW does not exist
-  }
-  gpio_put(TADD, 1);  //back to default state
-#endif
 }
 
 void camSetReg(unsigned char regaddr, unsigned char regval)  //Sets one of the 8 8-bit registers in the sensor, from 0 to 7, in this order
@@ -593,11 +584,9 @@ void camSetReg(unsigned char regaddr, unsigned char regval)  //Sets one of the 8
     } else {
       gpio_put(SIN, 0);
     }
-    camDelay();
     gpio_put(CLOCK, 1);
     camDelay();
     gpio_put(SIN, 0);  //set the SIN bit low
-    camDelay();
   }
   for (bitmask = 128; bitmask >= 1; bitmask >>= 1) {  //Write the 8-bits register
     gpio_put(CLOCK, 0);
@@ -607,14 +596,12 @@ void camSetReg(unsigned char regaddr, unsigned char regval)  //Sets one of the 8
     } else {
       gpio_put(SIN, 0);
     }
-    camDelay();
     if (bitmask == 1) {
       gpio_put(LOAD, 1);  //Assert load at rising edge of CLOCK
     }
     gpio_put(CLOCK, 1);
     camDelay();
     gpio_put(SIN, 0);
-    camDelay();
   }
 }
 
@@ -680,7 +667,6 @@ void camReadPicture()  //Take a picture, read it and store it
         }
 #endif
         subcounter = subcounter + 1;
-        camDelay();
         gpio_put(CLOCK, 1);
         camDelay();
       }  // end for x
@@ -707,11 +693,9 @@ bool camTestSensor()  //dummy cycle faking to take a picture, if it's not able t
   camDelay();  //ensure load bit is cleared from previous call
   gpio_put(LOAD, 0);
   gpio_put(START, 1);  //START rises before CLOCK
-  camDelay();
   gpio_put(CLOCK, 1);
   camDelay();
   gpio_put(START, 0);  //START valid on rising edge of CLOCK, so can drop now
-  camDelay();
   gpio_put(CLOCK, 0);
   camDelay();
 #ifndef USE_SNEAK_MODE
@@ -728,8 +712,8 @@ bool camTestSensor()  //dummy cycle faking to take a picture, if it's not able t
       sensor_OK = 0;
       break;  //the sensor does not respond after 1 second = not connected
     }
-    camDelay();
     gpio_put(CLOCK, 0);
+    camDelay();
   }
   camDelay();
   gpio_put(LED, 0);
@@ -1335,8 +1319,39 @@ void display_other_informations() {
   img.setTextColor(TFT_ORANGE);
   img.setCursor(8, 24);
   img.println(error_string);
+#endif  ////////////////end of debug informations//////////////////////////////////////
 
-  //this part writes the camera registers on screen
+#ifdef DEBAGAME_MODE                                          ///begining of debagame mode//////////////////////////////////////
+  dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;  //get the average of the last line of pixels (masked), convert in mV
+  sprintf(mask_pixels_string, "Dark: %d mV", dark_level);     //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
+  //The sum Vref + reg O + offset must be as close as V ref as possible by adjsuting register O (fine tuning)
+  //other said, the Voffset must ideally be cancelled by reg O (the Voffset varies vary with exposure time, gain, sensor, temperature, etc.)
+  //in order to ensure an independance of "image aspect" to the sensor.
+  img.setCursor(2, 86);
+  img.println(mask_pixels_string);
+
+  V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);    //get register V (Vref), convert in mV
+  sprintf(mask_pixels_string, "Vref: %d mV", V_ref);  //theoretical Vref
+  img.setCursor(2, 94);
+  img.println(mask_pixels_string);
+
+  O_reg = (camReg[0] & 0b00011111) * 32;  //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
+  if ((camReg[0] & 0b00100000) == 0x20) {
+    O_reg = O_reg;  //register O positive, do nothing, max +992mV
+  } else {
+    O_reg = O_reg * -1;  //register O negative, max -992mV
+  }
+  sprintf(mask_pixels_string, "Oreg: %d mV", O_reg);
+  img.setCursor(2, 102);
+  img.println(mask_pixels_string);
+
+  //pure offset = dark level - (Vref + register O), must be as close as zero as possible
+  V_Offset = dark_level - (V_ref + O_reg);
+  sprintf(mask_pixels_string, "Voff: %d mV", V_Offset);  //pure offset, must ideally be exactly cancelled by register O
+  img.setCursor(2, 110);
+  img.println(mask_pixels_string);
+
+//this part writes the camera registers on screen
   img.setCursor(2, 118);
   if (camReg[0] < 0x10) {
     img.print("0");
@@ -1376,37 +1391,6 @@ void display_other_informations() {
     img.print("0");
   }
   img.println(camReg[7], HEX);
-#endif  ////////////////end of debug informations//////////////////////////////////////
-
-#ifdef DEBAGAME_MODE                                          ///begining of debagame mode//////////////////////////////////////
-  dark_level = (masked_pixels / (128)) * (3.3 / 255) * 1000;  //get the average of the last line of pixels (masked), convert in mV
-  sprintf(mask_pixels_string, "Dark: %d mV", dark_level);    //average voltage of masked pixels (dark level) in mV, is equal to Vref + reg O + Voffset
-  //The sum Vref + reg O + offset must be as close as V ref as possible by adjsuting register O (fine tuning)
-  //other said, the Voffset must ideally be cancelled by reg O (the Voffset varies vary with exposure time, gain, sensor, temperature, etc.)
-  //in order to ensure an independance of "image aspect" to the sensor.
-  img.setCursor(2, 86);
-  img.println(mask_pixels_string);
-
-  V_ref = (camReg[7] & 0b00000111) * (1000 * 0.5);     //get register V (Vref), convert in mV
-  sprintf(mask_pixels_string, "Vref: %d mV", V_ref);  //theoretical Vref
-  img.setCursor(2, 94);
-  img.println(mask_pixels_string);
-
-  O_reg = (camReg[0] & 0b00011111) * 32;  //get register O (1 bit sign + 5 bits (32 steps) of 32 mV)
-  if ((camReg[0] & 0b00100000) == 0x20) {
-    O_reg = O_reg;  //register O positive, do nothing, max +992mV
-  } else {
-    O_reg = O_reg * -1;  //register O negative, max -992mV
-  }
-  sprintf(mask_pixels_string, "Oreg: %d mV", O_reg);
-  img.setCursor(2, 102);
-  img.println(mask_pixels_string);
-
-  //pure offset = dark level - (Vref + register O), must be as close as zero as possible
-  V_Offset = dark_level - (V_ref + O_reg);
-  sprintf(mask_pixels_string, "Voff: %d mV", V_Offset);  //pure offset, must ideally be exactly cancelled by register O
-  img.setCursor(2, 110);
-  img.println(mask_pixels_string);
 #endif  /////////////////////end of debagame mode//////////////////////////////////////
 
   img.setCursor(0, 0);
