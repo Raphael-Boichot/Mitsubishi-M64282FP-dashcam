@@ -45,4 +45,4 @@ Then run the following command into you image folder (png or bmp, adapt it):
     
     ffmpeg -i %07d.png -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
     
-Or use the [Matlab Movie Maker](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/Matlab%20only/Movie_Maker_Matlab_only.m) (NOT GNU Octave compatible).
+Or use the Matlab codes provided (NOT GNU Octave compatible at the moment but may be easy to adapt for animated gifs at least).
