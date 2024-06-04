@@ -3,6 +3,7 @@
 ## Powershell scripts made by [HerrZatacke](https://github.com/HerrZatacke)
 
 - **Upscaler_Camera.ps1** converts 1x BMP files from /Camera folder to 8x PNG;
+- **Upscaler_Slitscan.ps1** converts 1x BMP files from /Slitscan folder to 8x PNG;
 - **Upscaler_MS.ps1** converts raw datafiles files from /MS (Motion Sensor) folder to 8x PNG; 
 - **Upscaler_TL.ps1** converts raw datafiles files from /TL (Time Lapse) folder to 8x PNG;
 
@@ -37,6 +38,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **focusPeaking:** 0 = normal mode, 1 = [focus peaking](https://en.wikipedia.org/wiki/Focus_peaking) activated;
 - **focuspeakingThreshold:** threshold for focus peaking. The lower the value, the more pixels indicates good focusing (values 0..255).
 - **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor. It is advised to deactivate gameboycameraMode when using this mode to swicth to a single register strategy.
+- **slitscanMode:** 0 = regular camera in point and shoot mode, 1 = slit scan mode instead of point and shoot. Slit scan mode deactivates auto-exposure, freezes display and any feature not dedicated to spiting data to the SD as fast as possible. The yellow vertical bar indicates the space recording line. Images are limited to 128x65536 pixels. 
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
 
