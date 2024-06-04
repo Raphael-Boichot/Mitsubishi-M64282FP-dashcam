@@ -5,7 +5,7 @@
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
-#define DEBUG_MODE     //allow additionnal outputs on display
+#define DEBUG_MODE  //allow additionnal outputs on display
 //#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
@@ -129,7 +129,7 @@ unsigned char line_length = 4;                 //exposure area cross size
 //SD_MOSI - to pi pico pin GPIO19
 #define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-#define INOUT 22  //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
+#define INOUT 22   //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
 //GPIO 23 is reserved for internal use of the pi pico (on-board SMPS Power Save), usable but not recommended
 //GPIO 24 is reserved for internal use of the pi pico (VBUS sense), usable but not recommended
 //seems that using one of them could help ADC stability but I never had any issue with them...
@@ -295,14 +295,15 @@ unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel fr
 unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
 unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
-unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
-unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
-unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
-unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
-unsigned char BayerData[128 * 128];         //dithered image data
-unsigned char camReg[8];                    //empty register array
-unsigned char camReg_storage[8];            //empty register array
-unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
+unsigned char SlitData[128];                //slit extracted from slit scan mode
+unsigned short int HDRData[128 * 128];  //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
+unsigned char Bayer_matW_LG[4 * 4];     //Bayer matrix to apply dithering for each image pixel white to light gray
+unsigned char Bayer_matLG_DG[4 * 4];    //Bayer matrix to apply dithering for each image pixel light gray to dark gray
+unsigned char Bayer_matDG_B[4 * 4];     //Bayer matrix to apply dithering for each image pixel dark gray to dark
+unsigned char BayerData[128 * 128];     //dithered image data
+unsigned char camReg[8];                //empty register array
+unsigned char camReg_storage[8];        //empty register array
+unsigned int clock_divider = 1;         //time delay in processor cycles to cheat the exposure of the sensor
 unsigned short int pixel_TFT_RGB565;
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -328,6 +329,7 @@ double mean_value = 0;
 double error = 0;
 double difference_threshold;  //trigger threshold for motion sensor
 double multiplier = 1;        //deals with autoexposure algorithm
+bool SLIT_SCAN_mode = 0;      //adds a slit scan mode in regular camera mode
 bool TIMELAPSE_mode = 0;      //0 = use s a regular camera, 1 = recorder for timelapses
 bool HDR_mode = 0;            //0 = regular capture, 1 = HDR mode
 bool DITHER_mode = 0;         //0 = Dithering ON, 0 = dithering OFF

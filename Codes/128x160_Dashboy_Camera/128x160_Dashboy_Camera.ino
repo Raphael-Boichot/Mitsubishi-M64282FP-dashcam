@@ -315,7 +315,11 @@ void loop() {
     img.pushSprite(x_ori, y_ori);  //dump image to display
 #endif
 
-    recording_loop();  //record a single image
+    if ((SLIT_SCAN_mode == 0) | (MOTION_sensor == 1)) {  //forbid slit scan mode in motion sensor mode !
+      recording_loop();                             //record a single image
+    } else {//enter slit scan own recording loop
+      recording_slit_scan();
+    }
 
 #ifdef USE_SD
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //store last known file/directory# to SD card
@@ -870,6 +874,59 @@ void recording_loop() {
 #endif
 }
 
+void recording_slit_scan() {
+  delay(2000);
+  Next_ID++;                                                  //update the file number, but not in movie maker mode
+  sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
+  File Datafile = SD.open(storage_file_name, FILE_WRITE);
+  for (int i = 0; i < 10; i++) {       //pre set exposure with new registers
+    camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
+    take_a_picture();
+    new_exposure = auto_exposure();          // self explanatory
+    push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
+  }
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 1);
+#endif
+  long int slit_offset = 0;
+  for (int y = 0; y < 1078; y++) {
+    Datafile.write(0x66);  //reserve the space for BMP header
+  }
+  //now registers are locked
+  while (!(gpio_get(PUSH) == 1) && (slit_offset < 0xFFFF)) {
+    int offset = 0;
+    camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
+    take_a_picture();
+    for (int y = 0; y < 128; y++) {
+      for (int x = 0; x < 128; x++) {
+        if (x == 64) {
+          SlitData[y] = lookup_serial[CamData[offset]];  //to reduce noise
+        }
+        offset++;
+      }  // end for x
+    }    /* for y */
+    slit_offset++;
+    Datafile.write(SlitData, max_line_for_recording);
+  }
+
+  Pre_allocate_bmp_header(max_line_for_recording, slit_offset);  //number of lines will be updated at the end
+  Datafile.seek(0);
+  Datafile.write(BMP_header_generic, 54);     //fixed header
+  Datafile.write(BMP_indexed_palette, 1024);  //indexed RGB palette
+  Datafile.close();
+  //now restoring back the current BMP header
+  if (PRETTYBORDER_mode > 0) {                 //border or no border ?
+    pre_allocate_image_with_pretty_borders();  //pre allocate bmp data for image with borders
+    Pre_allocate_bmp_header(160, 144);
+  } else {
+    Pre_allocate_bmp_header(128, max_line);
+  }
+  store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 0);
+#endif
+}
+
 void pre_allocate_lookup_tables(unsigned char lookup_serial[256], unsigned char v_min, unsigned char v_max) {
   double gamma_pixel;
   for (int i = 0; i < 256; i++) {  //building the autocontrat table lookup_serial
@@ -1109,6 +1166,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FOCUS_mode = doc["focusPeaking"];
     FOCUS_threshold = doc["focuspeakingThreshold"];
     M64283FP = doc["M64283FPsensor"];
+    SLIT_SCAN_mode = doc["slitscanMode"];
     Datafile.close();
   }
 #endif
@@ -1351,7 +1409,7 @@ void display_other_informations() {
   img.setCursor(2, 110);
   img.println(mask_pixels_string);
 
-//this part writes the camera registers on screen
+  //this part writes the camera registers on screen
   img.setCursor(2, 118);
   if (camReg[0] < 0x10) {
     img.print("0");
@@ -1397,7 +1455,13 @@ void display_other_informations() {
   img.setTextColor(TFT_CYAN);
   if (TIMELAPSE_mode == 0) {
     if (MOTION_sensor == 0) {
+      if (SLIT_SCAN_mode == 1) {
+       img.println("Slit Scan mode");
+        img.drawLine(64, display_offset, 64, 120 + display_offset - 1, TFT_YELLOW);
+      }
+      else{
       img.println("Regular Camera mode");
+      }
     }
     if (MOTION_sensor == 1) {
       if (RAW_recording_mode == 0) {
