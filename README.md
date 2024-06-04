@@ -81,6 +81,7 @@ Additionally, you can address other cool features by entering them in the [confi
 - **Night Mode (default OFF)** allows automatically downclocking the device in case the exposure registers reaches their theoretical maximal value (0xFFFF). This is usefull to do light painting from example, the sensor being natively not able to expose more than 1 second. Here there is no limit.
 - **Fixed exposure mode (default OFF)** allows bypassing the autoexposure algorithm and fixing a value, useful for astrophotography where auto-exposure performs poorly. In this case you have to enter the exposure time or delay (between 0x0030 - 0.768 ms and 0xFFFF - 1.044 second) and the clock divider (a multiplier for the exposure time, stay at 1 if you do not know what to do.)
 - **2D enhancement mode (default OFF)** enforces the 2D image enhancement processed by the sensor in Game Boy Camera mode & non dithering mode only, whatever the register used.
+- **Slitscan mode (default OFF)** converts the **Regular Camera mode** in [**Slit-scan mode**](https://en.wikipedia.org/wiki/Slit-scan_photography). Image is recorded along the yellow line, one line per frame taken as fast as possible, until user presses the PUSH button again or the height of image reaches 65536 pixels. This mode disables the 2D enhancement whatever the other parameters to avoid unpleasant streaks of noise and freezes the display to fasten recording. Other recrding modes (time lapse and motion sensor mode) are not affected.
 
 # Nerd user manual (requirement: recompiling the code)
 
