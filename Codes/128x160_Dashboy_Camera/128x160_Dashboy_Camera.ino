@@ -876,11 +876,13 @@ void recording_loop() {
 
 void recording_slit_scan() {
   delay(2000);
+  bool enhance_temp=SMOOTH_mode;
+  SMOOTH_mode=1; //enforce smooth mode to void noise streaks
   Next_ID++;                                                  //update the file number, but not in movie maker mode
   sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
   File Datafile = SD.open(storage_file_name, FILE_WRITE);
   for (int i = 0; i < 10; i++) {       //pre set exposure with new registers
-    camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
+    //camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
     take_a_picture();
     new_exposure = auto_exposure();          // self explanatory
     push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
@@ -895,7 +897,7 @@ void recording_slit_scan() {
   //now registers are locked
   while (!(gpio_get(PUSH) == 1) && (slit_offset < 0xFFFF)) {
     int offset = 0;
-    camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
+    //camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
     take_a_picture();
     for (int y = 0; y < 128; y++) {
       for (int x = 0; x < 128; x++) {
@@ -922,6 +924,7 @@ void recording_slit_scan() {
     Pre_allocate_bmp_header(128, max_line);
   }
   store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
+  SMOOTH_mode=enhance_temp;
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
@@ -1457,7 +1460,7 @@ void display_other_informations() {
     if (MOTION_sensor == 0) {
       if (SLIT_SCAN_mode == 1) {
        img.println("Slit Scan mode");
-        img.drawLine(64, display_offset, 64, 120 + display_offset - 1, TFT_YELLOW);
+        img.drawLine(64, y_min + display_offset, 64, y_max + display_offset, TFT_YELLOW);
       }
       else{
       img.println("Regular Camera mode");
