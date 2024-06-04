@@ -296,14 +296,14 @@ unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per 
 unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
 unsigned char SlitData[128];                //slit extracted from slit scan mode
-unsigned short int HDRData[128 * 128];  //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
-unsigned char Bayer_matW_LG[4 * 4];     //Bayer matrix to apply dithering for each image pixel white to light gray
-unsigned char Bayer_matLG_DG[4 * 4];    //Bayer matrix to apply dithering for each image pixel light gray to dark gray
-unsigned char Bayer_matDG_B[4 * 4];     //Bayer matrix to apply dithering for each image pixel dark gray to dark
-unsigned char BayerData[128 * 128];     //dithered image data
-unsigned char camReg[8];                //empty register array
-unsigned char camReg_storage[8];        //empty register array
-unsigned int clock_divider = 1;         //time delay in processor cycles to cheat the exposure of the sensor
+unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
+unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
+unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
+unsigned char Bayer_matDG_B[4 * 4];         //Bayer matrix to apply dithering for each image pixel dark gray to dark
+unsigned char BayerData[128 * 128];         //dithered image data
+unsigned char camReg[8];                    //empty register array
+unsigned char camReg_storage[8];            //empty register array
+unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
 unsigned short int pixel_TFT_RGB565;
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;

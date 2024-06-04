@@ -316,8 +316,8 @@ void loop() {
 #endif
 
     if ((SLIT_SCAN_mode == 0) | (MOTION_sensor == 1)) {  //forbid slit scan mode in motion sensor mode !
-      recording_loop();                             //record a single image
-    } else {//enter slit scan own recording loop
+      recording_loop();                                  //record a single image
+    } else {                                             //enter slit scan own recording loop
       recording_slit_scan();
     }
 
@@ -876,16 +876,18 @@ void recording_loop() {
 
 void recording_slit_scan() {
   delay(2000);
-  bool enhance_temp=SMOOTH_mode;
-  SMOOTH_mode=1; //enforce smooth mode to void noise streaks
+  bool enhance_temp = SMOOTH_mode;
+  SMOOTH_mode = 1;                                            //enforce smooth mode to void noise streaks
   Next_ID++;                                                  //update the file number, but not in movie maker mode
   sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
   File Datafile = SD.open(storage_file_name, FILE_WRITE);
-  for (int i = 0; i < 10; i++) {       //pre set exposure with new registers
-    //camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
-    take_a_picture();
-    new_exposure = auto_exposure();          // self explanatory
-    push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
+  if (LOCK_exposure == 0) {
+    for (int i = 0; i < 10; i++) {  //pre set exposure with new registers
+      //camReg[1] = camReg[1] & 00011111;  //deactivates image enhancement to reduce noise
+      take_a_picture();
+      new_exposure = auto_exposure();          // self explanatory
+      push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
+    }
   }
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 1);
@@ -924,7 +926,7 @@ void recording_slit_scan() {
     Pre_allocate_bmp_header(128, max_line);
   }
   store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
-  SMOOTH_mode=enhance_temp;
+  SMOOTH_mode = enhance_temp;
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
@@ -1459,11 +1461,10 @@ void display_other_informations() {
   if (TIMELAPSE_mode == 0) {
     if (MOTION_sensor == 0) {
       if (SLIT_SCAN_mode == 1) {
-       img.println("Slit Scan mode");
+        img.println("Slit Scan mode");
         img.drawLine(64, y_min + display_offset, 64, y_max + display_offset, TFT_YELLOW);
-      }
-      else{
-      img.println("Regular Camera mode");
+      } else {
+        img.println("Regular Camera mode");
       }
     }
     if (MOTION_sensor == 1) {
