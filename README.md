@@ -102,7 +102,11 @@ You can also directly play with the **#define** options in [config.h](/Codes/128
 
 Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye with M12/CS adapters, and a [Tair-3s 300mm f/4.5 soviet telelens](http://nicolas.dupontbloch.free.fr/scope-tair-3s.htm) with a [M42 lens mount](https://www.thingiverse.com/thing:6077684) or sensor glued into a Zenit 12XP hand made shell adapter.
 
-# Some timelapses made with the M64282FP sensor
+## Examples of slit-scan picture
+
+![](/Docs%20and%20research/Image%20files/Slitscan.png)
+
+## Some timelapses made with the M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sun.gif)
 
@@ -110,21 +114,21 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
-# Example of dithered/non dithered image, M64282FP sensor
+## Example of dithered/non dithered image, M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Dither.gif)
 
-# Examples of artifacts intrinsic to the M64282FP sensor
+## Examples of artifacts intrinsic to the M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sensor_artifacts.gif)
 
-# Examples of image/timelapse taken with a M64283FP sensor
+## Examples of image/timelapse taken with a M64283FP sensor
 
 ![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/M64283FP_example.png)
 
 ![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/Stormy_weather.gif)
 
-# Examples of artifacts intrinsic to the M64283FP sensor
+## Examples of artifacts intrinsic to the M64283FP sensor
 
 ![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/Cloudy_weather.gif)
 
