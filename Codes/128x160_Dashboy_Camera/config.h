@@ -139,6 +139,7 @@ unsigned char line_length = 4;                 //exposure area cross size
 //GPIO 28 free ADC or digital channels
 //GPIO 29 is reserved to measure VSYS
 //It is advised to attach pi pico pin RUN pin to any GND via a pushbutton for resetting the pico
+//so basically there is a bunch of free GPIOs
 //////////////end of GPIO stuff///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////sensor stuff////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,10 +151,12 @@ unsigned char line_length = 4;                 //exposure area cross size
 //reg4 = 0b00000001; % P7 P6 P5 P4 P3 P2 P1 P0 filtering kernels, always 0x01 on a GB camera, but can be different here
 //reg5 = 0b00000000; % M7 M6 M5 M4 M3 M2 M1 M0 filtering kernels, always 0x00 on a GB camera, but can be different here
 //reg6 = 0b00000001; % X7 X6 X5 X4 X3 X2 X1 X0 filtering kernels, always 0x01 on a GB camera, but can be different here
-//reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0 (forbidden state)
+//reg7 = 0b00000011; % E3 E2 E1 E0 I V2 V1 V0 Edge mode / Edge enhancement ratio / invert / Output node bias voltage raw -> O and V add themselves, if !V==0 (forbidden state)
+//E3 allows switching between edge enhancement and edge extraction
 //P, M and X registers allows pure edge extraction for example, see datasheet, all other registers must be modified accordingly
-//Game Boy Camera strategy: uses half the voltage scale
+//Game Boy Camera strategy: uses half the voltage scale, Vref is about 1.5V
 //Note for finicky devs: register O must theoretically be adjusted between different sensors to get seamless transitions...
+//This is done by the Game Boy Camera calibration procedure https://github.com/Raphael-Boichot/Inject-pictures-in-your-Game-Boy-Camera-saves?tab=readme-ov-file#part-3-calibrating-the-sensor
 ///////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV};
 unsigned char camReg1[8] = { 0b10101001, 0b00100000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //low exposure time - high light
 //transition@ C=0x0030
@@ -164,7 +167,7 @@ unsigned char camReg3[8] = { 0b10101011, 0b11100100, 0b00000000, 0b00000000, 0b0
 unsigned char camReg4[8] = { 0b10101111, 0b11101000, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };
 //transition@ C=0x8500
 unsigned char camReg5[8] = { 0b10100111, 0b00001010, 0b00000000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b00000011 };  //high exposure time - low light
-//the voltage scale in this mode is defined earlier in config.h
+//the voltage scale in this mode is defined earlier in config.h because it can be tuned with the config.json file
 
 //DashBoy Camera strategy for the M64282FP sensor: uses the maximum voltage scale
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bPPPPPPPP, 0bMMMMMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
@@ -180,19 +183,21 @@ unsigned char M64282FP_v_max = 180;  //0 is OV, 255 is 3.3 volts
 //reg1 = like M64282FP
 //reg2 = like M64282FP
 //reg3 = like M64282FP
-//reg4 = SH  AZ  CL  []  [P3  P2  P1  P0]
-//reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0] //OB low enables outputing black level on line 1 instead of VOUT
-//reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0]
-//reg7 = like M64282FP but E register is shifted in value
-//reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles !
-//reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles !
+//reg4 = SH  AZ  CL  []  [P3  P2  P1  P0] //CL activates the clamp circuit (using black level on line 1, see OB) to perform auto-calibration
+//reg5 = PX  PY  MV4 OB  [M3  M2  M1  M0] //OB low enables outputing black level on line 1, used by the clamp circuit (see CL)
+//reg6 = MV3 MV2 MV1 MV0 [X3  X2  X1  X0] //PX, PY, MV3-MV0 are for projection mode, not embedded here
+//reg7 = like M64282FP but E register is shifted in value, see project read.me
+//reg8 = ST7  ST6  ST5  ST4  ST3  ST2  ST1  ST0  - random access start address by (x, y), beware image divided into 8x8 tiles ! - Mode not embedded here
+//reg9 = END7 END6 END5 END4 END3 END2 END1 END0 - random access stop address by (x', y'), beware image divided into 8x8 tiles ! - Mode not embedded here
 ///////////////////////////////////{ 0bZZOOOOOO, 0bNVVGGGGG, 0bCCCCCCCC, 0bCCCCCCCC, 0bSAC_PPPP, 0bPPMOMMMM, 0bXXXXXXXX, 0bEEEEIVVV };
 unsigned char camReg_M64283FP[8] = { 0b10000000, 0b11100111, 0b00010000, 0b00000000, 0b00000001, 0b00000000, 0b00000001, 0b01000001 };  //registers with black level calibration
 //2D edge enhancement activated + set gain to 24.5dB
 //CL + OB = LOW -> outputs black level on the first pixel line and activates the auto-calibration circuit
 //CL + OB = HIGH -> acts more or less as a M64282FP, no calibration other than with register O
+//Basically, CL + OB always go together, even if OB (output black pixel line) can be activated alone
 //SH and AZ are never described correctly and the Japanese datasheet recommends put them always LOW, so let's do this
-//see https://github.com/Raphael-Boichot/Play-with-the-Mitsubishi-M64283FP-sensor
+//see https://github.com/Raphael-Boichot/Play-with-the-Mitsubishi-M64283FP-sensor for projection and random access mode
+//as these modes are ONLY intended to fasten the image processing with the 1999 puny processors, they make no sense here with a Pi Pico at 133MHz
 
 //these next values are not embedded into the config.json but could
 unsigned char M64283FP_v_min = 60;   //0 is OV, 255 is 3.3 volts
@@ -295,7 +300,7 @@ unsigned char CamData_previous[128 * 128];  //sensor data in 8 bits per pixel fr
 unsigned char EdgeData[128 * 128];          //edge detection data in 8 bits per pixel
 unsigned char BmpData[128 * 128];           //sensor data with autocontrast ready to be merged with BMP header
 unsigned char BigBmpData[160 * 144];        //sensor data with autocontrast and pretty border ready to be merged with BMP header
-unsigned char SlitData[128];                //slit extracted from slit scan mode
+unsigned char SlitData[128];                //slit extracted from slit scan mode, vertical slit by default
 unsigned short int HDRData[128 * 128];      //cumulative data for HDR imaging -1EV, +1EV + 2xOEV, 4 images in total
 unsigned char Bayer_matW_LG[4 * 4];         //Bayer matrix to apply dithering for each image pixel white to light gray
 unsigned char Bayer_matLG_DG[4 * 4];        //Bayer matrix to apply dithering for each image pixel light gray to dark gray
