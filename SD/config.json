@@ -21,6 +21,7 @@
 "exposureyWindow":56,
 "focusPeaking":0,
 "focuspeakingThreshold":48,
-"M64283FPsensor":0
-"slitscanMode":0
+"M64283FPsensor":0,
+"slitscanMode":0,
+"slitscanDelay":0
 }
