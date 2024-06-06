@@ -67,12 +67,14 @@ bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
 unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
 bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
 bool SLIT_SCAN_mode = 0;             //adds a slit scan mode in regular camera mode
-int SLIT_SCAN_delay = 0;             //here the result is a fixed exposure perfect for full moon photography
+bool SLIT_SCAN_128_shot = 0;         //force the slit scan mode to scan all vertical sensor lines and output a 128 pixels width image instead of a long shot taken on one line
+int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well with clouds for example
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };  //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
 unsigned long delay_MOTION = 5000;                          //time to place the camera before motion detection starts
+unsigned long delay_SLIT_SCAN = 2000;                        //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;                   //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;                   //absolute low exposure limit whatever the strategy
 

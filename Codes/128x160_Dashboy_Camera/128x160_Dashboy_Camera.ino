@@ -620,11 +620,9 @@ void camReadPicture()  //Take a picture, read it and store it
   camDelay();  //ensure load bit is cleared from previous call
   gpio_put(LOAD, 0);
   gpio_put(START, 1);  //START rises before CLOCK
-  camDelay();
   gpio_put(CLOCK, 1);
   camDelay();
   gpio_put(START, 0);  //START valid on rising edge of CLOCK, so can drop now
-  camDelay();
   gpio_put(CLOCK, 0);
   camDelay();
 
@@ -875,59 +873,70 @@ void recording_loop() {
 }
 
 void recording_slit_scan() {
-  delay(2000);                      //allows tripod stabilization
-  bool enhance_temp = SMOOTH_mode;  //store the smooth mode in case it is 0
-  bool STOP = 0;
-  long int slit_offset;  //future height of the image
+  delay(delay_SLIT_SCAN);  //allows tripod stabilization after button is pushed
+  bool STOP = 0;           //to detect manual ending as the loop is infinite
+  long int slit_offset;    //future height of the image
   int offset;
-  SMOOTH_mode = 1;                           //enforce smooth mode to void noise streaks
-  for (int i = 0; i < 10; i++) {             //pre set exposure with SMOOTH_mode enforced
-    take_a_picture();                        //even if lock exposure was ON
-    new_exposure = auto_exposure();          //self explanatory
-    push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
+  int max_slit_offset;
+
+  if (SLIT_SCAN_128_shot == 1) {
+    max_slit_offset = 128;  //short shot with vertical line scanning
+  } else {
+    max_slit_offset = 0x1000;  //long shot with fixed vertical line
   }
 
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 1);
 #endif
 
-  while (STOP == 0) {
+  while (STOP == 0) {                                           //the loop never stops until a key is pressed
     Next_ID++;                                                  //update the file number, but not in movie maker mode
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);   //in case of crash...
     sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
+
+#ifdef USE_TFT
+    img.fillScreen(TFT_BLACK);
+    display_other_informations();  //updates the screen and freezes it
+    img.setTextColor(TFT_RED);
+    img.setCursor(0, 8);
+    img.println("Recording slit...");
+    img.pushSprite(x_ori, y_ori);  //dumps image to display
+#endif
+
     File Datafile = SD.open(storage_file_name, FILE_WRITE);
     slit_offset = 0;  //future height of the image
     for (int y = 0; y < 1078; y++) {
-      Datafile.write(0x66);  //reserve the space for BMP header
+      Datafile.write(0x52);  //reserves the space for BMP header, ASCII character 0x52 "R" for reserved
     }
-    tft.setTextColor(TFT_RED);
 
-    while ((STOP == 0) && (slit_offset < 0x1000)) {
+    // tft.fillRect(96, 8, 32, 8, TFT_BLACK);                      //Here I write direct to the TFT to not reload the whole image
+    // tft.setCursor(96, 8);
+    // tft.setTextColor(TFT_RED);
+    // tft.print(Next_ID, DEC);                                    //just the image ID, nothing else
+
+    while ((STOP == 0) && (slit_offset < max_slit_offset)) {
       if (gpio_get(PUSH) == 1) {
         STOP = 1;
       }
-      if ((slit_offset % 0xF) == 0) {
-        tft.fillRect(96, 8, 32, 8, TFT_BLACK);  //Here I write direct t the TFT to no reload the whole image
-        tft.setCursor(96, 8);
-        tft.print(slit_offset, HEX);
-      }
       offset = 0;
-      take_a_picture();
-      if (LOCK_exposure == 0) {                  //now registers are locked again if LOCK_exposure = 1
-        new_exposure = auto_exposure();          //self explanatory
-        push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
-      }
+      take_a_picture();  //exposure is not updated anymore into the loop
       for (int y = 0; y < 128; y++) {
         for (int x = 0; x < 128; x++) {
-          if (x == 64) {
-            SlitData[y] = lookup_serial[CamData[offset]];  //we copy the line at x = 64, all y
+          if (SLIT_SCAN_128_shot == 0) {  //it's a long shot at constant vertical line position
+            if (x == 64) {
+              SlitData[y] = lookup_serial[CamData[offset]];  //we copy the line at x = 64, all y
+            }
+          } else {  //it's a 128 shot with 128 vertical line scanning
+            if (x == slit_offset) {
+              SlitData[y] = lookup_serial[CamData[offset]];  //we copy the line at x = slit_offset, all y
+            }
           }
           offset++;
-        }  // end for x
-      }    /* for y */
+        }
+      }
       slit_offset++;
-      Datafile.write(SlitData, max_line_for_recording);
-      sleep_ms(SLIT_SCAN_delay);
+      Datafile.write(SlitData, max_line_for_recording);  //writes the slit to SD
+      sleep_ms(SLIT_SCAN_delay);                         //delay if entered
     }
     Pre_allocate_bmp_header(max_line_for_recording, slit_offset);  //number of lines will be updated now
     Datafile.seek(0);                                              //go to the beginning of the file
@@ -944,7 +953,6 @@ void recording_slit_scan() {
     Pre_allocate_bmp_header(128, max_line);
   }
 
-  SMOOTH_mode = enhance_temp;
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
@@ -1191,6 +1199,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FOCUS_threshold = doc["focuspeakingThreshold"];
     M64283FP = doc["M64283FPsensor"];
     SLIT_SCAN_mode = doc["slitscanMode"];
+    SLIT_SCAN_128_shot = doc["slitscanWithvertscan"];
     SLIT_SCAN_delay = doc["slitscanDelay"];
     Datafile.close();
   }
@@ -1609,7 +1618,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
   img.setColorDepth(BITS_PER_PIXEL);  // Set colour depth first
   img.createSprite(128, 160);         // then create the giant sprite that will be our video ram buffer
 
-#ifdef ST7789
+#ifdef USE_TFT
   tft.fillScreen(TFT_BLACK);
 #endif
 
