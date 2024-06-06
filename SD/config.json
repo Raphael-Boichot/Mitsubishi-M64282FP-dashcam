@@ -23,5 +23,6 @@
 "focuspeakingThreshold":48,
 "M64283FPsensor":0,
 "slitscanMode":0,
+"slitscanWithvertscan":0,
 "slitscanDelay":0
 }
