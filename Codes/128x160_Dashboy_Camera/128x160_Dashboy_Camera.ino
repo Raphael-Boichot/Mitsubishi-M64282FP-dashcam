@@ -878,6 +878,7 @@ void recording_slit_scan() {
   long int slit_offset;    //future height of the image
   int offset;
   int max_slit_offset;
+  int slit_number = 0;
 
   if (SLIT_SCAN_128_shot == 1) {
     max_slit_offset = 128;  //short shot with vertical line scanning
@@ -889,7 +890,8 @@ void recording_slit_scan() {
   gpio_put(RED, 1);
 #endif
 
-  while (STOP == 0) {                                           //the loop never stops until a key is pressed
+  while (STOP == 0) {
+    slit_number++;                                              //the loop never stops until a key is pressed
     Next_ID++;                                                  //update the file number, but not in movie maker mode
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);   //in case of crash...
     sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
@@ -899,7 +901,8 @@ void recording_slit_scan() {
     display_other_informations();  //updates the screen and freezes it
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println("Recording slit...");
+    img.print("Recording slit: ");
+    img.print(slit_number, DEC);
     img.pushSprite(x_ori, y_ori);  //dumps image to display
 #endif
 
@@ -1490,7 +1493,11 @@ void display_other_informations() {
   if (TIMELAPSE_mode == 0) {
     if (MOTION_sensor == 0) {
       if (SLIT_SCAN_mode == 1) {
-        img.println("Slit Scan mode");
+        if (SLIT_SCAN_128_shot == 0) {
+          img.println("Slit Scan mode 1");
+        } else {
+          img.println("Slit Scan mode 2");
+        }
         img.drawLine(64, 18 + display_offset, 64, 104 + display_offset, TFT_YELLOW);
       } else {
         img.println("Regular Camera mode");
