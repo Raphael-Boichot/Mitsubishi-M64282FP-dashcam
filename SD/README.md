@@ -38,8 +38,6 @@ User can keep the current default values without modifying anything. Advanced us
 - **focusPeaking:** 0 = normal mode, 1 = [focus peaking](https://en.wikipedia.org/wiki/Focus_peaking) activated;
 - **focuspeakingThreshold:** threshold for focus peaking. The lower the value, the more pixels indicates good focusing (values 0..255).
 - **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor. It is advised to deactivate gameboycameraMode when using this mode to swicth to a single register strategy.
-- **slitscanMode:** 0 = regular camera in point and shoot mode, 1 = slit scan mode instead of point and shoot. Slit scan mode freezes display and any feature not dedicated to spiting data to the SD as fast as possible. The yellow vertical bar indicates the space recording line. Images are limited to 128x4096 pixels in slit-scan mode 1 and 128x128 pixels in slit-scan mode 2 (but automatically incremented).
-- **slitscanWithvertscan:** 0 = slit scan mode 1 (central vertical pixel line stacking, infinite), 1 = slit scan mode 2 (whole sensor scanning, 128 lines stacking).
 - **slitscanDelay:** delay between slits in ms in slit-scan mode. 0 allows recording about 12 slits per seconds in full sun. 2000 gives interesting images with clouds. Be creative !
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
