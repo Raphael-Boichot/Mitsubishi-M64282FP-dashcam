@@ -145,7 +145,7 @@ void setup() {
   if (timelapse_list[0] >= 0) {  //there is a time in ms in the list, get it
     TIMELAPSE_mode = 1;
     TIMELAPSE_deadtime = timelapse_list[0];
-  } else {  //there is -1 or -2 in the list, regular mode is called
+  } else {  //there is -1, -2, -3 or -4 in the list, regular mode is called
     TIMELAPSE_mode = 0;
   }
 
@@ -158,7 +158,8 @@ void setup() {
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
-  for (int i = 1; i < 15; i++) {
+currentTime = millis();
+ while ((millis()-currentTime)<3000) {
     take_a_picture();
     new_exposure = auto_exposure();          // self explanatory
     push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
@@ -235,7 +236,7 @@ void loop() {
       SLIT_SCAN_mode = 1;
       SLIT_SCAN_128_shot = 0;
     }
-    //there is "-3" in the list, slit scan mode 128 pix scanning is called
+    //there is "-4" in the list, slit scan mode 128 pix scanning is called
     if (timelapse_list[rank_timelapse] == -4) {
       SLIT_SCAN_mode = 1;
       SLIT_SCAN_128_shot = 1;
