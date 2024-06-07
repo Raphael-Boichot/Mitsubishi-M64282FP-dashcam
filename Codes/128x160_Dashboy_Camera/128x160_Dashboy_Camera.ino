@@ -897,13 +897,11 @@ void recording_slit_scan() {
     sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
 
 #ifdef USE_TFT
-    img.fillScreen(TFT_BLACK);
-    display_other_informations();  //updates the screen and freezes it
-    img.setTextColor(TFT_RED);
-    img.setCursor(0, 8);
-    img.print("Recording slit: ");
-    img.print(slit_number, DEC);
-    img.pushSprite(x_ori, y_ori);  //dumps image to display
+    tft.fillRect(0, 8, 128, 8, TFT_BLACK);                      //Here I write direct to the TFT to not reload the whole image
+    tft.setTextColor(TFT_RED);
+    tft.setCursor(0, 8);
+    tft.print("Recording slit: ");
+    tft.print(slit_number, DEC);
 #endif
 
     File Datafile = SD.open(storage_file_name, FILE_WRITE);
@@ -911,12 +909,6 @@ void recording_slit_scan() {
     for (int y = 0; y < 1078; y++) {
       Datafile.write(0x52);  //reserves the space for BMP header, ASCII character 0x52 "R" for reserved
     }
-
-    // tft.fillRect(96, 8, 32, 8, TFT_BLACK);                      //Here I write direct to the TFT to not reload the whole image
-    // tft.setCursor(96, 8);
-    // tft.setTextColor(TFT_RED);
-    // tft.print(Next_ID, DEC);                                    //just the image ID, nothing else
-
     while ((STOP == 0) && (slit_offset < max_slit_offset)) {
       if (gpio_get(PUSH) == 1) {
         STOP = 1;
