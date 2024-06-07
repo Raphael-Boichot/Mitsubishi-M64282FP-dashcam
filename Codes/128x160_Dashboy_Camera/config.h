@@ -19,10 +19,10 @@
 #endif
 
 ///////////////default values in case config.json is not existing////////////////////////////////////////////////////////////////////
-bool RAW_recording_mode = 0;                                              //0 = save as BMP (slow), 1 = save as raw stream (fast)
-double timelapse_list[8] = { -1, 0, 1000, 2000, 4000, 8000, 16000, -2 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms
-unsigned char PRETTYBORDER_mode = 1;                                      //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
-bool NIGHT_mode = 0;                                                      //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+bool RAW_recording_mode = 0;                                             //0 = save as BMP (slow), 1 = save as raw stream (fast)
+double timelapse_list[8] = { -1, 2000, 4000, 8000, 16000, -2, -3, -4 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms, -3 slit scan mode infinite, -4 slit mode 128 pix scanning
+unsigned char PRETTYBORDER_mode = 1;                                     //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
+bool NIGHT_mode = 0;                                                     //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 double motion_detection_threshold = 0.01;
 double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
 //double exposure_list[8]={ 1, 1, 1, 1, 1, 1, 1, 1 };  //for fancy multi-exposure images or signal to noise ratio increasing
@@ -66,15 +66,13 @@ unsigned char y_box = 7 * 8;         //y range for autoexposure (centered, like 
 bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
 unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
 bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
-bool SLIT_SCAN_mode = 0;             //adds a slit scan mode in regular camera mode
-bool SLIT_SCAN_128_shot = 0;         //force the slit scan mode to scan all vertical sensor lines and output a 128 pixels width image instead of a long shot taken on one line
 int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well with clouds for example
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };  //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
 unsigned long delay_MOTION = 5000;                          //time to place the camera before motion detection starts
-unsigned long delay_SLIT_SCAN = 2000;                        //time to place the camera before motion detection starts
+unsigned long delay_SLIT_SCAN = 2000;                       //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;                   //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;                   //absolute low exposure limit whatever the strategy
 
@@ -344,6 +342,8 @@ bool JSON_ready = 0;          //reserved, for bug on config.txt
 bool LOCK_exposure = 0;       //reserved, for locking exposure
 bool MOTION_sensor = 0;       //reserved, to trigger motion sensor mode
 bool overshooting = 0;        //reserved, for register anti-jittering system
+bool SLIT_SCAN_mode = 0;      //adds a slit scan mode in regular camera mode
+bool SLIT_SCAN_128_shot = 0;  //force the slit scan mode to scan all vertical sensor lines and output a 128 pixels width image instead of a long shot taken on one line
 
 char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
 char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];

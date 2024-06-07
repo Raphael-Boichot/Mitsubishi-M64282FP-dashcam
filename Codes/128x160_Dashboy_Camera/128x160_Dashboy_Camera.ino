@@ -207,10 +207,12 @@ void loop() {
   if ((gpio_get(TLC) == 1) & (recording == 0) & (image_TOKEN == 0)) {  //Change regular camera<->timelapse mode, but only when NOT recording
     rank_timelapse++;
     MOTION_sensor = 0;
+    SLIT_SCAN_mode = 0;
     MOTION_sensor_counter = 0;
     if (rank_timelapse >= 8) {
       rank_timelapse = 0;
     }
+
     if (timelapse_list[rank_timelapse] >= 0) {
       TIMELAPSE_mode = 1;
       TIMELAPSE_deadtime = timelapse_list[rank_timelapse];
@@ -227,6 +229,16 @@ void loop() {
 #ifdef USE_SD
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //store last known file/directory# to SD card
 #endif
+    }
+    //there is "-3" in the list, slit scan mode infinite is called
+    if (timelapse_list[rank_timelapse] == -3) {
+      SLIT_SCAN_mode = 1;
+      SLIT_SCAN_128_shot = 0;
+    }
+    //there is "-3" in the list, slit scan mode 128 pix scanning is called
+    if (timelapse_list[rank_timelapse] == -4) {
+      SLIT_SCAN_mode = 1;
+      SLIT_SCAN_128_shot = 1;
     }
     short_fancy_delay();
   }
@@ -873,6 +885,7 @@ void recording_loop() {
 }
 
 void recording_slit_scan() {
+  short_fancy_delay();
   delay(delay_SLIT_SCAN);  //allows tripod stabilization after button is pushed
   bool STOP = 0;           //to detect manual ending as the loop is infinite
   long int slit_offset;    //future height of the image
@@ -880,15 +893,15 @@ void recording_slit_scan() {
   int max_slit_offset;
   int slit_number = 0;
 
+#ifndef USE_SNEAK_MODE
+  gpio_put(RED, 1);
+#endif
+
   if (SLIT_SCAN_128_shot == 1) {
     max_slit_offset = 128;  //short shot with vertical line scanning
   } else {
     max_slit_offset = 0x1000;  //long shot with fixed vertical line
   }
-
-#ifndef USE_SNEAK_MODE
-  gpio_put(RED, 1);
-#endif
 
   while (STOP == 0) {
     slit_number++;                                              //the loop never stops until a key is pressed
@@ -897,7 +910,7 @@ void recording_slit_scan() {
     sprintf(storage_file_name, "/Slitscan/%07d.bmp", Next_ID);  //update filename
 
 #ifdef USE_TFT
-    tft.fillRect(0, 8, 128, 8, TFT_BLACK);                      //Here I write direct to the TFT to not reload the whole image
+    tft.fillRect(0, 8, 128, 8, TFT_BLACK);  //Here I write direct to the TFT to not reload the whole image
     tft.setTextColor(TFT_RED);
     tft.setCursor(0, 8);
     tft.print("Recording slit: ");
@@ -947,7 +960,6 @@ void recording_slit_scan() {
   } else {
     Pre_allocate_bmp_header(128, max_line);
   }
-
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
@@ -1193,8 +1205,6 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FOCUS_mode = doc["focusPeaking"];
     FOCUS_threshold = doc["focuspeakingThreshold"];
     M64283FP = doc["M64283FPsensor"];
-    SLIT_SCAN_mode = doc["slitscanMode"];
-    SLIT_SCAN_128_shot = doc["slitscanWithvertscan"];
     SLIT_SCAN_delay = doc["slitscanDelay"];
     Datafile.close();
   }
@@ -1486,9 +1496,9 @@ void display_other_informations() {
     if (MOTION_sensor == 0) {
       if (SLIT_SCAN_mode == 1) {
         if (SLIT_SCAN_128_shot == 0) {
-          img.println("Slit Scan mode 1");
+          img.println("Slit Scan mode inf.");
         } else {
-          img.println("Slit Scan mode 2");
+          img.println("Slit Scan mode x128");
         }
         img.drawLine(64, 18 + display_offset, 64, 104 + display_offset, TFT_YELLOW);
       } else {
