@@ -40,7 +40,7 @@ Then:
 
     **#include <Mitsubishi_M64282FP_dashcam_TFT_eSPI_setup.h> // Default setup is root library folder**
     
-- Compile your code **with frequency set at 133 MHz** and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
+- Compile your code **with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"** (Menu Tools) and flash the .uf2 to your board (Arduino IDE does that automatically once you've pressed the BOOTSEL button once).
 - Enjoy your brand new 0.015 Mpixels camera !
 
 # Casual user manual (requirement: just pushing buttons)
