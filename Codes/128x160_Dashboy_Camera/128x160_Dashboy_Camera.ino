@@ -10,6 +10,7 @@
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
+//Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
 
 //some general calls to deal with the RP2040 core for Arduino and the json stuff
 #include "ArduinoJson.h"   //self explanatory
@@ -158,8 +159,8 @@ void setup() {
 #ifndef USE_SNEAK_MODE
   gpio_put(RED, 0);
 #endif
-currentTime = millis();
- while ((millis()-currentTime)<3000) {
+  currentTime = millis();
+  while ((millis() - currentTime) < 3000) {
     take_a_picture();
     new_exposure = auto_exposure();          // self explanatory
     push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3

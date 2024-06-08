@@ -18,11 +18,21 @@
 #define y_ori 40
 #endif
 
+//to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
+#ifdef USE_OVERCLOCKING
+unsigned int cycles = 22;  //Compiling with CPU Speed: "250 MHz" and Optimize: "Optimize even more (-O3)"
+#endif
+#ifndef USE_OVERCLOCKING
+unsigned int cycles = 11;  //Compiling with CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
+#endif
+
 ///////////////default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 bool RAW_recording_mode = 0;                                             //0 = save as BMP (slow), 1 = save as raw stream (fast)
-double timelapse_list[8] = { -1, 2000, 4000, 8000, 16000, -2, -3, -4 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms, -3 slit scan mode infinite, -4 slit mode 128 pix scanning
-unsigned char PRETTYBORDER_mode = 1;                                     //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
-bool NIGHT_mode = 0;                                                     //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
+double timelapse_list[8] = { -2, -1, 2000, 4000, 8000, 16000, -3, -4 };  //-2 = motion sensor mode, -1 = regular mode, value >=0 = time in ms, -3 slit scan mode infinite, -4 slit mode 128 pix scanning
+// -2 MUST precede -1 in the list to force jumping from motion sensor mode to regular mode
+// it is advised to start by default by -1, so rank_timelapse = 1 by default here, see next variables
+unsigned char PRETTYBORDER_mode = 1;  //0 = 128*120 image, 1 = 128*114 image + 160*144 border, like the GB Camera
+bool NIGHT_mode = 0;                  //0 = exp registers cap to 0xFFFF, 1 = clock hack. I'm honestly not super happy of the current version but it works
 double motion_detection_threshold = 0.01;
 double exposure_list[8] = { 0.5, 0.69, 0.79, 1, 1, 1.26, 1.44, 2 };  //list of exposures -1EV to +1EV by third roots of 2 steps for HDR mode
 //double exposure_list[8]={ 1, 1, 1, 1, 1, 1, 1, 1 };  //for fancy multi-exposure images or signal to noise ratio increasing
@@ -70,20 +80,11 @@ int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well w
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };  //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
-unsigned long delay_MOTION = 5000;                          //time to place the camera before motion detection starts
-unsigned long delay_SLIT_SCAN = 2000;                       //time to place the camera before motion detection starts
-unsigned int max_files_per_folder = 1024;                   //self explanatory, in BMP mode
-unsigned int low_exposure_limit = 0x0010;                   //absolute low exposure limit whatever the strategy
-
-//to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
-#ifdef USE_OVERCLOCKING
-unsigned int cycles = 22;  //nop clock setting for 250 MHz
-#endif
-#ifndef USE_OVERCLOCKING
-unsigned int cycles = 11;  //nop clock setting for 133 MHz
-#endif
-
+unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };        //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
+unsigned long delay_MOTION = 5000;                                //time to place the camera before motion detection starts
+unsigned long delay_SLIT_SCAN = 2000;                             //time to place the camera before motion detection starts
+unsigned int max_files_per_folder = 1024;                         //self explanatory, in BMP mode
+unsigned int low_exposure_limit = 0x0010;                         //absolute low exposure limit whatever the strategy
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };  //colors as they will appear in the bmp file and display after dithering
 unsigned char max_line_for_recording = 128;                       //choose 128 to record the whole image in "no border" mode
@@ -350,6 +351,6 @@ char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_
 char mask_pixels_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
-char rank_timelapse = 0;                                        //rank in the timelapse array
+char rank_timelapse = 1;                                        //default rank in the timelapse array, do not move as -2 must be before -1
 char register_strategy = 0;                                     //strategy # of the Game Boy Camera emulation
 //////////////end of global variables///////////////////////////////////////////////////////////////////////////////////////////////////////////////
