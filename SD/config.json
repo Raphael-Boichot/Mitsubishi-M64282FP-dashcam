@@ -1,6 +1,6 @@
 {
 "timelapserawrecordingMode":1,
-"timelapseDelay":[ -1, 0, 3750, 7500, 15000, 30000, 60000, -2],
+"timelapseDelay":[-2, -1, 0, 1000, 30000, 60000, -3, -4],
 "prettyborderMode":1,
 "nightMode":0,
 "motiondetectionThreshold":0.01,
@@ -22,7 +22,5 @@
 "focusPeaking":0,
 "focuspeakingThreshold":48,
 "M64283FPsensor":0,
-"slitscanMode":0,
-"slitscanWithvertscan":0,
 "slitscanDelay":0
 }
