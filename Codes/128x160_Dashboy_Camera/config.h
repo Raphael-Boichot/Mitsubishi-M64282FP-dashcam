@@ -20,7 +20,7 @@
 
 //to check if this is accurate with your compiling freq, the exposure time @FFFF must be closest as 1048 ms as possible and never less
 #ifdef USE_OVERCLOCKING
-unsigned int cycles = 22;  //Compiling with CPU Speed: "250 MHz" and Optimize: "Optimize even more (-O3)"
+unsigned int cycles = 23;  //Compiling with CPU Speed: "250 MHz" and Optimize: "Optimize even more (-O3)"
 #endif
 #ifndef USE_OVERCLOCKING
 unsigned int cycles = 11;  //Compiling with CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
