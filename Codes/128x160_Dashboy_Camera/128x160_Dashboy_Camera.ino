@@ -10,7 +10,7 @@
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
-//Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
+//Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)" by
 
 //some general calls to deal with the RP2040 core for Arduino and the json stuff
 #include "ArduinoJson.h"   //self explanatory
@@ -899,17 +899,23 @@ void recording_slit_scan() {
   int max_slit_offset;
   int slit_number = 0;
 
-#ifndef USE_SNEAK_MODE
-  gpio_put(RED, 1);
-#endif
-
   if (SLIT_SCAN_128_shot == 1) {
     max_slit_offset = 128;  //short shot with vertical line scanning
   } else {
     max_slit_offset = 0x1000;  //long shot with fixed vertical line
   }
-
   while (STOP == 0) {
+
+#ifndef USE_SNEAK_MODE
+    gpio_put(RED, 0);
+#endif
+
+    currentTime = millis();
+    while ((millis() - currentTime) < 1000) {  //correct exposure between slits
+      take_a_picture();
+      new_exposure = auto_exposure();          // self explanatory
+      push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
+    }
     slit_number++;                                              //the loop never stops until a key is pressed
     Next_ID++;                                                  //update the file number, but not in movie maker mode
     store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);   //in case of crash...
@@ -921,6 +927,10 @@ void recording_slit_scan() {
     tft.setCursor(0, 8);
     tft.print("Recording slit: ");
     tft.print(slit_number, DEC);
+#endif
+
+#ifndef USE_SNEAK_MODE
+    gpio_put(RED, 1);
 #endif
 
     File Datafile = SD.open(storage_file_name, FILE_WRITE);
@@ -1506,6 +1516,7 @@ void display_other_informations() {
           img.println("Slit Scan mode inf.");
         } else {
           img.println("Slit Scan mode x128");
+          img.drawLine(8, 60 + display_offset, 120, 60 + display_offset, TFT_YELLOW);
         }
         img.drawLine(64, 18 + display_offset, 64, 104 + display_offset, TFT_YELLOW);
       } else {
