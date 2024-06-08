@@ -106,7 +106,7 @@ Pictures were taken with the original plastic lens, CCTV lenses, CCTV fisheye wi
 
 ![](/Docs%20and%20research/Image%20files/Slitscan.png)
 
-The **slit-scan mode infinite** makes streaks whatever the scene. It gives interesting effects with long moving objects (trains) or natural scenes in the wind. It completely obliterates the backgropung and only moving objects are pictured. It acts exactly as a [photo-finish](https://en.wikipedia.org/wiki/Photo_finish), in slower however due to sensor limitations. The **slit-scan mode x128** scans the whole scene line by line, the immobile backgroung is conserved. Only the moving objects of the scene will be deformed in a grotestque fashion. Using this mode with a Game Boy Camera sensor is an idea of [Andreas Hahn](https://github.com/HerrZatacke). Both mode loop infinitely as long as **PUSH** is not pressed.
+The **slit-scan mode infinite** makes streaks whatever the scene. It gives interesting effects with long moving objects (trains) or natural scenes in the wind. It completely obliterates the background and only moving objects can be seen. It acts exactly as a [photo-finish](https://en.wikipedia.org/wiki/Photo_finish), in slower however due to sensor limitations. The **slit-scan mode x128** scans the whole scene line by line, the immobile backgroung is conserved. Only the moving objects of the scene will be deformed in a grotestque fashion. Using this mode with a Game Boy Camera sensor is an idea of [Andreas Hahn](https://github.com/HerrZatacke). Both mode loop infinitely as long as **PUSH** is not pressed.
 
 ## Some timelapses made with the M64282FP sensor
 
