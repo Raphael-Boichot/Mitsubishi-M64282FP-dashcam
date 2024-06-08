@@ -1212,6 +1212,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FOCUS_threshold = doc["focuspeakingThreshold"];
     M64283FP = doc["M64283FPsensor"];
     SLIT_SCAN_delay = doc["slitscanDelay"];
+    json_corrupt = doc["jsonCorruption"];
     Datafile.close();
   }
 #endif
@@ -1707,19 +1708,22 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 #endif
 
 #ifdef USE_TFT
+  img.setCursor(50, 16);
   if (JSON_ready == 1) {
-    img.setTextColor(TFT_GREEN);
-    img.setCursor(50, 16);
-    img.println("READY");
+    if (json_corrupt == 123456789) {
+      img.setTextColor(TFT_GREEN);
+      img.println("READY");
+    } else {
+      img.setTextColor(TFT_YELLOW);
+      img.println("CORRUPTED");
+    }
   } else {
-    img.setTextColor(TFT_ORANGE);
-    img.setCursor(50, 16);
-    img.println("ERROR");
+    img.setTextColor(TFT_RED);
+    img.println("NOT READABLE");
   }
 
   img.setTextColor(TFT_CYAN);
   img.setCursor(0, 24);
-
   //reboot when this text appears to cycle between borders
   switch (PRETTYBORDER_mode) {
     case 0:

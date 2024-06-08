@@ -77,6 +77,7 @@ bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
 unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
 bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
 int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well with clouds for example
+int json_corrupt = 0;                //"cheap checksum"
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
