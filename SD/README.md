@@ -16,7 +16,7 @@ I you want to directly store Motion Sensor and Timelapse images in BMP (for exam
 User can keep the current default values without modifying anything. Advanced user are advised to look into code what is the effect of each parameter. **Value can be changed but not the length of tables. Values MUST be entered as decimal.** Here is the signification of each variable in detail:
 
 - **timelapserawrecordingMode:** 1 = recording to .raw file, 0 = recording to 1x bmp files with a limit of 1024 files per folder (it od course increases the folder # automatically in case of folder capacity overflow);
-- **timelapseDelay:** list of actions associated with the timelapse button. A value up to zero is a delay for timelapse in ms, -1 is the regular camera mode and -2 is the motion sensor mode;
+- **timelapseDelay:** list of actions associated with the timelapse button. Any positive value is a delay for timelapse in ms (even zero), -1 is the regular camera mode, -2 is the motion sensor mode, -3 is slit-scan infinite mode and -4 is slit-scan x128 mode. The list **must began by -2 then -1**, other values/oreder are not critical;
 - **prettyborderMode:** >1 = pretty borders, 0 = image without border. Quick reboot during "NOW BOOTING... message to roll over the borders;
 - **nightMode:** 1 = allows to go decrease the sensor clock to over expose image at night, 0 = constant sensor clock;
 - **motiondetectionThreshold:** value for the motion detection threshold. 0 = detect everything, 1 = detect nothing. 0.025 is a good starting value, the lower, the lore sensitive to motion;
