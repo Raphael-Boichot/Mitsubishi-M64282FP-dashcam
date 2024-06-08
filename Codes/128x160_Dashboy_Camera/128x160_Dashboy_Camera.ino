@@ -81,9 +81,13 @@ void setup() {
 #ifdef USE_SERIAL  // serial is optional, only needed for debugging or interfacing with third party soft via USB cable
   Serial.begin(115200);
 #endif
-
+  //variables from config.jon are not yet loaded into memory
   init_sequence();  //Boot screen get stuck here with red flashing LED if any problem with SD or sensor to avoid further board damage
   //now if code arrives at this point, this means that sensor and SD card are connected correctly, we can go further
+  //variables from config.jon are now loaded into memory
+  if (M64283FP == 1) {
+    max_line_for_recording = 128;  //the M68283FP is a true 128x128 sensor
+  }
   difference_threshold = motion_detection_threshold * 128 * max_line * 255;  //trigger threshold for motion sensor
   x_min = (128 - x_box) / 2;                                                 //recalculate the autoexposure area limits with json config values
   y_min = (max_line - y_box) / 2;
