@@ -172,6 +172,7 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 - Solder the display: **ensure to have enough clearance to slide the SD card out of the display above the Pi Pico**. Best is either to use female pin headers to secure the distance between display and main PCB or to solder the display with pins just showing out of the back PCB surface (pins are long enough).
 - Trim the remaining pin connectors as short as possible from the back side of PCB.
 - At this step, flash the Pi Pico and verify that the device boots and the display works. It should be stuck to an error screen with the red LED flashing, this is normal as the device needs SD card and a sensor to go further.
+- **Before glueing anything to the back side, reflow any trimmed pin carefully.**
 - Solder the JST connectors to the [Breakout PCB](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/tree/main/PCB/128x160_PCB%20and%20schematic/Sensor%20to%20PCB%20adapter%20board) (INPUT and NORMAL OUT if you use a cable similar to the default sensor one linked in **Parts**) or just bend straight the pins of a female JST connector and plug it into the JST extension cable to inverse its gender.
 - Trim the AA battery holder ON/OFF switch and place it in ON position, solder the battery terminals.
 - Glue the Battery holder behind the pushbuttons (it will act as a hand grip) and the camera shell behind the display. Use double sided tape or dots of hotglue in order to allow reversing the mod and get back your precious camera shell if necessary.
