@@ -23,5 +23,6 @@
 "focuspeakingThreshold":48,
 "M64283FPsensor":0,
 "slitscanDelay":0,
+"colorMode":0,
 "jsonCorruption":"123456789"
 }
