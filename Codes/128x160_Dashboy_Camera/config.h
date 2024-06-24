@@ -77,6 +77,7 @@ bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
 unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
 bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
 int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well with clouds for example
+bool RGB_mode = 0;                   //eases filter swap for taking RGB pictures
 int json_corrupt = 0;                //"cheap checksum"
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
@@ -354,4 +355,5 @@ char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or
 char num_timelapses = sizeof(timelapse_list) / sizeof(double);  //get the timelapse list size
 char rank_timelapse = 1;                                        //default rank in the timelapse array, do not move as -2 must be before -1
 char register_strategy = 0;                                     //strategy # of the Game Boy Camera emulation
+char RGB_counter = 0;
 //////////////end of global variables///////////////////////////////////////////////////////////////////////////////////////////////////////////////

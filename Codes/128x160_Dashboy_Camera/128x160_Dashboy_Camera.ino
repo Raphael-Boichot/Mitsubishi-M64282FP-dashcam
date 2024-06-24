@@ -292,10 +292,28 @@ void loop() {
 
   if ((recording == 1) & (image_TOKEN == 0)) {  //prepare for recording in timelapse mode
 #ifdef USE_TFT
-    img.setTextColor(TFT_RED);
+    if (RGB_mode == 0) {
+      img.setTextColor(TFT_RED);
+    } else {
+      if (RGB_counter == 3) {
+        RGB_counter = 0;
+      }
+      if (RGB_counter == 0) {
+        img.setTextColor(TFT_RED);
+        img.fillRect(116, 0, 14, 14, TFT_RED);
+      }
+      if (RGB_counter == 1) {
+        img.setTextColor(TFT_GREEN);
+        img.fillRect(116, 0, 14, 14, TFT_GREEN);
+      }
+      if (RGB_counter == 2) {
+        img.setTextColor(TFT_BLUE);
+        img.fillRect(116, 0, 14, 14, TFT_BLUE);
+      }
+    }
     img.setCursor(0, 8);
-    img.println("Recording...");
-    img.setCursor(84, 8);
+    img.println("Recording:");
+    img.setCursor(64, 8);
     sprintf(files_on_folder_string, "%X/%X", files_on_folder, max_files_per_folder);
     img.println(files_on_folder_string);
     display_other_informations();
@@ -304,9 +322,9 @@ void loop() {
     if ((currentTime - previousTime) > TIMELAPSE_deadtime) {  //Wait for deadtime set in config.txt
       recording_loop();                                       //here is the juicy stuff
     }
-    //if (TIMELAPSE_deadtime > 10000) {
-    sleep_ms(min(TIMELAPSE_deadtime / 10, 1000));  //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure, saves battery
-    //}
+    if (RGB_mode == 0) {
+      sleep_ms(min(TIMELAPSE_deadtime / 10, 1000));  //for timelapses with long deadtimes, no need to constantly spam the sensor for autoexposure, saves battery
+    }
   }  //end of recording loop for timelapse
 
   if ((TIMELAPSE_mode == 0) & (gpio_get(PUSH) == 1) & (MOTION_sensor == 0)) {  //camera mode acts like if user requires just one picture
@@ -370,6 +388,7 @@ void loop() {
     if ((gpio_get(PUSH) == 1) & (recording == 1)) {  //we want to stop recording
       recording = 0;
       files_on_folder = 0;
+      RGB_counter = 0;
       short_fancy_delay();  //blinks red to acknowledge action
     }
     if ((gpio_get(PUSH) == 1) & (recording == 0)) {  //we want to record: get file/directory#
@@ -875,6 +894,7 @@ void recording_loop() {
 #ifdef USE_SD
   if (TIMELAPSE_mode == 1) {
     files_on_folder++;
+    RGB_counter++;
     if (files_on_folder == max_files_per_folder) {  //because up to 1000 files per folder stalling or errors in writing can happens
       files_on_folder = 0;
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
@@ -1222,6 +1242,7 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     FOCUS_threshold = doc["focuspeakingThreshold"];
     M64283FP = doc["M64283FPsensor"];
     SLIT_SCAN_delay = doc["slitscanDelay"];
+    RGB_mode = doc["colorMode"];
     json_corrupt = doc["jsonCorruption"];
     Datafile.close();
   }
