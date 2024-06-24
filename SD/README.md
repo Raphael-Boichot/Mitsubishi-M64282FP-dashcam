@@ -39,7 +39,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **focuspeakingThreshold:** threshold for focus peaking. The lower the value, the more pixels indicates good focusing (values 0..255).
 - **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor. It is advised to deactivate gameboycameraMode when using this mode to swicth to a single register strategy.
 - **slitscanDelay:** delay between slits in ms in slit-scan mode. 0 allows recording about 12 slits per seconds in full sun. 2000 gives interesting images with clouds. Be creative !
-- **colorMode:** Gives help to create color animation in timelapse mode: faster autoexposure and color filter to use indicated.
+- **colorMode:** 0 = normal mode, 1 = gives help to create color animation in timelapse mode: faster autoexposure and color filter to use indicated.
 - **jsonCorruption:** do not modify, internal check for json integrity. If this value is not reported correctly, json is considered as corrupted, copy a fresh one to SD card.
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
