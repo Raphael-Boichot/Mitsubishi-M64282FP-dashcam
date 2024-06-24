@@ -134,6 +134,10 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 ![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/Cloudy_weather.gif)
 
+## Because it had to be done !
+
+![](/Docs%20and%20research/Image%20files/RGB.gif)
+
 # Building the device !
 
 ## Required parts
