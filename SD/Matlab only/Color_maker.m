@@ -1,0 +1,13 @@
+clc
+clear
+R=imread('R.png');
+G=imread('G.png');
+B=imread('B.png');
+R=R(:,:,1);
+G=G(:,:,1);
+B=B(:,:,1);
+RGB(:,:,1)=R;
+RGB(:,:,2)=G;
+RGB(:,:,3)=B;
+imshow(RGB);
+imwrite(RGB,'RGB.png')
