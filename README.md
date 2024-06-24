@@ -138,6 +138,8 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 ![](/Docs%20and%20research/Image%20files/RGB.gif)
 
+![](/Docs%20and%20research/Image%20files/RGB_2.gif)
+
 This animation was done by simply stacking images taken 3 by 3 with RGB filters (auto-exposure activated). Lens is equipped with an IR filter too. Without IR filter, images in outdoor conditions have serious color issues (they always appear pinkish, I mean even more than this example, without any way to correct the hue distorsion). Images were stacked with a [dedicated Matlab code](/SD/Matlab%20only/Movie_and_Gif_Maker_from_png_data_color.m) but I guess that any image software could do the trick.
 
 # Building the device !
