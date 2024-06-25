@@ -74,6 +74,7 @@ void setup() {
 
   //if you want to use GPIO22 as external trigger
   myservo.attach(22);  // attaches the servo on GPIO22 to the servo object
+  myservo.write(0); //set the servo at 0 angle
 
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
