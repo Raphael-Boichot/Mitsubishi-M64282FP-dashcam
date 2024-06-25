@@ -71,14 +71,15 @@ unsigned short int lookup_TFT_RGB565[256] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x
                                               0xD69A, 0xD69A, 0xD69A, 0xD69A, 0xD6BA, 0xD6BA, 0xD6BA, 0xD6BA, 0xDEDB, 0xDEDB, 0xDEDB, 0xDEDB, 0xDEFB, 0xDEFB, 0xDEFB, 0xDEFB,
                                               0xE71C, 0xE71C, 0xE71C, 0xE71C, 0xE73C, 0xE73C, 0xE73C, 0xE73C, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF5D, 0xEF7D, 0xEF7D, 0xEF7D, 0xEF7D,
                                               0xF79E, 0xF79E, 0xF79E, 0xF79E, 0xF7BE, 0xF7BE, 0xF7BE, 0xF7BE, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFDF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-unsigned char x_box = 8 * 8;         //x range for autoexposure (centered, like GB camera, 8 tiles)
-unsigned char y_box = 7 * 8;         //y range for autoexposure (centered, like GB camera, 7 tiles)
-bool FOCUS_mode = 0;                 //1 = Focus peaking mode overlayed on image
-unsigned char FOCUS_threshold = 50;  //0..255, self explanatory
-bool M64283FP = 0;                   //strategy for the M64283FP in single register strategy
-int SLIT_SCAN_delay = 0;             //delay between slits, 2000 ms works well with clouds for example
-bool RGB_mode = 0;                   //eases filter swap for taking RGB pictures
-int json_corrupt = 0;                //"cheap checksum"
+unsigned char x_box = 8 * 8;                           //x range for autoexposure (centered, like GB camera, 8 tiles)
+unsigned char y_box = 7 * 8;                           //y range for autoexposure (centered, like GB camera, 7 tiles)
+bool FOCUS_mode = 0;                                   //1 = Focus peaking mode overlayed on image
+unsigned char FOCUS_threshold = 50;                    //0..255, self explanatory
+bool M64283FP = 0;                                     //strategy for the M64283FP in single register strategy
+int SLIT_SCAN_delay = 0;                               //delay between slits, 2000 ms works well with clouds for example
+bool RGB_mode = 0;                                     //eases filter swap for taking RGB pictures
+unsigned char RGB_servo_positions[] = { 0, 90, 180 };  //{R,G,B} default positions for the servo driving the filter wheel in degrees
+int json_corrupt = 0;                                  //"cheap checksum"
 //////////////end of default values in case config.json is not existing////////////////////////////////////////////////////////////////////
 
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +135,7 @@ unsigned char line_length = 4;                 //exposure area cross size
 //SD_MOSI - to pi pico pin GPIO19
 #define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-#define INOUT 22   //to trigger input/output in 3.3 volts, see dedicated pins on the PCB
+#define SERVO 22   //to trigger something in 3.3 volts, see dedicated pins on the PCB
 //GPIO 23 is reserved for internal use of the pi pico (on-board SMPS Power Save), usable but not recommended
 //GPIO 24 is reserved for internal use of the pi pico (VBUS sense), usable but not recommended
 //seems that using one of them could help ADC stability but I never had any issue with them...

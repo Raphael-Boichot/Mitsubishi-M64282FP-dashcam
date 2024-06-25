@@ -20,6 +20,10 @@
 #include "splash.h"        //splash and crash images in 8 bits (no compression, as I gain nothing)
 #include "prettyborder.h"  //2 bpp image borders encoded in 8 bits with cheap RLE compression (very efficient)
 
+//servo library
+#include <Servo.h>
+Servo myservo;  //create servo object to control a servo
+
 //absence of the SD card leads to general failure of the code, so to test without, better deactivate the feature at compiling
 #ifdef USE_SD
 #include <SPI.h>  //for SD
@@ -69,9 +73,7 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //if you want to use GPIO22 as external trigger
-  //gpio_init(INOUT);
-  //gpio_set_dir(INOUT, GPIO_IN);  //to use with remote for example
-  //gpio_set_dir(INOUT, GPIO_OUT); //to use with a flash for example
+  myservo.attach(22);  // attaches the servo on GPIO22 to the servo object
 
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
@@ -299,14 +301,20 @@ void loop() {
         RGB_counter = 0;
       }
       if (RGB_counter == 0) {
+        myservo.write(RGB_servo_positions[0]);  //tells servo to go to position filter RED (0->180)
+        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_RED);
         img.fillRect(116, 0, 14, 14, TFT_RED);
       }
       if (RGB_counter == 1) {
+        myservo.write(RGB_servo_positions[1]);  //tells servo to go to position filter GREEN (0->180)
+        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_GREEN);
         img.fillRect(116, 0, 14, 14, TFT_GREEN);
       }
       if (RGB_counter == 2) {
+        myservo.write(RGB_servo_positions[2]);  //tells servo to go to position filter BLUE (0->180)
+        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_BLUE);
         img.fillRect(116, 0, 14, 14, TFT_BLUE);
       }
@@ -1243,6 +1251,9 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     M64283FP = doc["M64283FPsensor"];
     SLIT_SCAN_delay = doc["slitscanDelay"];
     RGB_mode = doc["colorMode"];
+    for (int i = 0; i < 3; i++) {
+      RGB_servo_positions[i] = doc["colorservoPositions"][i];
+    }
     json_corrupt = doc["jsonCorruption"];
     Datafile.close();
   }
