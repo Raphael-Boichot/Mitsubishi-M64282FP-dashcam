@@ -24,5 +24,6 @@
 "M64283FPsensor":0,
 "slitscanDelay":0,
 "colorMode":0,
+"colorservoPositions":[0, 90, 180],
 "jsonCorruption":"123456789"
 }
