@@ -90,8 +90,8 @@ You can also directly play with the **#define** options in [config.h](/Codes/128
 - activate the serial output and spit images as hexadecimal text to interface the camera with another software like Matlab, but it is rather slow. I used that initially for debugging without display, and I kept that mode for tricky bugs requiring access to the arrays for example;
 - change screen driver from ST7735 128x128 pixels (default) to ST7789 256x256 pixels TFT display. Beware, you must also modify the config file (comment/uncomment stuff, everything is explained) for the TFT library, see the installtion guide;
 - activate overclocking. I yet provide an overclocked build at the maximum possible frequency that do no crashes but it drains battery too fast to my own taste, despite being more responsive;
-- deactivate the register display on screen or debug mode if it bothers you (why not after all, I though it was fun to keep it);
-- activate the [debagame mode](https://tcrf.net/Proto:Game_Boy_Camera) that give access to advanced sensor calibration parameters. It displays on screen the voltage of masked pixels, the offset voltage, the register O and the register V and compare them to see how far the camera is from perfect calibration. If you do not see what it means, it's normal, this means you probably have a rewarding life and fulfilling social relationships.
+- deactivate the display of exposure offset and exposure delay in time units if it bothers you (why not after all, I though it was fun to keep it);
+- activate the [debagame mode](https://tcrf.net/Proto:Game_Boy_Camera) that give access to advanced sensor calibration parameters and real hex registers. It displays on screen the voltage of masked pixels, the offset voltage, the register O and the register V and compare them to see how far the camera is from perfect calibration. If you do not see what it means, it's normal, this means you probably have a rewarding life and fulfilling social relationships.
 
 # Some pictures made with the M64282FP sensor (old border)
 
