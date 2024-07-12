@@ -263,10 +263,10 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 # Troubleshooting
 
 - The screen stays white after flashing: error of TFT library linking, follow closely the installation guide with the Bodmer library and flash again;
-- The image colors on screen are inacurrate and the default parameters are lost: json config file corruption, the device runs on internal miminal configuration, copy a fresh config.json from repo to the SD card and reboot. Cables between sensor en main board may be loose too;
+- The image colors on screen are inacurrate and the default parameters are lost: json config file corruption, the device runs on internal miminal configuration, copy a fresh config.json from repo to the SD card and reboot;
 - The image looks too dark or too bright on screen despite the auto-exposure working, the image jitters: loose connection with sensor, re-seat the 9 pins connector on both sides.
 - the screen shuts down but the auto-exposure continues to work: empty batteries;
-- the device works but very slowly: SD card corruption, the device struggles to access it so the slowdown.
+- the device works but very slowly: SD card corruption after boot sequence, the device struggles to access it so the slowdown.
 - the SD card is not recognized even formatted for sure in FAT32 ? You can use some low level formatting tool like diskpart on Windows to restore the filesystem integrity.
 
 # Kind warning
