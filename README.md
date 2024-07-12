@@ -267,6 +267,7 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 - The image looks too dark or too bright on screen despite the auto-exposure working, the image jitters: loose connection with sensor, re-seat the 9 pins connector on both sides.
 - the screen shuts down but the auto-exposure continues to work: empty batteries;
 - the device works but very slowly: SD card corruption, the device struggles to access it so the slowdown.
+- the SD card is not recognized even formatted for sure in FAT32 ? You can use some low level formatting tool like diskpart on Windows to restore the filesystem integrity.
 
 # Kind warning
 
