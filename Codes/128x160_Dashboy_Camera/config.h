@@ -23,7 +23,7 @@
 unsigned int cycles = 23;  //Compiling with CPU Speed: "250 MHz" and Optimize: "Optimize even more (-O3)"
 #endif
 #ifndef USE_OVERCLOCKING
-unsigned int cycles = 11;  //Compiling with CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
+unsigned int cycles = 10;  //Compiling with CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
 #endif
 
 ///////////////default values in case config.json is not existing////////////////////////////////////////////////////////////////////
@@ -127,12 +127,10 @@ unsigned char line_length = 4;                 //exposure area cross size
 #define PUSH 13  //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
 #define TLC 14   //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
 #define LOCK 15  //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
-//Beware, SD card MUST be attached to these pins as the pico seems not very tolerant with SD card pinout, they CANNOT be changed
-//SD_MISO - to pi pico pin GPIO16
-//SD_CS   - to pi pico pin GPIO17
-#define CHIPSELECT 17  //for SD card, can be moved but I recommend not changing it either
-//SD_SCK  - to pi pico pin GPIO18
-//SD_MOSI - to pi pico pin GPIO19
+#define SD_MISO 16     //to pi pico pin GPIO16
+#define CHIPSELECT 17  //to pi pico pin GPIO17
+#define SD_SCK 18      //to pi pico pin GPIO18
+#define SD_MOSI 19 // to pi pico pin GPIO19
 #define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
 #define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
 #define SERVO 22   //to trigger something in 3.3 volts, see dedicated pins on the PCB

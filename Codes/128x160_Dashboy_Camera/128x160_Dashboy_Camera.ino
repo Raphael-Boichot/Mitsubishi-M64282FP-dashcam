@@ -74,7 +74,7 @@ void setup() {
 
   //if you want to use GPIO22 as external trigger
   myservo.attach(22);  // attaches the servo on GPIO22 to the servo object
-  myservo.write(0); //set the servo at 0 angle
+  myservo.write(0);    //set the servo at 0 angle
 
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
@@ -1698,6 +1698,10 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 
   //see if the card is present and can be initialized
 #ifdef USE_SD
+  // Ensure the SPI pinout the SD card is connected to / is configured properly
+  SPI.setRX(SD_MISO);
+  SPI.setTX(SD_MOSI);
+  SPI.setSCK(SD_SCK);
   if (SD.begin(CHIPSELECT)) {
     SDcard_READY = 1;
   } else {
