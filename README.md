@@ -238,9 +238,6 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 **Kentaro Nishimura aka "the dancing man" of Game Boy Camera**
 ![Game Boy Camera dancing man](/Docs%20and%20research/Image%20files/JP_Dancing_man.jpg)
 
-**The unknown face hidden in the Debagame Tester: Second Impact, maybe Kentaro Nishimura too ?**
-- ![Debagame tester game boy camera](/Docs%20and%20research/Image%20files/DebagameTesterSI-Pictures.png)
-
 # My feedback about some Game Boy Camera lens modes I've tried with the GameBoy/Dashboy Camera
   
 - First, the original plastic lens used in 8-bits mode gives a quite eery image with vignetting. In a word: it is crap. But it also has its own charm. Everything looks "ashy" with it. And the original camera eye ball allows making selfies contrary to lens modes ! 
