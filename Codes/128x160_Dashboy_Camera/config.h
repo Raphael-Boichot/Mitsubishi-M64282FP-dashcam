@@ -127,6 +127,17 @@ unsigned char line_length = 4;                 //exposure area cross size
 #define PUSH 13  //to pi pico pin GPIO13 action button <-> 3.3V - action button to record
 #define TLC 14   //to pi pico pin GPIO14 <-> 3.3V - timelapse<->regular camera mode
 #define LOCK 15  //to pi pico pin GPIO15  <-> 3.3V - Lock exposure
+//    SD card attached to SPI bus as follows on RP2040:
+//   ************ SPI0 ************
+//   ** MISO (AKA RX) - pin 0, 4, or 16
+//   ** MOSI (AKA TX) - pin 3, 7, or 19
+//   ** CS            - pin 1, 5, or 17
+//   ** SCK           - pin 2, 6, or 18
+//   ************ SPI1 ************
+//   ** MISO (AKA RX) - pin  8 or 12
+//   ** MOSI (AKA TX) - pin 11 or 15
+//   ** CS            - pin  9 or 13
+//   ** SCK           - pin 10 or 14
 #define SD_MISO 16     //to pi pico pin GPIO16
 #define CHIPSELECT 17  //to pi pico pin GPIO17
 #define SD_SCK 18      //to pi pico pin GPIO18
