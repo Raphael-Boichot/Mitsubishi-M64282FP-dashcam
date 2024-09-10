@@ -73,7 +73,8 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //if you want to use GPIO22 as external trigger
-  myservo.attach(22);  // attaches the servo on GPIO22 to the servo object
+  myservo.attach(22,600,2400);  // attaches the servo on GPIO22 to the servo object
+  //min and max servo pulse width have to be forced as it is too conservative in this library
   myservo.write(0);    //set the servo at 0 angle
 
   //analog stuff
