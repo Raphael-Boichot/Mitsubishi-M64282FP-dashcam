@@ -73,9 +73,9 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //if you want to use GPIO22 as external trigger
-  myservo.attach(22,600,2400);  // attaches the servo on GPIO22 to the servo object
+  myservo.attach(22, 600, 2400);  // attaches the servo on GPIO22 to the servo object
   //min and max servo pulse width have to be forced as it is too conservative in this library
-  myservo.write(0);    //set the servo at 0 angle
+  myservo.write(servo_starting);  //set the servo at 0 angle (must be the RED filter)
 
   //analog stuff
   adc_init();  //mandatory, without it stuck the camera, it must be called first
@@ -302,21 +302,16 @@ void loop() {
       if (RGB_counter == 3) {
         RGB_counter = 0;
       }
+      servo_starting = sweep(servo_starting, RGB_servo_positions[RGB_counter]);  //go to the position corresponding to the relevant filter
       if (RGB_counter == 0) {
-        myservo.write(RGB_servo_positions[0]);  //tells servo to go to position filter RED (0->180)
-        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_RED);
         img.fillRect(116, 0, 14, 14, TFT_RED);
       }
       if (RGB_counter == 1) {
-        myservo.write(RGB_servo_positions[1]);  //tells servo to go to position filter GREEN (0->180)
-        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_GREEN);
         img.fillRect(116, 0, 14, 14, TFT_GREEN);
       }
       if (RGB_counter == 2) {
-        myservo.write(RGB_servo_positions[2]);  //tells servo to go to position filter BLUE (0->180)
-        delay(15);                              //waits 15ms for the servo to reach the position
         img.setTextColor(TFT_BLUE);
         img.fillRect(116, 0, 14, 14, TFT_BLUE);
       }
@@ -1842,4 +1837,23 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
     }
   }
 #endif
+}
+
+//////////////////////////////////////////////Servo stuff///////////////////////////////////////////////////////////////////////////////////////////
+int sweep(int current_pos, int final_pos) {
+  int pos;
+  int servo_delay=10;
+  if (current_pos < final_pos) {
+    for (pos = current_pos; pos <= final_pos; pos++) {  // goes from current to final pos, steps of 1°
+      myservo.write(pos);                               // tell servo to go to position in variable 'pos'
+      delay(servo_delay);
+    }
+  }
+  if (current_pos > final_pos) {
+    for (pos = current_pos; pos >= final_pos; pos--) {  // goes from current to final pos, steps of -1°
+      myservo.write(pos);                               // tell servo to go to position in variable 'pos'
+      delay(servo_delay);
+    }
+  }
+  return final_pos;
 }
