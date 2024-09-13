@@ -333,6 +333,7 @@ unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
 unsigned int MOTION_sensor_counter = 0;
+int servo_starting =0;
 int dark_level = 0;  //for DEGABAME mode
 int V_ref = 0;       //for DEGABAME mode
 int O_reg = 0;       //for DEGABAME mode

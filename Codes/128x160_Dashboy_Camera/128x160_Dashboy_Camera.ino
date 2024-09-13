@@ -73,7 +73,7 @@ void setup() {
   gpio_set_dir(START, GPIO_OUT);
 
   //if you want to use GPIO22 as external trigger
-  myservo.attach(22, 600, 2400);  // attaches the servo on GPIO22 to the servo object
+  myservo.attach(22, 540, 2400);  // attaches the servo on GPIO22 to the servo object
   //min and max servo pulse width have to be forced as it is too conservative in this library
   myservo.write(servo_starting);  //set the servo at 0 angle (must be the RED filter)
 
@@ -394,6 +394,7 @@ void loop() {
       recording = 0;
       files_on_folder = 0;
       RGB_counter = 0;
+      myservo.write(0);  //set the servo at 0 angle
       short_fancy_delay();  //blinks red to acknowledge action
     }
     if ((gpio_get(PUSH) == 1) & (recording == 0)) {  //we want to record: get file/directory#
@@ -1842,7 +1843,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 //////////////////////////////////////////////Servo stuff///////////////////////////////////////////////////////////////////////////////////////////
 int sweep(int current_pos, int final_pos) {
   int pos;
-  int servo_delay=10;
+  int servo_delay=0;
   if (current_pos < final_pos) {
     for (pos = current_pos; pos <= final_pos; pos++) {  // goes from current to final pos, steps of 1°
       myservo.write(pos);                               // tell servo to go to position in variable 'pos'
