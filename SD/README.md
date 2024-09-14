@@ -11,7 +11,7 @@ I you want to directly store Motion Sensor and Timelapse images in BMP (for exam
 
 ## Matlab and GNU Octave conversion scripts
 
-The projet comes with image conversion codes both compatible with Matlab if you are rich enough or [GNU Octave](https://octave.org/). Sadly, movie maker is only Matlab compatible but animated gifs are cool enough anyway.
+The projet comes with image conversion codes both compatible with Matlab if you are rich enough or [GNU Octave](https://octave.org/). Sadly, movie maker is only Matlab compatible but animated gifs are cool enough anyway. If you like Python, do not hesitate to PR codes, I would be glad to add them.
 
 ## json configuration file
 
