@@ -1843,7 +1843,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 //////////////////////////////////////////////Servo stuff///////////////////////////////////////////////////////////////////////////////////////////
 int sweep(int current_pos, int final_pos) {
   int pos;
-  int servo_delay=0;
+  int servo_delay=0; //By default, the servo goes very fast, increase this value to have smooth filter transition (15 ms is fine for example)
   if (current_pos < final_pos) {
     for (pos = current_pos; pos <= final_pos; pos++) {  // goes from current to final pos, steps of 1°
       myservo.write(pos);                               // tell servo to go to position in variable 'pos'
