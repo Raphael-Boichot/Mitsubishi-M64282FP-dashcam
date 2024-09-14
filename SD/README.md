@@ -9,6 +9,10 @@
 
 I you want to directly store Motion Sensor and Timelapse images in BMP (for example because you have no access to Powershell on your OS, set timelapserawrecordingMode to 0 in json config file (see next section). Recording in BMP format decreases a bit the available recording fps (it goes down to about 3 at most instead of 4).
 
+## Matlab and GNU Octave conversion scripts
+
+The projet comes with image conversion codes both compatible with Matlab if you are rich enough or [GNU Octave](https://octave.org/). Sadly, movie maker is only Matlab compatible but animated gifs are cool enough anyway.
+
 ## json configuration file
 
 **config.json** is the general configuration file for the DashBoy Camera. It has always priority on internal default configuration. Config.json is not a mandatory file but it pimps available options.
