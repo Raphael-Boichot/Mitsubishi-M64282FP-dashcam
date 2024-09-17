@@ -11,6 +11,9 @@ target_mp4_file='Output.mp4'; %target file for mp4, keep all image
 target_gif_file='Output.gif'; %target file for animated gif
 gif_deadtime=0.1;            %delay is seconds between pictures for animated gifs
 scaling_factor=0.5;           %because images are 8x after powershell step
+color_weight=[1 1.4 1]         %[R G B] weights to get a gray image when taking a white screen in photo in my case
+%to get these values, take pictures of a white scene with the three filters, note the exposure times and divide by the minimal value
+%these corresponds to my filters but yours can vary
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 vidfile = VideoWriter(target_mp4_file,'MPEG-4');
@@ -27,9 +30,9 @@ for i=1:3:length(listing)
     disp(['Processing ',listing(i+2).name]);
     B=imread(name);
     [height, width, null]=size(R);
-    R=imresize(R,scaling_factor,'nearest');
-    G=imresize(G,scaling_factor,'nearest');
-    B=imresize(B,scaling_factor,'nearest');
+    R=uint8(R(:,:,1)*color_weight(1));
+    G=uint8(G(:,:,1)*color_weight(2));
+    B=uint8(B(:,:,1)*color_weight(3));
     R=R(:,:,1);
     G=G(:,:,1);
     B=B(:,:,1);
