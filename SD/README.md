@@ -13,6 +13,8 @@ I you want to directly store Motion Sensor and Timelapse images in BMP (for exam
 
 The projet comes with image conversion codes both compatible with Matlab if you are rich enough or [GNU Octave](https://octave.org/). Sadly, movie maker is only Matlab compatible but animated gifs are cool enough anyway. If you like Python, do not hesitate to PR codes, I would be glad to add them.
 
+The script to make RGB animations contains all the necessary inputs to balance each color individually. The DashBoy Camera itself just does its best to expose as optimally as it can with each filter (thus collecting the maximum possible information). It's up to the user (you) to calibrate the white balance manually.
+
 ## json configuration file
 
 **config.json** is the general configuration file for the DashBoy Camera. It has always priority on internal default configuration. Config.json is not a mandatory file but it pimps available options.
