@@ -56,7 +56,7 @@ The **Dashboy Camera** uses a [configuration file](https://github.com/Raphael-Bo
 
 To activate **HDR mode** or **Dithering mode**, simply push the corresponding pushbuttons.
 
-**HDR mode** (High Dynamical Range) take several images from -1EV to +1EV and make an average of them before recording. This increases the dynamic range of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json). **Keep the total length of the table at 8 entries !**
+**HDR mode** (for High Dynamical Range, not for the dickhead) take several images from -1EV to +1EV and make an average of them before recording. This increases the dynamic range of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json). **Keep the total length of the table at 8 entries !**
 
 **Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. 
 
@@ -91,7 +91,7 @@ You can also directly play with the **#define** options in [config.h](/Codes/128
 - change screen driver from ST7735 128x128 pixels (default) to ST7789 256x256 pixels TFT display. Beware, you must also modify the config file (comment/uncomment stuff, everything is explained) for the TFT library, see the installtion guide;
 - activate overclocking at the maximum possible frequency that do no crashes but it drains battery too fast to my own taste, despite being a bit more responsive;
 - deactivate the display of exposure offset and exposure delay in time units if it bothers you (why not after all, I though it was fun to keep it);
-- activate the [debagame mode](https://tcrf.net/Proto:Game_Boy_Camera) that give access to advanced sensor calibration parameters and real hex registers. It displays on screen the voltage of masked pixels, the offset voltage, the register O and the register V and compare them to see how far the camera is from perfect calibration.
+- activate the [debagame mode](https://tcrf.net/Proto:Game_Boy_Camera) that gives access to advanced sensor calibration parameters and real hex registers. It displays on screen the voltage of masked pixels, the offset voltage, the register O and the register V and compare them to see how far the camera is from perfect calibration.
 
 # Some pictures made with the M64282FP sensor (old border)
 
