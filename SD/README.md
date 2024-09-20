@@ -46,7 +46,7 @@ User can keep the current default values without modifying anything. Advanced us
 - **M64283FPsensor:** 0 = normal mode, 1 = special strategy to handle the unobtainium M64283FP sensor. It is advised to deactivate gameboycameraMode when using this mode to swicth to a single register strategy.
 - **slitscanDelay:** delay between slits in ms in slit-scan mode. 0 allows recording about 12 slits per seconds in full sun. 2000 gives interesting images with clouds. Be creative !
 - **colorMode:** 0 = normal mode, 1 = gives help to create color animation in timelapse mode: faster autoexposure and color filter to use indicated. A PWM signal is also output on GPIO22 (see next variable). Using the servo output is not mandatory, you can pass filters by hand.
-- **colorservoPositions:** triplet for RGB positions of the servo arm in degree. PWM is on GPIO22. To power the servo, use a [wire connected to any 5V line](/Docs%20and%20research/Image%20files/PCB_bare_version_2.0_servo_wiring.png).
+- **colorservoPositions:** triplet for RGB positions of the servo arm in degree. PWM is on GPIO22. To power the servo, use a [wire connected to any 5V line](/Docs%20and%20research/Image%20files/PCB_bare_version_2.0_servo_wiring.png) (possible) or an external power source (better).
 - **jsonCorruption:** do not modify, internal check for json integrity. If this value is not reported correctly, json is considered as corrupted, copy a fresh one to SD card.
 
 ## Convert images to movie, script made by [HerrZatacke](https://github.com/HerrZatacke)
