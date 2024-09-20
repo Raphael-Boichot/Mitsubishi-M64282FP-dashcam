@@ -1,4 +1,4 @@
-//By Raphaël BOICHOT, made around 2023-01-27. Beware, I'm not a developper at all so it won't be a pretty code !
+//By Raphaël BOICHOT, started around 2023-01-27. Beware, I'm not a developper at all so it won't be a pretty code !
 //Version 2.0 (1.0 was on ESP32 https://github.com/Raphael-Boichot/Play-with-the-Game-Boy-Camera-Mitsubishi-M64282FP-sensor/tree/main/ESP32_version_beta)
 //Code is now too huge to be ported back on ESP32 due to its puny memory (theoretically 520 kB, in fact 160 kB but in real less than 110 kB without using sorcery)
 //I've minimized the use of local variables, pointers and structures to have a constant clear view of what happens in memory because I'm dumb.
@@ -10,7 +10,7 @@
 //https://github.com/earlephilhower/arduino-pico core for pi-pico
 //https://github.com/Bodmer/TFT_eSPI library for TFT display
 //https://arduinojson.org/ for config.json file support
-//Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)" by
+//Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
 
 //some general calls to deal with the RP2040 core for Arduino and the json stuff
 #include "ArduinoJson.h"   //self explanatory
