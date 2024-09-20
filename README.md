@@ -56,7 +56,7 @@ The **Dashboy Camera** uses a [configuration file](https://github.com/Raphael-Bo
 
 To activate **HDR mode** or **Dithering mode**, simply push the corresponding pushbuttons.
 
-**HDR mode** (HDR stands for High Dynamical Range, not for the dickhead) takes 8 images from -1EV to +1EV and makes an average of them before recording. This increases the dynamic range of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json). **Keep the total length of the table at 8 entries !**
+**HDR mode** (HDR stands for [High Dynamical Range](https://en.wikipedia.org/wiki/High_dynamic_range), not for the dickhead) takes 8 images from -1EV to +1EV and makes an average of them before recording. This increases the dynamic range of the sensor. The list of exposures can be modified in the [config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json). **Keep the total length of the table at 8 entries !**
 
 **Dithering mode** mimicks the dithering process of a Game Boy Camera with 4x4 derived Bayer matrices. Dithering matrices [generated online](https://herrzatacke.github.io/dither-pattern-gen/) can be copied in the **[config.json](https://github.com/Raphael-Boichot/Mitsubishi-M64282FP-dashcam/blob/main/SD/config.json)** file. 
 
