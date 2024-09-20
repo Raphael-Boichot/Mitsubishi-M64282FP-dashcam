@@ -145,7 +145,7 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 These animations were done by simply stacking images taken 3 by 3 with RGB filters (auto-exposure activated). Lens is equipped with an IR filter too. Without IR filter, images in outdoor conditions have serious color issues (they always appear pinkish, I mean even more than these examples, without any way to correct the hue distorsion). Images were stacked with a [Matlab code](/SD/Matlab%20only/Movie_and_Gif_Maker_from_png_data_color.m) or a [GNU Octave code](/SD/GNU%20Octave%20only/Gif_Maker_from_png_data_color.m) but I guess that any image software could do the trick. Examples of [Automatic animations](/Docs%20and%20research/Image%20files/4_hours_color_movie.gif) made with a [quick and dirty filter wheel](/Docs%20and%20research/Image%20files/Colorwheel%20front.jpg) driven by the device through GPIO22 are included.
 
-If you are nerd enough to go toward animated color images, I recommend you to pull the 5V to power the servo from another source than the onboard 5V. Even if it works, pulling amps from the main board creates slight image artifacts and can lead to unexpected reboots when batteries are close to flat.
+If you are nerd enough to go toward animated color images, I recommend you to pull the 5V to power the servo from another source than the onboard 5V. Even if it works, pulling amps from the main board creates slight image artifacts and can lead to unexpected reboots when batteries are close to flat. So take PWM from GPIO22, common GND, and 5V for servo from a powerbank for example.
 
 # Building the device !
 
