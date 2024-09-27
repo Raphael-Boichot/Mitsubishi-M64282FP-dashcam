@@ -5,7 +5,7 @@
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
-#define DEBUG_MODE  //allow additionnal outputs on display
+#define DEBUG_MODE     //allow additionnal outputs on display
 //#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
@@ -85,7 +85,6 @@ int json_corrupt = 0;                                  //"cheap checksum"
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };        //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
 unsigned long delay_MOTION = 5000;                                //time to place the camera before motion detection starts
-unsigned long delay_SLIT_SCAN = 2000;                             //time to place the camera before motion detection starts
 unsigned int max_files_per_folder = 1024;                         //self explanatory, in BMP mode
 unsigned int low_exposure_limit = 0x0010;                         //absolute low exposure limit whatever the strategy
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
@@ -141,10 +140,10 @@ unsigned char line_length = 4;                 //exposure area cross size
 #define SD_MISO 16     //to pi pico pin GPIO16
 #define CHIPSELECT 17  //to pi pico pin GPIO17
 #define SD_SCK 18      //to pi pico pin GPIO18
-#define SD_MOSI 19 // to pi pico pin GPIO19
-#define HDR 20     //to pi pico pin GPIO20 <-> 3.3V - HDR mode
-#define DITHER 21  //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
-#define SERVO 22   //to trigger something in 3.3 volts, see dedicated pins on the PCB
+#define SD_MOSI 19     // to pi pico pin GPIO19
+#define HDR 20         //to pi pico pin GPIO20 <-> 3.3V - HDR mode
+#define DITHER 21      //to pi pico pin GPIO21 <-> 3.3V - dithering with Bayer matrix
+#define SERVO 22       //to trigger something in 3.3 volts, see dedicated pins on the PCB
 //GPIO 23 is reserved for internal use of the pi pico (on-board SMPS Power Save), usable but not recommended
 //GPIO 24 is reserved for internal use of the pi pico (VBUS sense), usable but not recommended
 //seems that using one of them could help ADC stability but I never had any issue with them...
@@ -333,7 +332,7 @@ unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
 unsigned int MOTION_sensor_counter = 0;
-int servo_starting =0;
+int servo_starting = 0;
 int dark_level = 0;  //for DEGABAME mode
 int V_ref = 0;       //for DEGABAME mode
 int O_reg = 0;       //for DEGABAME mode
@@ -341,8 +340,6 @@ int V_Offset = 0;    //for DEGABAME mode
 unsigned char v_min, v_max;
 double difference = 0;
 double exposure_error = 0;
-double mean_value = 0;
-double error = 0;
 double difference_threshold;  //trigger threshold for motion sensor
 double multiplier = 1;        //deals with autoexposure algorithm
 bool TIMELAPSE_mode = 0;      //0 = use s a regular camera, 1 = recorder for timelapses
@@ -359,7 +356,7 @@ bool overshooting = 0;        //reserved, for register anti-jittering system
 bool SLIT_SCAN_mode = 0;      //adds a slit scan mode in regular camera mode
 bool SLIT_SCAN_128_shot = 0;  //force the slit scan mode to scan all vertical sensor lines and output a 128 pixels width image instead of a long shot taken on one line
 
-char storage_file_name[20], storage_file_dir[20], storage_deadtime[20], exposure_string[20], multiplier_string[20];
+char storage_file_name[32], storage_file_dir[32], storage_deadtime[20], exposure_string[20], multiplier_string[20];
 char error_string[20], remaining_deadtime[20], exposure_string_ms[20], files_on_folder_string[20], register_string[2], difference_string[8];
 char mask_pixels_string[20];
 char num_HDR_images = sizeof(exposure_list) / sizeof(double);   //get the HDR or multi-exposure list size

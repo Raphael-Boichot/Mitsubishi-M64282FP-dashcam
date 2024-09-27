@@ -394,7 +394,7 @@ void loop() {
       recording = 0;
       files_on_folder = 0;
       RGB_counter = 0;
-      myservo.write(0);  //set the servo at 0 angle
+      myservo.write(0);     //set the servo at 0 angle
       short_fancy_delay();  //blinks red to acknowledge action
     }
     if ((gpio_get(PUSH) == 1) & (recording == 0)) {  //we want to record: get file/directory#
@@ -420,7 +420,7 @@ void take_a_picture() {
 }
 
 double auto_exposure() {
-  double exp_regs, new_regs;                      //doubles are luxury but we are on a powerfull device and 8 bits arithmetics is not always fun
+  double exp_regs, new_regs, mean_value, error;   //doubles are luxury but we are on a powerfull device and 8 bits arithmetics is not always fun
   unsigned char setpoint = (v_max + v_min) >> 1;  //set point is just voltage mid scale, why not...
   unsigned int accumulator = 0;                   //exposure integrator
   unsigned char least_change = 1;
@@ -918,7 +918,6 @@ void recording_loop() {
 
 void recording_slit_scan() {
   short_fancy_delay();
-  delay(delay_SLIT_SCAN);  //allows tripod stabilization after button is pushed
   bool STOP = 0;           //to detect manual ending as the loop is infinite
   long int slit_offset;    //future height of the image
   int offset;
@@ -937,7 +936,7 @@ void recording_slit_scan() {
 #endif
 
     currentTime = millis();
-    while ((millis() - currentTime) < 1000) {  //correct exposure between slits
+    while ((millis() - currentTime) < 2000) {  //correct exposure between slits
       take_a_picture();
       new_exposure = auto_exposure();          // self explanatory
       push_exposure(camReg, new_exposure, 1);  //update exposure registers C2-C3
@@ -1843,7 +1842,7 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
 //////////////////////////////////////////////Servo stuff///////////////////////////////////////////////////////////////////////////////////////////
 int sweep(int current_pos, int final_pos) {
   int pos;
-  int servo_delay=0; //By default, the servo goes very fast, increase this value to have smooth filter transition (15 ms is fine for example)
+  int servo_delay = 15;  //By default, the servo goes very fast, increase this value to have smooth filter transition (15 ms is fine for example)
   if (current_pos < final_pos) {
     for (pos = current_pos; pos <= final_pos; pos++) {  // goes from current to final pos, steps of 1°
       myservo.write(pos);                               // tell servo to go to position in variable 'pos'
