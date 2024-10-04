@@ -272,7 +272,7 @@ The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as
 
 # Kind warning
 
-The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Push request with tested and working improvements are of course still welcomed.
+The code and current design come as it. If you're not happy with the current hardware, the PCB EasyEDA design or the Arduino IDE, create your own, the licence allows it ! Pull request with tested and working improvements are of course still welcomed.
 
 # Acknowledgments
 
