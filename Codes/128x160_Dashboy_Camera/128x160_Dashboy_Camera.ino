@@ -904,9 +904,7 @@ void recording_loop() {
     if (files_on_folder == max_files_per_folder) {  //because up to 1000 files per folder stalling or errors in writing can happens
       files_on_folder = 0;
       store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
-      if (RAW_recording_mode == 0) {
-        Next_dir++;
-      }
+      Next_dir++;                                                //if BMP are recorded, the folder # changes, if RAW is recorded, the # .raw file changes
     }
   }
 #endif
@@ -918,8 +916,8 @@ void recording_loop() {
 
 void recording_slit_scan() {
   short_fancy_delay();
-  bool STOP = 0;           //to detect manual ending as the loop is infinite
-  long int slit_offset;    //future height of the image
+  bool STOP = 0;         //to detect manual ending as the loop is infinite
+  long int slit_offset;  //future height of the image
   int offset;
   int max_slit_offset;
   int slit_number = 0;
