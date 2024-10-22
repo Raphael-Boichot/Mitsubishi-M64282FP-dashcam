@@ -56,4 +56,4 @@ Then run the following command into you image folder (png or bmp, adapt it):
     
     ffmpeg -i %07d.png -s 1024x896 -sws_flags neighbor -r 30 -vcodec libx264 -c:v libx264 -crf 30 -pix_fmt yuv420p output.mp4
     
-Or use the Matlab codes provided (NOT GNU Octave compatible at the moment but may be easy to adapt for animated gifs at least).
+Or use the Matlab codes provided (GNU Octave version is not able to generate video files, only animated gifs).
