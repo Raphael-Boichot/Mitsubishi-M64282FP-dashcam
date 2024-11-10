@@ -333,12 +333,6 @@ void loop() {
   }  //end of recording loop for timelapse
 
   if ((TIMELAPSE_mode == 0) & (gpio_get(PUSH) == 1) & (MOTION_sensor == 0)) {  //camera mode acts like if user requires just one picture
-
-#ifdef USE_SD
-    Next_ID = get_next_ID("/Dashcam_storage.bin");    //get the file number on SD card
-    Next_dir = get_next_dir("/Dashcam_storage.bin");  //get the folder number on SD card, just to store it in memory and rewrite it at the end
-#endif
-
     image_TOKEN = 1;  //gives a single token for recording
   }
 
@@ -347,10 +341,11 @@ void loop() {
 #ifdef USE_TFT
     img.setTextColor(TFT_RED);
     img.setCursor(0, 8);
-    img.println("Recording image");
+    img.println("Recording...");
     if (MOTION_sensor == 1) {
-      img.setCursor(100, 8);
-      img.println(MOTION_sensor_counter, HEX);
+    img.setCursor(80, 8);  
+    sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
+    img.println(files_on_folder_string);
     }
     display_other_informations();
     img.pushSprite(x_ori, y_ori);  //dump image to display
@@ -381,8 +376,9 @@ void loop() {
     img.fillRect(0, 8, 128, 8, TFT_BLACK);
     img.println("Display Mode");
     if (MOTION_sensor == 1) {
-      img.setCursor(100, 8);
-      img.println(MOTION_sensor_counter, HEX);
+    img.setCursor(80, 8);  
+    sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
+    img.println(files_on_folder_string);
     }
     display_other_informations();
     img.pushSprite(x_ori, y_ori);  //dump image to display
@@ -409,6 +405,15 @@ void loop() {
       short_fancy_delay();
     }
   }
+
+///////////for debug only/////////////////
+  // tft.fillRect(0, 64, 128, 16, TFT_BLACK);
+  // tft.setCursor(8, 64);
+  // tft.println(Next_ID, DEC);
+  // tft.setCursor(8, 72);
+  // tft.println(Next_dir, DEC);
+//////////////////////////////////////////
+
 }  //end of main loop
 
 //////////////////////////////////////////////Sensor stuff///////////////////////////////////////////////////////////////////////////////////////////
@@ -907,6 +912,14 @@ void recording_loop() {
       Next_dir++;                                                //if BMP are recorded, the folder # changes, if RAW is recorded, the # .raw file changes
     }
   }
+
+//////////////////////////////////////////////////
+    if (MOTION_sensor_counter == max_files_per_folder) {  //because up to 1000 files per folder stalling or errors in writing can happens
+      MOTION_sensor_counter = 0;
+      store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
+      Next_dir++;                                                //if BMP are recorded, the folder # changes, if RAW is recorded, the # .raw file changes
+    }
+//////////////////////////////////////////////////
 #endif
 
 #ifndef USE_SNEAK_MODE

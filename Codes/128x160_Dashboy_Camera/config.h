@@ -5,7 +5,7 @@
 //#define USE_OVERCLOCKING  //self explanatory, use with the Arduino IDE overclocking option to 250 MHz, beware, it changes the sensor clock parameters
 //#define USE_SERIAL //mode for outputing image in ascii to the serial console
 //#define USE_SNEAK_MODE  //deactivates the LEDs, why not
-#define DEBUG_MODE     //allow additionnal outputs on display
+#define DEBUG_MODE  //allow additionnal outputs on display
 //#define DEBAGAME_MODE  //more variables: masked pixel, O reg and V reg voltages
 
 #ifdef ST7735  //natural screen to use, 128x160 pixels, all acreen used, pixel perfect rendering
@@ -85,7 +85,7 @@ int json_corrupt = 0;                                  //"cheap checksum"
 //////////////general parameters///////////////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned char dithering_strategy[] = { 2, 1, 1, 1, 1, 0 };        //2 for single register strategy, 0 for Dithering_patterns_low, 1 Dithering_patterns_high, from high to low light
 unsigned long delay_MOTION = 5000;                                //time to place the camera before motion detection starts
-unsigned int max_files_per_folder = 1024;                         //self explanatory, in BMP mode
+unsigned int max_files_per_folder = 0x400;                        //self explanatory, both in BMP mode and RAW mode
 unsigned int low_exposure_limit = 0x0010;                         //absolute low exposure limit whatever the strategy
 unsigned char jittering_threshold = 13;                           //error threshold to keep/change registers in Game Boy Camera Mode
 unsigned char Dithering_palette[4] = { 0x00, 0x55, 0xAA, 0xFF };  //colors as they will appear in the bmp file and display after dithering
@@ -318,6 +318,7 @@ unsigned char BayerData[128 * 128];         //dithered image data
 unsigned char camReg[8];                    //empty register array
 unsigned char camReg_storage[8];            //empty register array
 unsigned int clock_divider = 1;             //time delay in processor cycles to cheat the exposure of the sensor
+
 unsigned short int pixel_TFT_RGB565;
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
@@ -325,9 +326,9 @@ unsigned long currentTime_MOTION = 0;
 unsigned long currentTime_exp = 0;
 unsigned long previousTime_exp = 0;
 unsigned long file_number;
-unsigned long Next_ID, Next_dir;       //for directories and filenames
 unsigned long TIMELAPSE_deadtime = 0;  //to introduce a deadtime for timelapses in ms, is read from config.json
 unsigned long masked_pixels = 0;       //accumulator for dark/masked pixels
+unsigned int Next_ID, Next_dir;        //for directories and filenames
 unsigned int current_exposure, new_exposure;
 unsigned int low_exposure_threshold = 0;
 unsigned int files_on_folder = 0;
