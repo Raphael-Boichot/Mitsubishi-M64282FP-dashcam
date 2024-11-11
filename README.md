@@ -17,7 +17,7 @@ If you manage to touch the unobtainium [M64283FP](https://github.com/Raphael-Boi
 
 You're of course free to modify this project as you wish, all sources are available here (all files for PCBs, all source codes, all documentation used). **The project was designed to be clean, cheap and easy to make** (requiring only cheap and very common parts, very basic soldering skills, no 3D printed parts, simple Arduino IDE environment and some hot glue). Fork it and play with it !
 
-# Picture of the device (example of PCB V1.0)
+# Picture of the device (prototype)
 
 ![Dashboy Camera V1.0](Docs%20and%20research/Image%20files/PCB_version_1.0.png)
 
