@@ -200,6 +200,8 @@ PCBs can be ordered at [JLCPCB](https://jlcpcb.com/) by simply uploading the ger
 
 ![Dashboy populated PCB](Docs%20and%20research/Image%20files/PCB_version_2.0.png)
 
+![Dashboy populated PCB](Docs%20and%20research/Image%20files/PCB_version_2.0_full.jpg)
+
 The GPIO22 pin, only digital pin left free on the Pi Pico, is exposed as well as a GND and 3.3V pins if you want to use them for other purpose like triggering something in/out of the device. It will of course require modifying and compiling the code. It is by default routed as PWM output to drive a servo.
 
 # Some random informations for you Game Boy Camera nerd !
