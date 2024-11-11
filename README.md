@@ -117,7 +117,7 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
-## Some birds in motion sensor mode taken with the M64282FP sensor
+## Some birds taken in motion sensor mode with the M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Birds.gif)
 
