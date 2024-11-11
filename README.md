@@ -117,6 +117,10 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
+## Some motion sensor images made with the M64282FP sensor
+
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Birds.gif)
+
 ## Example of dithered/non dithered image, M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Dither.gif)
