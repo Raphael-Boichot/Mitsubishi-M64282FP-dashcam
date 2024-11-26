@@ -112,7 +112,7 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 ## Some timelapses made with the M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sun.gif)
-Funfact, this series of image shows one of the [biggest solar flare of 2024](https://en.m.wikipedia.org/wiki/May_2024_solar_storms) just before it was annonced by NASA.
+Funfact, this series of image shows the sunspot at the origin of one of the [biggest solar flare of 2024](https://en.m.wikipedia.org/wiki/May_2024_solar_storms) before it was detected on Earth.
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Moon.gif)
 
