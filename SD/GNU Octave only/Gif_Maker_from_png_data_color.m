@@ -8,9 +8,10 @@ pkg load image
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %User parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-target_mp4_file='Output.mp4'; %target file for mp4, keep all image
+%target_mp4_file='Output.mp4'; %target file for mp4, keep all image
 target_gif_file='Output.gif'; %target file for animated gif
 gif_deadtime=0.04;            %delay is seconds between pictures for animated gifs, 25 fps
+gif_skip=2;                   %keep every 1 out of gif_skip image for gif
 scaling_factor=0.5;           %because images are 8x after powershell step
 color_weight=[1 1.4 1]        %[R G B] weights to get a gray image when taking a white screen in photo in my case
 %to get these values, take pictures of a white scene with the three filters, note the exposure times and divide by the minimal value
@@ -19,8 +20,10 @@ color_weight=[1 1.4 1]        %[R G B] weights to get a gray image when taking a
 
 %vidfile = VideoWriter(target_mp4_file,'MPEG-4');
 %open(vidfile);
+gif_counter=0;
 listing = dir('*.png');
 for i=1:3:length(listing)
+    gif_counter=gif_counter+1;
     name=listing(i).name;
     disp(['Processing ',listing(i).name]);
     R=imread(name);
@@ -46,7 +49,9 @@ for i=1:3:length(listing)
     if i==1
         imwrite(imind,map,target_gif_file,'gif', 'Loopcount',inf,'DelayTime',gif_deadtime);
     else
-        imwrite(imind,map,target_gif_file,'gif','WriteMode','append','DelayTime',gif_deadtime);
+        if rem(gif_counter,gif_skip)==0
+            imwrite(imind,map,target_gif_file,'gif','WriteMode','append','DelayTime',gif_deadtime);
+        end
     end
 end
 %close(vidfile)
