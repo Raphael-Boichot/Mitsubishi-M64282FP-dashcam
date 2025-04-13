@@ -20,6 +20,14 @@
 //#define TFT_WIDTH  240 // ST7789 240 x 240 and 240 x 320
 //#define TFT_HEIGHT 240 // ST7789 240 x 240
 
+/*How to configure the Bodmer TFT library for the 240*240 display (7 pins without CS)
+- Locate the TFT_eSPI library: \Arduino\libraries\TFT_eSPI folder in your Arduino libraries
+- copy the configuration file (TinyGB_240x240.h) for the TFT display in this folder.
+- edit the User_Setup_Select.h and modify line 29:
+#include <TinyGB_240x240.h> // Default setup is root library folder
+- edit the TFT_eSPI_RP2040.h and modify line 52
+#define SET_BUS_READ_MODE // spi_set_format(SPI_X, 8, (spi_cpol_t)0, (spi_cpha_t)0, SPI_MSB_FIRST*/
+
 //other universal parameters
 #define USER_SETUP_ID 60
 #define TFT_MISO  99  // not used here, just to avoid a compiling message
