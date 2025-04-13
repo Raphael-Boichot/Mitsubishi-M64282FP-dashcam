@@ -333,7 +333,7 @@ void loop() {
   }  //end of recording loop for timelapse
 
   if ((TIMELAPSE_mode == 0) & (gpio_get(PUSH) == 1) & (MOTION_sensor == 0)) {  //camera mode acts like if user requires just one picture
-    image_TOKEN = 1;  //gives a single token for recording
+    image_TOKEN = 1;                                                           //gives a single token for recording
   }
 
   if ((image_TOKEN == 1) & (recording == 0)) {  //prepare for recording one shot
@@ -343,9 +343,9 @@ void loop() {
     img.setCursor(0, 8);
     img.println("Recording...");
     if (MOTION_sensor == 1) {
-    img.setCursor(80, 8);  
-    sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
-    img.println(files_on_folder_string);
+      img.setCursor(80, 8);
+      sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
+      img.println(files_on_folder_string);
     }
     display_other_informations();
     img.pushSprite(x_ori, y_ori);  //dump image to display
@@ -376,9 +376,9 @@ void loop() {
     img.fillRect(0, 8, 128, 8, TFT_BLACK);
     img.println("Display Mode");
     if (MOTION_sensor == 1) {
-    img.setCursor(80, 8);  
-    sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
-    img.println(files_on_folder_string);
+      img.setCursor(80, 8);
+      sprintf(files_on_folder_string, "%X/%X", MOTION_sensor_counter, max_files_per_folder);
+      img.println(files_on_folder_string);
     }
     display_other_informations();
     img.pushSprite(x_ori, y_ori);  //dump image to display
@@ -406,13 +406,13 @@ void loop() {
     }
   }
 
-///////////for debug only/////////////////
+  ///////////for debug only/////////////////
   // tft.fillRect(0, 64, 128, 16, TFT_BLACK);
   // tft.setCursor(8, 64);
   // tft.println(Next_ID, DEC);
   // tft.setCursor(8, 72);
   // tft.println(Next_dir, DEC);
-//////////////////////////////////////////
+  //////////////////////////////////////////
 
 }  //end of main loop
 
@@ -913,12 +913,12 @@ void recording_loop() {
     }
   }
 
-//////////////////////////////////////////////////
-    if (MOTION_sensor_counter == max_files_per_folder) {  //because up to 1000 files per folder stalling or errors in writing can happens
-      MOTION_sensor_counter = 0;
-      store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
-      Next_dir++;                                                //if BMP are recorded, the folder # changes, if RAW is recorded, the # .raw file changes
-    }
+  //////////////////////////////////////////////////
+  if (MOTION_sensor_counter == max_files_per_folder) {  //because up to 1000 files per folder stalling or errors in writing can happens
+    MOTION_sensor_counter = 0;
+    store_next_ID("/Dashcam_storage.bin", Next_ID, Next_dir);  //in case of crash...
+    Next_dir++;                                                //if BMP are recorded, the folder # changes, if RAW is recorded, the # .raw file changes
+  }
 //////////////////////////////////////////////////
 #endif
 
@@ -1266,22 +1266,23 @@ bool Get_JSON_config(const char* path) {  //I've copy paste the library examples
     Datafile.close();
   }
 #endif
-
   return JSON_OK;
 }
 
 void Put_JSON_config(const char* path) {  //I've copy paste the library examples, just used at boot to cycle the border #
 
 #ifdef USE_SD
-  JsonDocument doc;
-  File Datafile = SD.open(path);
-  deserializeJson(doc, Datafile);
-  Datafile.close();
+  if (SD.exists(path)) {
+    JsonDocument doc;
+    File Datafile = SD.open(path);
+    deserializeJson(doc, Datafile);
+    Datafile.close();
 
-  doc["prettyborderMode"] = PRETTYBORDER_mode;  //Update some data
-  Datafile = SD.open(path, "w");
-  serializeJson(doc, Datafile);  //overwrite file
-  Datafile.close();
+    doc["prettyborderMode"] = PRETTYBORDER_mode;  //Update some data
+    Datafile = SD.open(path, "w");
+    serializeJson(doc, Datafile);  //overwrite file
+    Datafile.close();
+  }
 #endif
 }
 
@@ -1771,10 +1772,13 @@ void init_sequence() {  //not 100% sure why, but screen must be initialized befo
     } else {
       img.setTextColor(TFT_YELLOW);
       img.println("CORRUPTED");
+#ifdef USE_SD
+      SD.remove("/config.json");  // corrupted json leads to crashes, better just remove it and run with the default configuration
+#endif
     }
   } else {
     img.setTextColor(TFT_RED);
-    img.println("NOT READABLE");
+    img.println("NO JSON FILE");
   }
 
   img.setTextColor(TFT_CYAN);
