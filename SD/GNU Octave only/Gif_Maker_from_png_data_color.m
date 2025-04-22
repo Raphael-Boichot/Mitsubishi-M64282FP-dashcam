@@ -24,7 +24,9 @@ color_weight=[1 1 1]        %[R G B] weights to get a gray image when taking a w
 
 gif_counter=0;
 listing = dir('*.png');
-for i=1:3:length(listing)
+
+size_list=length(listing)-rem(length(listing),3);
+for i=1:3:size_list
     gif_counter=gif_counter+1;
     name=listing(i).name;
     disp(['Processing ',listing(i).name]);
