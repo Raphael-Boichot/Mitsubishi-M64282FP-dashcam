@@ -23,7 +23,7 @@ for i=1:1:length(listing)
     frame=imread(name);
     [height, width, null]=size(frame);
     frame=imresize(frame,scaling_factor,'nearest');
-    [imind,map] = rgb2ind(cat(3,frame));
+    [imind,map] = rgb2ind(frame);
     if i==1
         imwrite(imind,map,target_gif_file,'gif', 'Loopcount',inf,'DelayTime',gif_deadtime,'Compression','bzip');
     else
