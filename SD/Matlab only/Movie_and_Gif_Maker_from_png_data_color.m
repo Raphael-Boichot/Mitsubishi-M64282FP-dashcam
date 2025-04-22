@@ -21,7 +21,9 @@ vidfile = VideoWriter(target_mp4_file,'MPEG-4');
 open(vidfile);
 listing = dir('*.png');
 gif_counter=0;
-for i=1:3:length(listing)
+size_list=length(listing)-rem(length(listing),3);
+
+for i=1:3:size_list
     gif_counter=gif_counter+1;
     name=listing(i).name;
     disp(['Processing ',listing(i).name]);
