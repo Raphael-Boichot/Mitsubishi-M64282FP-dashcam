@@ -21,7 +21,7 @@ for i=1:1:length(listing)
     [height, width, null]=size(frame);
     frame=imresize(frame,scaling_factor,'nearest');
     writeVideo(vidfile, frame);
-    [imind,map] = rgb2ind(cat(3,frame),256);
+    [imind,map] = rgb2ind(frame,256);
     if i==1
         imwrite(imind,map,target_gif_file,'gif', 'Loopcount',inf,'DelayTime',gif_deadtime);
     else

@@ -43,7 +43,7 @@ for i=1:3:length(listing)
     frame(:,:,2)=G;
     frame(:,:,3)=B;
     writeVideo(vidfile, frame);
-    [imind,map] = rgb2ind(cat(3,frame),256);
+    [imind,map] = rgb2ind(frame,256);
     if i==1
         imwrite(imind,map,target_gif_file,'gif', 'Loopcount',inf,'DelayTime',gif_deadtime);
     else
