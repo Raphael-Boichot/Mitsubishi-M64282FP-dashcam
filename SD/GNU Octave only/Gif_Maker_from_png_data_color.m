@@ -3,11 +3,11 @@
 %adjust exposure between each filter.
 clc
 clear
-pkg load image
 
 disp('-----------------------------------------------------------')
 disp('|Beware, this code is for GNU Octave ONLY !!!             |')
 disp('-----------------------------------------------------------')
+pkg load image
 
 %script to be run directly in the image folder
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,9 +15,9 @@ disp('-----------------------------------------------------------')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 target_gif_file='Output.gif'; %target file for animated gif
 gif_deadtime=0.04;            %delay is seconds between pictures for animated gifs, 25 fps
-gif_skip=2;                   %keep every 1 out of gif_skip image for gif
-scaling_factor=0.5;           %because images are 8x after powershell step
-color_weight=[1 1.4 1]        %[R G B] weights to get a gray image when taking a white screen in photo in my case
+gif_skip=1;                   %keep every 1 out of gif_skip image for gif
+scaling_factor=1;           %because images are 8x after powershell step
+color_weight=[1 1 1]        %[R G B] weights to get a gray image when taking a white screen in photo in my case
 %to get these values, take pictures of a white scene with the three filters, note the exposure times and divide by the minimal value
 %these corresponds to my filters but yours can vary
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
