@@ -4,11 +4,15 @@
 clc
 clear
 pkg load image
+
+disp('-----------------------------------------------------------')
+disp('|Beware, this code is for GNU Octave ONLY !!!             |')
+disp('-----------------------------------------------------------')
+
 %script to be run directly in the image folder
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %User parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%target_mp4_file='Output.mp4'; %target file for mp4, keep all image
 target_gif_file='Output.gif'; %target file for animated gif
 gif_deadtime=0.04;            %delay is seconds between pictures for animated gifs, 25 fps
 gif_skip=2;                   %keep every 1 out of gif_skip image for gif
@@ -18,8 +22,6 @@ color_weight=[1 1.4 1]        %[R G B] weights to get a gray image when taking a
 %these corresponds to my filters but yours can vary
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%vidfile = VideoWriter(target_mp4_file,'MPEG-4');
-%open(vidfile);
 gif_counter=0;
 listing = dir('*.png');
 for i=1:3:length(listing)
@@ -43,9 +45,7 @@ for i=1:3:length(listing)
     frame(:,:,1)=R;
     frame(:,:,2)=G;
     frame(:,:,3)=B;
-    %writeVideo(vidfile, frame);
-    %[imind,map] = rgb2ind(cat(3,frame),256);
-    [imind,map] = rgb2ind(cat(3,frame));
+    [imind,map] = rgb2ind(frame);
     if i==1
         imwrite(imind,map,target_gif_file,'gif', 'Loopcount',inf,'DelayTime',gif_deadtime);
     else
@@ -54,5 +54,4 @@ for i=1:3:length(listing)
         end
     end
 end
-%close(vidfile)
 disp('End of conversion, enjoy your fancy animations !')
