@@ -117,6 +117,8 @@ Funfact, this series of image in identally shows the sunspot at the origin of on
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Moon.gif)
 
+![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Crescent_Moon.gif)
+
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
 ## Some birds taken in motion sensor mode with the M64282FP sensor
