@@ -13,9 +13,9 @@
 //Compile your code with frequency set at CPU Speed: "133 MHz" and Optimize: "Optimize even more (-O3)"
 
 //some general calls to deal with the RP2040 core for Arduino and the json stuff
-#include "ArduinoJson.h"   //self explanatory
-#include "pico/stdlib.h"   //stuff from pico sdk
-#include "hardware/adc.h"  //the GPIO commands are here
+#include <ArduinoJson.h>   //self explanatory
+#include <pico/stdlib.h>   //stuff from pico sdk
+#include <hardware/adc.h>  //the GPIO commands are here
 #include "config.h"        //the camera meat is here
 #include "splash.h"        //splash and crash images in 8 bits (no compression, as I gain nothing)
 #include "prettyborder.h"  //2 bpp image borders encoded in 8 bits with cheap RLE compression (very efficient)
