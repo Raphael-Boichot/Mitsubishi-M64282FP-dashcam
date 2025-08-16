@@ -113,7 +113,7 @@ The **slit-scan mode infinite** makes streaks whatever the scene. It gives inter
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Sun.gif)
 
-Funfact, this series of image in identally shows the sunspot at the origin of one of the [biggest solar flare](https://en.m.wikipedia.org/wiki/May_2024_solar_storms) striking earth.
+Funfact, this series of image incidentally shows the sunspot at the origin of one of the [biggest solar flare](https://en.m.wikipedia.org/wiki/May_2024_solar_storms) striking earth.
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Moon.gif)
 
