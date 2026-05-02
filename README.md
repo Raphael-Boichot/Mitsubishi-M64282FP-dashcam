@@ -122,6 +122,7 @@ Funfact, this series of image incidentally shows the sunspot at the origin of on
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Alps.gif)
 
 ![Dashboy Camera pictures](/Docs%20and%20research/Image%20files/Two_months_timelapse.gif)
+
 This time lapse was taken over about two months and a half, each picture is separated by one day and 5 minutes, so that first image is at dawn in winter and final image at dusk in spring.
 
 ## Some birds taken in motion sensor mode with the M64282FP sensor
