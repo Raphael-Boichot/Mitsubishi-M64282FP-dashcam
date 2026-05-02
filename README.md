@@ -125,8 +125,6 @@ Funfact, this series of image incidentally shows the sunspot at the origin of on
 
 This time lapse was taken over about two months and a half, each picture is separated by one day and 5 minutes, so that first image is at dawn in winter and final image at dusk in spring. Click on the image to see the whole movie.
 
-[![Dashboy Camera video](https://img.youtube.com/vi/WuVHIP4UFfo/0.jpg)]([https://www.youtube.com/watch?v=WuVHIP4UFfo](https://www.youtube.com/watch?v=WuVHIP4UFfo))
-
 ## Some birds taken in motion sensor mode with the M64282FP sensor
 
 ![Dashboy Camera pictures](Docs%20and%20research/Image%20files/Birds.gif)
